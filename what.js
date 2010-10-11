@@ -14,9 +14,10 @@ wc.start();
 // Example Servlet
 var exampleServlet = wc.setResource({
 	name: "stats",
-	servlet: function(request) {
-		return {
-			response : "Stats Servlet"
+	servlet: {
+		persist : false,
+		handler : function(request) {
+		return { response : a.b.getBogus() }
 		}
 	}
 });
@@ -32,13 +33,19 @@ wc.setResource({
 wc.setURI({ uri : "/webcontainer", resource : wc.getResource("webcontainer")});
 
 // Example MIME Cache Clearing
-wc.setURI({ uri : "/clearcache", 
+wc.setURI({
+	uri : "/clearcache", 
 	resource : wc.setResource({
 		name : "clearcache",
-		servlet : function(request) {
-			wc.clearCache();
-			return {
-				response : "Cache Cleared"
+		servlet : {
+			persist : true,
+			data : {
+				times : 0
+			},
+			handler : function(request, data) {
+				wc.clearCache();
+				data.times++;
+				return { response : "Cache Cleared " + data.times + " times." };
 			}
 		}
 	})

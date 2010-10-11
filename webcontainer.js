@@ -18,6 +18,16 @@ exports.setResource = function(options) {
 	if(!options.name) {
 		console.log("Warning: No resource name was given.  No resource will be added.");
 	}else{
+		if (options.servlet && options.servlet.persist) try {
+			var pd = fs.readFileSync(options.name + "_servletState").toString();
+			var persistData = eval("("+pd+")");
+			for (el in persistData) {
+				options.servlet.data[el] = persistData[el];
+			}
+			debug.log("Servlet State restored.");
+		}catch(e){
+			debug.log("No prior servlet state found.");
+		}
 		options.contentType = options.contentType || config.defaults.headers.contentType;
 		if(exports.getResource(options.name)) exports.deleteResource(options.name);
 		resources.push(options);
@@ -40,12 +50,14 @@ exports.setURI = function(options) {
 exports.getPort = function(){
 	return config.port;
 }
+
 exports.start = function() {
 	status.running = true;
 	status.startupTime = new Date();
 	httpServer = http.createServer(listener);
 	httpServer.listen(config.port);
 	console.log("Web Container running on:" + config.port);
+	setInterval(saveState, config.saveStateInterval);
 }
 exports.getMIME = function(path, ignoreCache) {
 	if(!ignoreCache) {
@@ -116,7 +128,7 @@ var listener = function(request, response) {
 		}else if(URI.resource.servlet) {	// Servlet
 			var results = null;
 			try {
-				results = (URI.resource.servlet(request));
+				results = (URI.resource.servlet.handler(request, URI.resource.servlet.data));
 				response.writeHead(200, {"Content-Type" : results.contentType || URI.resource.contentType});
 				response.end(results.response);
 			}catch(e) {
@@ -128,9 +140,22 @@ var listener = function(request, response) {
 	//response.end();
 	debug.log("Response complete");
 };
+var saveState = function () {
+	if(status.savingState) return
+	debug.log("Saving State...");
+	status.savingState = true;
+	for(var i=0;i<resources.length;i++) {
+		var res = resources[i];
+		if( res.servlet && res.servlet.data && res.servlet.persist ) {
+			if(res.servlet.data) fs.writeFileSync(res.name + "_servletState", JSON.stringify(res.servlet.data));
+		}
+	}
+	status.savingState = false;
+}
 var config = {
 	port : 80,
 	debug : true,
+	saveStateInterval : 5000,
 	webroot : 'webroot',
 	defaults : {
 		headers : [
@@ -162,3 +187,4 @@ var getAlias = function(uri) {
 	}
 	return uri;
 }
+var sharedData = [];

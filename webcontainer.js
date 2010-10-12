@@ -1,3 +1,8 @@
+var http = require('http');
+var url = require('url');
+var querystring = require('querystring');
+var fs = require('fs');
+
 // Public
 exports.clearCache = function(name) {
 	if(!name){
@@ -6,47 +11,16 @@ exports.clearCache = function(name) {
 		for(var i=0;i<MIMECache.length;i++) if(MIMECache[i].name == name) return MIMECache[i].pop();
 	}
 }
-exports.getResource = function(name) {
+exports.getResourceByName = function(name) {
 	for(var i=0;i<resources.length;i++) if(resources[i].name == name)return resources[i];
 	return null;
 }
-exports.deleteResource = function(name) {
-	for(var i=0;i<resources.length;i++) if(resources[i].name == name)return resources.pop();
-	return null;
-}
-exports.setResource = function(options) {
-	if(!options.name) {
-		console.log("Warning: No resource name was given.  No resource will be added.");
-	}else{
-		if (options.servlet && options.servlet.persist) try {
-			var pd = fs.readFileSync(options.name + "_servletState").toString();
-			var persistData = eval("("+pd+")");
-			for (el in persistData) {
-				options.servlet.data[el] = persistData[el];
-			}
-			debug.log("Servlet State restored.");
-		}catch(e){
-			debug.log("No prior servlet state found.");
-		}
-		options.contentType = options.contentType || config.defaults.headers.contentType;
-		if(exports.getResource(options.name)) exports.deleteResource(options.name);
-		resources.push(options);
-		return exports.getResource(options.name);
-	}
-}
+
 exports.getURI = function(uri) {
 	for(var i=0;i<URIs.length;i++) if(URIs[i].uri == uri) return URIs[i];
 	return null;
 }
-exports.setURI = function(options) {
-	if(!options.uri) {
-		console.log("Warning: No URI path was given.  No URI will be added.");
-	}else{
-		if(exports.getURI(options.uri)) exports.deleteURI(options.uri);
-		URIs.push(options);
-		return exports.getURI(options.uri);
-	}
-}
+
 exports.getPort = function(){
 	return config.port;
 }
@@ -57,12 +31,13 @@ exports.start = function() {
 	httpServer = http.createServer(listener);
 	httpServer.listen(config.port);
 	console.log("Web Container running on:" + config.port);
+	// State Listener/Thread
 	setInterval(saveState, config.saveStateInterval);
 }
 exports.getMIME = function(path, ignoreCache) {
 	if(!ignoreCache) {
 		for(var i=0;i<MIMECache.length;i++) if(MIMECache[i].path == path) {
-			console.log("MIME found in cache");
+			debug.log("MIME found in cache");
 			return MIMECache[i];
 		}
 	};
@@ -74,7 +49,7 @@ exports.getMIME = function(path, ignoreCache) {
 		MIME.found = true;
 		MIME.path = path;
 		MIME.content = data;
-		if(!ignoreCache) MIMECache.push(MIME);
+		// if(!ignoreCache) MIMECache.push(MIME);
 	}catch(e){
 		debug.log("MIME not found.");
 		debug.log(e);
@@ -91,10 +66,6 @@ var debug = {
 		if(config.debug) console.log(msg);
 	}
 }
-var http = require('http');
-var url = require('url');
-var querystring = require('querystring');
-var fs = require('fs');
 
 var httpServer = null;
 var listener = function(request, response) {
@@ -113,41 +84,49 @@ var listener = function(request, response) {
 		}
 		response.end(MIME.content);
 	}else{
-		if(URI.resource.content) {		// Simple Content
-			response.writeHead(200, {"Content-Type" : URI.resource.contentType});
-			response.write(URI.resource.content);
-			response.end();			
-		}else if(URI.resource.mime) {	// MIME Resource
-			var MIME = exports.getMIME(URI.resource.mime);
-			if(MIME.found) {
-				response.writeHead(200, {"Content-Type" : {}});
-			}else{
-				response.writeHead(404, {"Content-Type" : "text/plain"});
-			}
-			response.end(MIME.content);			
-		}else if(URI.resource.servlet) {	// Servlet
-			var results = null;
-			try {
-				results = (URI.resource.servlet.handler(request, URI.resource.servlet.data));
-				response.writeHead(200, {"Content-Type" : results.contentType || URI.resource.contentType});
-				response.end(results.response);
-			}catch(e) {
-				response.writeHead(500, {"Content-Type" : "text/plain"});
-				response.end(e.toString());
-			}
-		}
+		switch(URI.resource.rtype) {
+			case "simple" :
+				response.writeHead(200, {"Content-Type" : URI.resource.contentType});
+				response.end(URI.resource.content);
+				break;
+			case "mime" :
+				var MIME = exports.getMIME(URI.resource.mime);
+				if(MIME.found) {
+					response.writeHead(200, {"Content-Type" : {}});
+				}else{
+					response.writeHead(404, {"Content-Type" : "text/plain"});
+				};
+				response.end(MIME.content);
+				break;
+			case "servlet" :						// Servlet Resource
+				try {
+					results = URI.resource.handler.call(URI.resource, request);
+					response.writeHead(200, {"Content-Type" : results.contentType || URI.resource.contentType});
+					response.end(results.response);
+				}catch(e){
+					response.writeHead(500, {"Content-Type" : "text/plain"});
+					response.end(e.toString());
+				}
+				break;
+			default :								// Unknown Resource Type
+				response.writeHead(200, {"Content-Type" : "text/plain" });
+				response.end(JSON.stringify(URI.resource));
+		};
 	}
-	//response.end();
 	debug.log("Response complete");
 };
 var saveState = function () {
-	if(status.savingState) return
-	debug.log("Saving State...");
+	if(status.savingState) return;
 	status.savingState = true;
 	for(var i=0;i<resources.length;i++) {
 		var res = resources[i];
-		if( res.servlet && res.servlet.data && res.servlet.persist ) {
-			if(res.servlet.data) fs.writeFileSync(res.name + "_servletState", JSON.stringify(res.servlet.data));
+		if( res.rtype=="servlet" && res.data && res.persist && res.dataDirty) {
+			var dataObj = {
+				timeStamp: new Date(),
+				servletData : res.data
+			};
+			fs.writeFileSync(res.name + "_servletState", JSON.stringify(dataObj));
+			res.dataDirty = false;
 		}
 	}
 	status.savingState = false;
@@ -168,15 +147,6 @@ var status = {
 	running : false,
 	counter: 0
 };
-var resources = [
-	{ name : "admin", mime : "admin.html" }
-];
-var URIs = [
-	{ uri : "/admin", resource : exports.getResource("admin") }
-];
-var transforms = [
-	{ uri : "/index.html", aliases : ["/", "/index.htm", "/index.html", "/default.htm", "/default.html" ] }
-]
 var MIMECache = [];
 var requestLog = [];
 var getAlias = function(uri) {
@@ -187,4 +157,118 @@ var getAlias = function(uri) {
 	}
 	return uri;
 }
+exports.getStatus = function() {
+	return status;
+}
+exports.createURI = function(options) {
+	if(!options.uri) {
+		console.log("Warning: No URI path was given.  No URI will be added.");
+	}else{
+		if(exports.getURI(options.uri)) exports.deleteURI(options.uri);
+		URIs.push(options);
+		return exports.getURI(options.uri);
+	}	
+}
+
+exports.createResource = function(options) {
+	// Global Properties
+	var resourcePrivate = {
+		running : true
+	};
+	var returnResource = {
+		rtype : options.rtype || "simple",
+		name : options.name || "res" + ++resourceCounter
+	};
+	switch(returnResource.rtype) {
+		case "simple" :			// Simple Resource
+			returnResource.content = options.content;
+			break;
+			
+		case "mime" :			// MIME Resource
+			returnResource.mime = options.mime;
+			break;
+			
+		case "servlet" :		// Servlet Resource
+			returnResource.running = true;
+			returnResource.executions = 0;
+			returnResource.contentType = options.contentType || "text/plain";
+			returnResource.container = this;
+			returnResource.stop = function() {
+				this.running = false;
+			}
+			returnResource.handler = function(request){
+				var results = options.handler.call(returnResource, request);
+				this.executions++;
+				this.dataDirty = true;
+				return results;
+			};
+			returnResource.data = options.data || {};
+			returnResource.persist = options.persist || false;
+			if (returnResource.persist) try {
+				var pd = fs.readFileSync(returnResource.name + "_servletState").toString();
+				var persistData = eval("("+pd+")");
+				for (el in persistData.servletData) {
+					returnResource.data[el] = persistData.servletData[el];
+				}
+				debug.log("[" + returnResource.name + "] state restored (." + persistData.timeStamp + ")");
+			}catch(e){
+				debug.log("No prior servlet state found.");
+			}
+			returnResource.dataDirty = false;
+			returnResource.setData = function(key, value) {
+				this.data[key] = value;
+				this.dataDirty = true;
+			};
+		default :
+			break;
+	}
+	debug.log(returnResource.name + " created.");
+	resources.push(returnResource);
+	return returnResource;
+};
+exports.getResources = function() {
+	return resources;
+}
+var resourceCounter = 0;
 var sharedData = [];
+var resources = [];
+var URIs = [];
+var transforms = [
+	{ uri : "/index.html", aliases : ["/", "/index.htm", "/index.html", "/default.htm", "/default.html" ] }
+];
+// Server Status Get System Environment
+var getEnv = exports.createResource({
+	name : "getEnv",
+	rtype : "servlet",
+	handler : function(request) {
+		return { response : JSON.stringify({env:process.env})};
+	}
+});
+exports.createURI({ uri : "/getEnv", resource : getEnv });
+
+// Server Status JSON Emitter
+var getServerStatus = exports.createResource({
+	name : "getServerStatus",
+	rtype : "servlet",
+	handler : function(request) {
+		return {
+			response: JSON.stringify({status:this.container.getStatus()})
+		}
+	}
+});
+exports.createURI({ uri: "/getServerStatus", resource : getServerStatus });
+
+// Servlet List JSON Emitter
+var getServlets = exports.createResource({
+	name : "getServlets",
+	rtype : "servlet",
+	handler : function(request) {
+		var r = this.container.getResources();
+		var rr = [];
+		for (var i=0;i<r.length;i++) if(r[i].rtype=="servlet") rr.push(r[i]);
+		return {
+			response: JSON.stringify({servlets : rr})
+		};
+	}	
+});
+exports.createURI({ uri : "/getServlets", resource : getServlets });

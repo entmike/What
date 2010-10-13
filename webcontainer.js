@@ -48,33 +48,37 @@ exports.getMIME = function(path, ignoreCache) {
 	var data = null;
 	try{
 		data = fs.readFileSync(path);
-		debug.log("Caching MIME: [" + path + "].");
 		MIME.found = true;
 		MIME.path = path;
 		MIME.content = data;
 		if (ext=="nsp") {
 			var nsp = MIME.content.toString();
-			var buffer = {
+			var context = {
 				buffer : [],
 				write : function(text){
 					this.buffer.push(text);
 				},
 				writeEscapedText :function(text){
 					this.buffer.push(unescape(text));
-					console.log(text);
+				},
+				getBuffer : function(){
+					return this.buffer.join("").toString();
 				}
 			};
 			var toEval = NSPParser(nsp);
-			
 			try{
-				eval("(" + toEval + ")");
+				eval(toEval.toString());
+				MIME.content = context.getBuffer();
 			}catch(e){
-				debug.log(toEval);
-				debug.log(e.toString());
+				MIME.error = true;
+				MIME.exception = e;
 			}
-			MIME.content = buffer.buffer;
+			
 		}
-		// if(!ignoreCache) MIMECache.push(MIME);
+		if(!ignoreCache && ext != "nsp") {
+			MIMECache.push(MIME);
+			debug.log("Caching MIME: [" + path + "].");
+		}
 	}catch(e){
 		debug.log("MIME not found.");
 		debug.log(e);
@@ -102,12 +106,17 @@ var listener = function(request, response) {
 	if(!URI) {		// No URI Found.  Try file in webroot.
 		debug.log("Unknown URI.  Trying [" + config.webroot + objURL.pathname + "]");
 		var MIME = exports.getMIME(config.webroot + objURL.pathname);
-		if(MIME.found) {
-			response.writeHead(200, {"Content-Type" : {}});
+		if(MIME.error) {
+			response.writeHead(500, {"Content-Type" : "text/plain"});
+			response.end(JSON.stringify(MIME.exception));
 		}else{
-			response.writeHead(404, {"Content-Type" : "text/plain"});
+			if(MIME.found) {
+				response.writeHead(200, {"Content-Type" : {}});
+			}else{
+				response.writeHead(404, {"Content-Type" : "text/plain"});
+			}
+			response.end(MIME.content);
 		}
-		response.end(MIME.content);
 	}else{
 		switch(URI.resource.rtype) {
 			case "simple" :
@@ -289,63 +298,58 @@ exports.createURI({ uri : "/getServlets", resource : getServlets });
 function NSPParser(contents){
 	var parsedTextArray = [];
 	var externalParsedTextArray = [];
-	var startTag = "<%";
-	var startWriteAddition = "=";
-	var startGlobalAddition = "!";
-	var endTag = "%>";
-	var lineArray = contents.split(new RegExp( "\\n", "g" ));
-	var isInScript = false;
+	var tags = {
+		start : "<%",
+		writer : "=",
+		global : "!",
+		end : "%>"
+	}
+	var lines = contents.split(new RegExp( "\\n", "g" ));
+	var inScript = false;
 	var currentScript =[];
-	var nextLine = "\n";
-	for(var i=0;i<lineArray.length;i++){
-		line = lineArray[i];			
+	for(var i=0;i<lines.length;i++){
+		var line = lines[i];
+		// While Loop over a single line until it is parsed out to 0 bytes.
 		while(line.length>0){
-			if(!isInScript){
-				var startTagIndex = line.indexOf(startTag);
-				if(line.indexOf(startTag)==-1){
-					parsedTextArray.push('buffer.writeEscapedText("'+escape(line+nextLine)+'");'+nextLine);
+			if(!inScript){		// Outside of Script
+				var startIndex = line.indexOf(tags.start);
+				if(line.indexOf(tags.start)==-1) {		// Normal Text
+					parsedTextArray.push('context.writeEscapedText("' + escape(line + "\n") + '");\n');
 					line="";
-				}
-				else{
-					lineBeforeStart = line.substring(0,startTagIndex);
-					parsedTextArray.push('buffer.writeEscapedText("'+escape(lineBeforeStart)+'");');
-					line = line.substring(startTagIndex+startTag.length);
-					if(line.length==0) parsedTextArray.push(nextLine);
-					isInScript = true;
+				}else{			// Found start of script tag
+					var lineBeforeStart = line.substring(0, startIndex);
+					parsedTextArray.push('context.writeEscapedText("' + escape(lineBeforeStart) + '");');
+					line = line.substring(startIndex + tags.start.length);
+					if(line.length==0) parsedTextArray.push("\n");
+					inScript = true;
 				}
 			}
-			else{// In Script
-				var endTagIndex = line.indexOf(endTag);
-				if(line.indexOf(endTag)==-1){
-					currentScript.push(line + nextLine);
+			else{				// Inside Script
+				var endIndex = line.indexOf(tags.end);
+				if(line.indexOf(tags.end)==-1){			// Line of Script
+					currentScript.push(line + "\n");
 					line="";
-				}
-				else{
-					lineBeforeEnd = line.substring(0,endTagIndex);
+				}else{			// Found end of script tag
+					lineBeforeEnd = line.substring(0,endIndex);
 					currentScript.push(lineBeforeEnd);
-					var theScript = currentScript.join("");
-					if(theScript.indexOf(startWriteAddition) === 0){ //handling <?=...?> cases
-						theScript = "buffer.write("+theScript.substring(startWriteAddition.length)+");";
+					var theScript = currentScript.join("");			// End of Script Block
+					if(theScript.indexOf(tags.writer) === 0){ 		// <%=...%> shorthand
+						theScript = "context.write(" + theScript.substring(tags.writer.length) + ");";
 						parsedTextArray.push(theScript);
-					}else if(theScript.indexOf(startGlobalAddition) === 0){ //handling <?!...?> cases
-						theScript = theScript.substring(startGlobalAddition.length);
+					}else if(theScript.indexOf(tags.global) === 0){ // <%!...%> footer
+						theScript = theScript.substring(tags.global.length);
 						externalParsedTextArray.push(theScript);
 					}else{
-						parsedTextArray.push(theScript);
+						parsedTextArray.push(theScript);			// Push Script to Parsed Stack
 					}
-					currentScript = [];
-					line = line.substring(endTagIndex+endTag.length);
-					if(line.length==0)
-						parsedTextArray.push(nextLine);
-					isInScript = false;
+					currentScript = [];								// Reset Script Stack
+					line = line.substring(endIndex+tags.end.length);
+					if(line.length==0) parsedTextArray.push("\n");
+					inScript = false;
 				}
 			}
 		}
 	}
-	var finalFunction = [
-		parsedTextArray.join(""),
-		externalParsedTextArray.join("")
-	].join("");
-	return finalFunction;
+	return [ parsedTextArray.join(""), externalParsedTextArray.join("") ].join("");
 };
 

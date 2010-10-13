@@ -1,0 +1,12 @@
+<html>
+	<head>
+	</head>
+	<body>
+	Dates: <br/>
+	<%
+	for(var i=0;i++;i<5) {
+	buffer.write(new Date());
+	}
+	%>
+	</body>
+</html>

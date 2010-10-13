@@ -1,0 +1,9 @@
+{
+	name : "getServerStatus",
+	rtype : "servlet",
+	handler : function(request) {
+		return {
+			response: JSON.stringify({status:this.container.getStatus()})
+		}
+	}
+}

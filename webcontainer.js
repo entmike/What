@@ -35,6 +35,9 @@ exports.start = function() {
 	setInterval(saveState, config.saveStateInterval);
 }
 exports.getMIME = function(path, ignoreCache) {
+	var ext;
+	var dots = path.split(".");
+	if(dots.length>0) ext=(dots[dots.length-1]);
 	if(!ignoreCache) {
 		for(var i=0;i<MIMECache.length;i++) if(MIMECache[i].path == path) {
 			debug.log("MIME found in cache");
@@ -49,6 +52,28 @@ exports.getMIME = function(path, ignoreCache) {
 		MIME.found = true;
 		MIME.path = path;
 		MIME.content = data;
+		if (ext=="nsp") {
+			var nsp = MIME.content.toString();
+			var buffer = {
+				buffer : [],
+				write : function(text){
+					this.buffer.push(text);
+				},
+				writeEscapedText :function(text){
+					this.buffer.push(unescape(text));
+					console.log(text);
+				}
+			};
+			var toEval = NSPParser(nsp);
+			
+			try{
+				eval("(" + toEval + ")");
+			}catch(e){
+				debug.log(toEval);
+				debug.log(e.toString());
+			}
+			MIME.content = buffer.buffer;
+		}
 		// if(!ignoreCache) MIMECache.push(MIME);
 	}catch(e){
 		debug.log("MIME not found.");
@@ -169,7 +194,16 @@ exports.createURI = function(options) {
 		return exports.getURI(options.uri);
 	}	
 }
-
+exports.loadResource = function(options) {
+	var resource;
+	try{
+		var data = eval("("+fs.readFileSync(options.file).toString()+")");
+		resource = exports.createResource(data);
+	}catch(e){
+		debug.log(e);
+	}
+	return resource;
+}
 exports.createResource = function(options) {
 	// Global Properties
 	var resourcePrivate = {
@@ -236,39 +270,82 @@ var URIs = [];
 var transforms = [
 	{ uri : "/index.html", aliases : ["/", "/index.htm", "/index.html", "/default.htm", "/default.html" ] }
 ];
-// Server Status Get System Environment
-var getEnv = exports.createResource({
-	name : "getEnv",
-	rtype : "servlet",
-	handler : function(request) {
-		return { response : JSON.stringify({env:process.env})};
-	}
-});
-exports.createURI({ uri : "/getEnv", resource : getEnv });
 
-// Server Status JSON Emitter
-var getServerStatus = exports.createResource({
-	name : "getServerStatus",
-	rtype : "servlet",
-	handler : function(request) {
-		return {
-			response: JSON.stringify({status:this.container.getStatus()})
+var getEnv = exports.loadResource({file : "adminServlets/getEnv.txt"});
+var getServerStatus = exports.loadResource({file: "adminServlets/getServerStatus.txt"});
+var getServlets = exports.loadResource({file: "adminServlets/getServlets.txt"});
+
+exports.createURI({ uri : "/getEnv", resource : getEnv });
+exports.createURI({ uri: "/getServerStatus", resource : getServerStatus });
+exports.createURI({ uri : "/getServlets", resource : getServlets });
+
+/*
+"begin"                 : "<?",
+"write" 				 : "=",
+"global" 				 : "!",					     
+"end"                   : "?>",
+*/
+
+function NSPParser(contents){
+	var parsedTextArray = [];
+	var externalParsedTextArray = [];
+	var startTag = "<%";
+	var startWriteAddition = "=";
+	var startGlobalAddition = "!";
+	var endTag = "%>";
+	var lineArray = contents.split(new RegExp( "\\n", "g" ));
+	var isInScript = false;
+	var currentScript =[];
+	var nextLine = "\n";
+	for(var i=0;i<lineArray.length;i++){
+		line = lineArray[i];			
+		while(line.length>0){
+			if(!isInScript){
+				var startTagIndex = line.indexOf(startTag);
+				if(line.indexOf(startTag)==-1){
+					parsedTextArray.push('buffer.writeEscapedText("'+escape(line+nextLine)+'");'+nextLine);
+					line="";
+				}
+				else{
+					lineBeforeStart = line.substring(0,startTagIndex);
+					parsedTextArray.push('buffer.writeEscapedText("'+escape(lineBeforeStart)+'");');
+					line = line.substring(startTagIndex+startTag.length);
+					if(line.length==0) parsedTextArray.push(nextLine);
+					isInScript = true;
+				}
+			}
+			else{// In Script
+				var endTagIndex = line.indexOf(endTag);
+				if(line.indexOf(endTag)==-1){
+					currentScript.push(line + nextLine);
+					line="";
+				}
+				else{
+					lineBeforeEnd = line.substring(0,endTagIndex);
+					currentScript.push(lineBeforeEnd);
+					var theScript = currentScript.join("");
+					if(theScript.indexOf(startWriteAddition) === 0){ //handling <?=...?> cases
+						theScript = "buffer.write("+theScript.substring(startWriteAddition.length)+");";
+						parsedTextArray.push(theScript);
+					}else if(theScript.indexOf(startGlobalAddition) === 0){ //handling <?!...?> cases
+						theScript = theScript.substring(startGlobalAddition.length);
+						externalParsedTextArray.push(theScript);
+					}else{
+						parsedTextArray.push(theScript);
+					}
+					currentScript = [];
+					line = line.substring(endTagIndex+endTag.length);
+					if(line.length==0)
+						parsedTextArray.push(nextLine);
+					isInScript = false;
+				}
+			}
 		}
 	}
-});
-exports.createURI({ uri: "/getServerStatus", resource : getServerStatus });
+	var finalFunction = [
+		parsedTextArray.join(""),
+		externalParsedTextArray.join("")
+	].join("");
+	return finalFunction;
+};
 
-// Servlet List JSON Emitter
-var getServlets = exports.createResource({
-	name : "getServlets",
-	rtype : "servlet",
-	handler : function(request) {
-		var r = this.container.getResources();
-		var rr = [];
-		for (var i=0;i<r.length;i++) if(r[i].rtype=="servlet") rr.push(r[i]);
-		return {
-			response: JSON.stringify({servlets : rr})
-		};
-	}	
-});
-exports.createURI({ uri : "/getServlets", resource : getServlets });

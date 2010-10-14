@@ -26,11 +26,15 @@ exports.create = function() {
 	// Web Applications
 	var webapps = [];
 	// Web Container Configuration
-	var config = {
-		web : {},
-		port : 80,
-		debug : true
-	};
+	var config = {};
+	try{
+		var data = fs.readFileSync("serverConfig.js");
+		config = eval("(" + data.toString() + ")");
+	}catch(e){
+		console.log(e);
+		console.log("Bad or missing serverConfig.js file.  Ending now.");
+		return;
+	}
 	// Web Container Status
 	var status = {
 		startupTime : new Date(),
@@ -119,6 +123,13 @@ exports.create = function() {
 		for(var i=0;i<webapps.length;i++) if(name.indexOf(webapps[i].name) == 1) return webapps[i];
 		return null;
 	}
+	var	MIMEinfo = function(ext) {
+		// Get MIME type for extension
+		for(var i=0;i<config.mimeTypes.length;i++) {
+			if(config.mimeTypes.ext == ext) return config.mimeTypes[i]
+		}
+		return null;
+	}
 	var getMIME = function(path) {
 		// Load MIME Resource and return as object w/some feedback
 		var ext;
@@ -132,6 +143,7 @@ exports.create = function() {
 			MIME.ext = ext;
 			MIME.path = path;
 			MIME.content = data;
+			MIME.mimeType = MIMEinfo(ext);
 		}catch(e){
 			debug.log("MIME not found.");
 			debug.log(e);
@@ -165,15 +177,14 @@ exports.create = function() {
 			}else{	// No mapping, try a MIME from webapps/[app]/...
 				var MIMEPath = "webapps" + URL.pathname;
 				var forbidPath = "webapps/" + webApp.name + "/WEB-INF/";
-				if(MIMEPath.indexOf(forbidPath) == 0){
-					// Forbid /WEB-INF/ listing
+				if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
 					debug.log("Forbidding WEB-INF...");
 					response.writeHead(403, {"Content-Type" : "text/plain"});
 					response.end("403 - Forbidden");
-				}else{
+				}else{	// Non-forbidden, check MIMEs
 					var MIME = getMIME(MIMEPath);
 					if(MIME.found) {
-						if(MIME.ext == "nsp") {
+						if(MIME.ext == "nsp") {		// NSP page
 							var servlet = webApp.getServlet(MIMEPath);
 							if(!servlet) {
 								console.log("Creating Servlet for: [" + MIMEPath + "]...");
@@ -195,8 +206,10 @@ exports.create = function() {
 									new HttpServletResponse.HttpServletResponse(response)
 								);
 							}
+						}else{						// General MIME type
+							response.writeHead(200, {"Content-Type" : MIME.mimeType.mimeType});
 						}
-						response.writeHead(200, {"Content-Type" : {}});
+						
 					}else{
 						response.writeHead(404, {"Content-Type" : "text/plain"});
 					}

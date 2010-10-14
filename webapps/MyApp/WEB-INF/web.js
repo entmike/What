@@ -29,13 +29,5 @@
 			name : "servlet2",
 			urlPattern : "/getStatus"
 		}
-	],
-	mimeMappings : [
-		{ extension : "html" , mimeType : "text/html" },
-		{ extension : "htm" , mimeType : "text/html" },
-		{ extension : "txt" , mimeType : "text/plain" },
-		{ extension : "gif" , mimeType : "image/gif" },
-		{ extension : "jpg" , mimeType : "image/jpg" },
-		{ extension : "png" , mimeType : "image/png" }
 	]
 }

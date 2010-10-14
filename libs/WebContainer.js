@@ -51,7 +51,12 @@ exports.create = function() {
 			var wb = fs.readdirSync("webapps/"+wa[i]);
 			for(var j=0;j<wb.length;j++) {
 				if(wb[j]=="WEB-INF") {
-					loadWebApp(wa[i]);
+					try{	// See if there's a web.js file
+						var data = fs.readFileSync("webapps/" + wa[i] + "/WEB-INF/web.js");
+						loadWebApp(wa[i]);
+					}catch(e){
+						// No web.js file.  Not a web app.
+					}
 				}
 			}
 		}

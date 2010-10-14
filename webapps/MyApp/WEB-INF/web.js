@@ -8,14 +8,14 @@
 		{
 			name : "servlet1",
 			description : "Servlet 1",
-			servletClass : "getEnv.js",
+			servletClass : "getEnv.servlet",
 			initParams : {
 				key1 : "value"
 			}
 		},{
 			name : "servlet2",
 			description : "Servlet 2",
-			servletClass : "getStatus.js",
+			servletClass : "getStatus.servlet",
 			initParams : {
 				key1 : "anotherValue"
 			}

@@ -17,7 +17,7 @@ exports.HttpServletResponse = function(res) {
 			response.end(this.getOutputStream());
 		},
 		setHeader : function(key, value) {
-			headers[hey] = value;
+			headers[key] = value;
 		},
 		getHeader : function(key) {
 			return header[key];

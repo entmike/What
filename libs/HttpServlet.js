@@ -14,6 +14,9 @@ exports.create = function(options) {
 		toString : function() {
 			return "HttpServlet";
 		},
+		getServletContext : function() {
+			return servletConfig.getServletContext();
+		},
 		getServletConfig : function() {
 			return servletConfig;
 		},

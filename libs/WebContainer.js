@@ -66,6 +66,7 @@ exports.create = function() {
 			servletMappings : [],
 			context : ServletContext.ServletContext({
 				path : appName,
+				initParameters : webConfig.contextParams,
 				containerServices : containerServices
 			}),
 			getMapping : function(urlPattern) {
@@ -88,6 +89,7 @@ exports.create = function() {
 			var newServlet = HttpServlet.create(options);
 			var servletConfig = ServletConfig.create({
 				name : webConfig.servlets[i].name,
+				initParameters : webConfig.servlets[i].initParams,
 				servletContext : webApp.context
 			});
 			newServlet.init(servletConfig);
@@ -141,24 +143,24 @@ exports.create = function() {
 	}
 	var listener = function(request, response) {
 		// Node.JS listener handler
-		status.counter++;	// Internal Counter
+		status.counter++;		// Internal Counter
 		var URL = url.parse(request.url, true);
 		debug.log("Incoming Request : [" + URL.pathname + "]");
 		var webApp = getWebApp(URL.pathname);
-		if(webApp) {	// Web App
+		if(webApp) {			// Web App
 			debug.log("Found App: [" + webApp.name + "]");
 			var webAppURL = URL.pathname.substring(webApp.name.length + 1); 	// Slice off webapp portion of URL
 			var mapping = webApp.getMapping(webAppURL);
 			if(mapping) {
 				var servlet = webApp.getServlet(mapping.name);
-				if(servlet) {
+				if(servlet) {	// Servlet Exists
 					servlet.service(
 						new HttpServletRequest.HttpServletRequest(request),
 						new HttpServletResponse.HttpServletResponse(response)
 					);
 				}else{
+					// Should be a servlet but there's not one.  To-do: Error message
 					response.end();
-					// Should be a servlet but there's not one.
 				}
 			}else{	// No mapping, try a MIME from webapps/[app]/...
 				var MIMEPath = "webapps" + URL.pathname;
@@ -261,8 +263,15 @@ exports.create = function() {
 				}
 			}
 		}
-		// Add a shorthand writer decl. at beginning.
-		var instructions = [ "var writer = response.getWriter();", steps.join(""), externalSteps.join("") ].join("");
+		// Add a few implicit variables
+		var instructions = [ 
+			"response.setHeader(\"Content-Type\", \"text/html\");",
+			"var writer = response.getWriter();",
+			"var config = this.getServletConfig();",
+			"var pageContext = this.getServletContext();",
+			"var application = this.getServletConfig().getServletContext();",	
+			steps.join(""), externalSteps.join("")
+		].join("");
 		// Create servlet options for servlet constructor
 		var servletOptions = {
 			doGet : function(request, response) {

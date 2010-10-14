@@ -1,9 +1,41 @@
 <html>
 	<head>
-		<title>MyApp</title>
+	<style type="text/css">
+		body {
+			background-color : #efefef;
+			font-family : Arial, Tahoma, Verdana;
+			font-size : 8pt;
+		}
+		h1 {
+			font-size : 12pt;
+			color : #006699;
+		}
+		.code {
+			background-color : #ffffff;
+			width: 100%;
+			font-family : "Courier New";
+			border: 1px #c0c0c0 solid;
+			padding: 2px;
+			font-size : 10pt;
+		}
+	</style>
 	</head>
 	<body>
-		<h1>Welcome</h1>
-		<%=new Date()%>
+	<h1>NSP Example</h1>
+	This page is an example of how you can host script pages similar to PHP, ASP, JSP, BSP, etc.<br/><br/>
+	<ul>
+		<li>The current system date is: <b><%=new Date()%></b></li>
+		<li>Web Application Author: <b><%=pageContext.getInitParameter("author")%></b></li>
+	</ul>
+	The code is found below:
+	<div class="code"><%
+	// Example Script snippet, let's read our own source since we want to show it.
+	fs = require("fs");
+	var data = fs.readFileSync("webapps/MyApp/index.nsp");
+	var source = data.toString();
+	// Regurgitate it as source not HTML
+	source = source.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>");
+	writer.write(source);
+	%></div>
 	</body>
 </html>

@@ -22,12 +22,6 @@ exports.create = function(options) {
 			running = true;
 			servletConfig = config;
 		},
-		getContainer : function() {
-			return container;
-		},
-		stop : function() {
-			running = false;
-		},
 		log : function(message) {
 			/* Writes the specified message to a servlet log file, prepended by the servlet's name.
 			*/
@@ -77,7 +71,7 @@ exports.create = function(options) {
 						options.doPut.call(this, request, response);
 						break;
 					case "OPTIONS" :
-						this.doOptions.call(request, response);
+						this.doOptions(request, response);
 						break;
 					case "TRACE" :
 						this.doTrace(request, response);
@@ -92,7 +86,6 @@ exports.create = function(options) {
 				errors++;
 			}
 			response.flushBuffer();
-			// this.dataDirty = true;
 		}
 	};
 }

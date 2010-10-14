@@ -1,2 +1,6 @@
-Testing 123
-Testing 456
+WHAT - A Node.JS Web Application Server
+===============================================================================
+Author : Mike Howles - entmike@gmail.com
+
+Work in progress Web Container / Application Server written against Java
+implementation of HttpServlets, etc but in JavaScript.

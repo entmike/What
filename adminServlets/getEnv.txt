@@ -1,7 +1,0 @@
-{
-	name : "getEnv",
-	rtype : "servlet",
-	handler : function(request) {
-		return { response : JSON.stringify({env:process.env})};
-	}
-}

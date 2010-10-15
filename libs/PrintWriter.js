@@ -1,13 +1,17 @@
 exports.PrintWriter = function() {
-	var stream = null;
 	var buffer = "";
+	var stream;
 	// Public
 	return {
 		toString : function() {
 			return "PrintWriter";
 		},
 		flush : function() {
-			stream = buffer;
+			if(typeof buffer == "string") {
+				stream = new Buffer(buffer);
+			}else{
+				stream = buffer;
+			}
 			buffer = "";
 		},
 		getStream : function() {
@@ -19,8 +23,19 @@ exports.PrintWriter = function() {
 		print : function(string) {
 			buffer+=string;
 		},
+		setStream : function(strm) {
+			buffer = strm;
+		},
 		write : function(string) {
-			this.print(string);
+			if(typeof string == "string" || typeof string == "integer") {
+				this.print(string);
+			}else{
+				if(string.toString) {
+					this.print(string.toString());
+				}else{
+					this.print("Object");
+				}
+			}
 		}
 	};
 };

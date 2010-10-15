@@ -1,6 +1,6 @@
 {
 	debug : true,
-	port : 80,
+	port : 81,
 	mimeTypes : [
 		{ ext : ".323",		mimeType : "text/h323" },
 		{ ext : ".3gp",		mimeType : "video/3gpp" },

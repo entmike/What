@@ -14,7 +14,8 @@ exports.HttpServletResponse = function(res) {
 		flushBuffer : function() {
 			this.getWriter().flush();
 			response.writeHead(this.getStatus(), this.getHeaders());
-			response.end(this.getOutputStream());
+			response.write(this.getOutputStream(), "binary");
+			response.end();
 		},
 		setHeader : function(key, value) {
 			headers[key] = value;

@@ -31,7 +31,6 @@ createServletContext = function(options) {
 			/* Returns a String containing the value of the named context-wide initialization parameter, 
 			or null if the parameter does not exist.
 			*/
-			console.log(initParameters);
 			return initParameters[name];
 		},
 		getInitParameterNames : function() {

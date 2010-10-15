@@ -6,9 +6,9 @@ var fs = require('fs');
 var HttpServlet = require('./HttpServlet');
 var HttpServletRequest = require('./HttpServletRequest');
 var HttpServletResponse = require('./HttpServletResponse');
-var ServletConfig = require('./ServletConfig');
 var ServletContext = require('./ServletContext');
-
+var ServletConfig = require('./ServletConfig');
+var WebApplication = require('./WebApplication');
 exports.create = function() {
 	/*
 	===============================================
@@ -17,14 +17,12 @@ exports.create = function() {
 	*/
 	// NodeJS HTTP Server
 	var httpServer = null;
-	// ServletContext Collection
-	var contexts = [];
-	// Servlets Collection
-	var servlets = [];
-	// HTTP Request Log
-	var requestLog = [];
 	// Web Applications
 	var webapps = [];
+	// ServletContext Collection
+	var contexts = [];
+	// HTTP Request Log
+	var requestLog = [];
 	// Web Container Configuration
 	var config = {};
 	try{
@@ -48,68 +46,35 @@ exports.create = function() {
 		debug.log ("Scanning for webapps...");
 		var wa = fs.readdirSync("webapps");
 		for(var i=0;i<wa.length;i++) {
+			// Get 'webapps' directory contents
 			var wb = fs.readdirSync("webapps/"+wa[i]);
 			for(var j=0;j<wb.length;j++) {
+				// Look for 'WEB-INF' directory
 				if(wb[j]=="WEB-INF") {
 					try{	// See if there's a web.js file
+						// Look for 'web.js' file
 						var data = fs.readFileSync("webapps/" + wa[i] + "/WEB-INF/web.js");
-						loadWebApp(wa[i]);
+						// Load Web Config for App
+						var webConfig = eval("(" + fs.readFileSync("webapps/" + wa[i] + "/WEB-INF/web.js").toString() + ")");
+						// Create Web App
+						var webApp = WebApplication.create({
+							appName : wa[i],
+							webConfig : webConfig,
+							containerServices : containerServices
+						});
+						// Push WebApp into collection
+						webapps.push(webApp);
 					}catch(e){
 						// No web.js file.  Not a web app.
 					}
 				}
 			}
 		}
-	}
-	var loadWebApp = function(appName) {
-		/* 
-		Load & Create WebApp
-		*/
-		// Load web.js config file for app
-		var webConfig = eval("(" + fs.readFileSync("webapps/" + appName + "/WEB-INF/web.js").toString() + ")");
-		// Create Web App (turn into a class eventually)
-		var webApp = {
-			name : appName,
-			config : webConfig,
-			servlets : [],
-			servletMappings : [],
-			context : ServletContext.ServletContext({
-				path : appName,
-				initParameters : webConfig.contextParams,
-				containerServices : containerServices
-			}),
-			getMapping : function(urlPattern) {
-				for(var i=0;i<this.servletMappings.length;i++) if(urlPattern == this.servletMappings.urlPattern) return this.servletMappings[i];
-				// To-do: pattern matching
-				// for(var i=0;i<this.servletMappings.length;i++) if(urlPattern.indexOf(this.servletMappings.urlPattern == 0)) return this.servletMappings[i];
-				return null;
-			},
-			getServlet : function(name) {
-				for(var i=0;i<this.servlets.length;i++) if(this.servlets[i].getServletConfig().getServletName()==name) return this.servlets[i];
-				return null;
-			}
-		};
-		// Copy servlet mappings
-		webApp.servletMappings = webConfig.servletMappings;
-		// Instantiate Servlets
-		for(var i=0;i<webConfig.servlets.length;i++) {
-			var options = eval("("+ fs.readFileSync("webapps/" + webApp.name + "/WEB-INF/classes/" + webConfig.servlets[i].servletClass).toString()+")");
-			// Instantiate Servlet
-			var newServlet = HttpServlet.create(options);
-			var servletConfig = ServletConfig.create({
-				name : webConfig.servlets[i].name,
-				initParameters : webConfig.servlets[i].initParams,
-				servletContext : webApp.context
-			});
-			newServlet.init(servletConfig);
-			webApp.servlets.push(newServlet);
-			debug.log(" Servlet [" + webApp.servlets[i].getServletConfig().getServletName() + "] created and inititialized.");
-		}
-		// Push WebApp into collection
-		webapps.push(webApp);
-	}
+	};
 	var debug = {
-		log : function(msg) { if(config.debug) console.log(msg); }
+		log : function(msg) { if(config.debug) 
+			console.log("[" + status.counter + "]" + msg); 
+		}
 	};
 	var getContexts = function() {
 		// Get all WebApp contexts
@@ -125,7 +90,7 @@ exports.create = function() {
 	};
 	var getWebApp = function(name) {
 		// Get WebApp by name
-		for(var i=0;i<webapps.length;i++) if(name.indexOf(webapps[i].name) == 1) return webapps[i];
+		for(var i=0;i<webapps.length;i++) if(name.indexOf(webapps[i].getName()) == 1) return webapps[i];
 		return null;
 	}
 	var	MIMEinfo = function(ext) {
@@ -133,7 +98,7 @@ exports.create = function() {
 		for(var i=0;i<config.mimeTypes.length;i++) {
 			if(config.mimeTypes.ext == ext) return config.mimeTypes[i]
 		}
-		return null;
+		return "text/plain";
 	}
 	var getMIME = function(path) {
 		// Load MIME Resource and return as object w/some feedback
@@ -158,154 +123,81 @@ exports.create = function() {
 		}
 		return MIME;
 	}
-	var listener = function(request, response) {
+	var listener = function(req, res) {
+		// Create HttpServletRequest and HttpServletResponse objects from NodeJS ones.
+		var request = new HttpServletRequest.HttpServletRequest(req);
+		var response = new HttpServletResponse.HttpServletResponse(res);
+		var writer = response.getWriter();
 		// Node.JS listener handler
 		status.counter++;		// Internal Counter
-		var URL = url.parse(request.url, true);
+		var URL = url.parse(req.url, true);
 		debug.log("Incoming Request : [" + URL.pathname + "]");
 		var webApp = getWebApp(URL.pathname);
 		if(webApp) {			// Web App
-			debug.log("Found App: [" + webApp.name + "]");
-			var webAppURL = URL.pathname.substring(webApp.name.length + 1); 	// Slice off webapp portion of URL
+			debug.log("Found App: [" + webApp.getName() + "]");
+			var webAppURL = URL.pathname.substring(webApp.getName().length + 1); 	// Slice off webapp portion of URL
 			var mapping = webApp.getMapping(webAppURL);
 			if(mapping) {
 				var servlet = webApp.getServlet(mapping.name);
 				if(servlet) {	// Servlet Exists
-					servlet.service(
-						new HttpServletRequest.HttpServletRequest(request),
-						new HttpServletResponse.HttpServletResponse(response)
-					);
+					debug.log("Found Servlet: [" + servlet.getServletConfig().getServletName() + "]");
+					servlet.service(request, response);
 				}else{
 					// Should be a servlet but there's not one.  To-do: Error message
-					response.end();
+					response.setStatus(500);
+					response.setHeader("Content-Type", "text/plain");
+					writer.write("Servlet not found!");
 				}
 			}else{	// No mapping, try a MIME from webapps/[app]/...
 				var MIMEPath = "webapps" + URL.pathname;
 				var forbidPath = "webapps/" + webApp.name + "/WEB-INF/";
 				if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
-					debug.log("Forbidding WEB-INF...");
-					response.writeHead(403, {"Content-Type" : "text/plain"});
-					response.end("403 - Forbidden");
+					debug.log("Forbidding WEB-INF: [" + forbidPath + "]");
+					response.setStatus(403);
+					response.setHeader("Content-Type", "text/plain");
+					writer.write("Forbidden");
 				}else{	// Non-forbidden, check MIMEs
 					var MIME = getMIME(MIMEPath);
 					if(MIME.found) {
 						if(MIME.ext == "nsp") {		// NSP page
 							var servlet = webApp.getServlet(MIMEPath);
-							if(!servlet) {
-								console.log("Creating Servlet for: [" + MIMEPath + "]...");
-								var servletOptions = NSP2Servlet(MIME.content.toString());
-								var newServlet = HttpServlet.create(servletOptions);
+							if(!servlet) {			// Initial NSP request, create servlet.
+								debug.log("Creating Servlet for: [" + MIMEPath + "] from NSP...");
+								servlet = HttpServlet.create(HttpServlet.parseNSP(MIME.content.toString()));
 									var servletConfig = ServletConfig.create({
 									name : MIMEPath,
-									servletContext : webApp.context
+									servletContext : webApp.getContext()
 								});
-								newServlet.init(servletConfig);
-								webApp.servlets.push(newServlet);
-								newServlet.service(
-									new HttpServletRequest.HttpServletRequest(request),
-									new HttpServletResponse.HttpServletResponse(response)
-								);
-							}else{
-								servlet.service(
-									new HttpServletRequest.HttpServletRequest(request),
-									new HttpServletResponse.HttpServletResponse(response)
-								);
+								servlet.init(servletConfig);
+								webApp.addServlet(servlet);
 							}
-						}else{						// General MIME type
-							response.writeHead(200, {"Content-Type" : MIME.mimeType.mimeType});
+							// Call Servlet Service
+							servlet.service(request, response);
+						}else{// General MIME type
+							response.setStatus(200);
+							response.setHeader("Content-Type", MIME.mimeType.mimeType);
+							writer.setStream(MIME.content);
 						}
-						
 					}else{
-						response.writeHead(404, {"Content-Type" : "text/plain"});
+						response.setStatus(200);
+						response.setHeader("Content-Type", "text/plain");
+						writer.setStream(MIME.content);
 					}
-					response.end(MIME.content);
 				}
 			}
-		}else{
-			// Not a webapp, try a MIME from webroot
+		}else{ // Not a webapp, try a MIME from webroot
 			var MIME = getMIME("webroot" + URL.pathname);
 			if(MIME.found) {
-				response.writeHead(200, {"Content-Type" : {}});
+				response.setStatus(200);
+				response.setHeader("Content-Type", MIME.mimeType.mimeType);
 			}else{
-				response.writeHead(404, {"Content-Type" : "text/plain"});
+				response.setStatus(404);
+				response.setHeader("Content-Type", "text/plain");
 			}
-			response.end(MIME.content);
+			writer.setStream(MIME.content);
 		}
-		debug.log("Response complete");
-	};
-	function NSP2Servlet(contents){
-		var steps = [];
-		var externalSteps = [];
-		var tags = { start : "<%", writer : "=", global : "!", end : "%>" }
-		var lines = contents.split(new RegExp( "\\n", "g" ));
-		var inScript = false;
-		var currentScript =[];
-		for(var i=0;i<lines.length;i++){	// Loop through raw .nsp content
-			var line = lines[i];
-			while(line.length>0){ 	// While Loop over a single line until it is parsed out to 0 bytes.
-				if(!inScript){		// Outside of Script
-					var startIndex = line.indexOf(tags.start);
-					if(line.indexOf(tags.start)==-1) {		// Normal Text
-						steps.push('writer.write(unescape("' + escape(line + "\n") + '"));\n');
-						line="";
-					}else{			// Found start of script tag
-						var lineBeforeStart = line.substring(0, startIndex);
-						steps.push('writer.write(unescape("' + escape(lineBeforeStart) + '"));');
-						line = line.substring(startIndex + tags.start.length);
-						if(line.length==0) steps.push("\n");
-						inScript = true;
-					}
-				}else{				// Inside Script
-					var endIndex = line.indexOf(tags.end);
-					if(line.indexOf(tags.end)==-1){			// Line of Script
-						currentScript.push(line + "\n");
-						line="";
-					}else{			// Found end of script tag
-						lineBeforeEnd = line.substring(0,endIndex);
-						currentScript.push(lineBeforeEnd);
-						var theScript = currentScript.join("");			// End of Script Block
-						if(theScript.indexOf(tags.writer) === 0){ 		// <%=...%> shorthand
-							theScript = "writer.write(" + theScript.substring(tags.writer.length) + ");";
-							steps.push(theScript);
-						}else if(theScript.indexOf(tags.global) === 0){ // <%!...%> footer
-							theScript = theScript.substring(tags.global.length);
-							externalSteps.push(theScript);
-						}else{
-							steps.push(theScript);			// Push Script to Parsed Stack
-						}
-						currentScript = [];								// Reset Script Stack
-						line = line.substring(endIndex+tags.end.length);
-						if(line.length==0) steps.push("\n");
-						inScript = false;
-					}
-				}
-			}
-		}
-		// Add a few implicit variables
-		var instructions = [ 
-			"response.setHeader(\"Content-Type\", \"text/html\");",
-			"var writer = response.getWriter();",
-			"var config = this.getServletConfig();",
-			"var pageContext = this.getServletContext();",
-			"var application = this.getServletConfig().getServletContext();",	
-			steps.join(""), externalSteps.join("")
-		].join("");
-		// Create servlet options for servlet constructor
-		var servletOptions = {
-			doGet : function(request, response) {
-				eval(instructions.toString());
-			},
-			doPost : function(request, response) {
-				eval(instructions.toString());
-			},
-			doDelete : function(request, response) {
-				eval(instructions.toString());
-			},
-			doPut : function(request, response) {
-				eval(instructions.toString());
-			}
-		}
-		return servletOptions;	
+		debug.log("Response complete - Status Code [" + response.getStatus() + "]");
+		response.flushBuffer();
 	};
 	// Services
 	var containerServices = {

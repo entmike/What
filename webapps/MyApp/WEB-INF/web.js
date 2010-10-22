@@ -15,7 +15,7 @@
 		},{
 			name : "servlet2",
 			description : "Servlet 2",
-			servletClass : "getStatus.servlet",
+			servletClass : "getStatusx.servlet",
 			initParams : {
 				key1 : "anotherValue"
 			}

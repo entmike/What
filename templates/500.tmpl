@@ -1,0 +1,43 @@
+<html>
+	<head>
+	<title><@title></title>
+	<style>
+		body {
+			font-size : 8pt;
+			font-family : Arial, Tahoma, Verdana;
+		}
+		h1 {
+			font-size : 14pt;
+			color : #006699;
+		}
+		h2 {
+			font-size : 10pt;
+			color : #303030;
+		}
+		#errorDetails {
+			border : 1px #FF0000 solid;
+			background-color : #FFFFCC;
+			font-family : Courier New;
+			padding: 5px;
+		}
+		#errorMessage {
+			border : 1px #006699 solid;
+			padding : 5px;
+			background-color: #EFEFEF;
+			font-family : Courier New;
+		}
+	</style>
+	</head>
+	<body>
+	<h1>500 - Server Error</h1>
+	<h2>Error Message:</h2>
+	<div id="errorMessage">
+		<@message>
+	</div>
+	<h2>Error Details:</h2>
+	</div>
+	<div id="errorDetails">
+		<@error>
+	</div>
+	</body>
+</html>

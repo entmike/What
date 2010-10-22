@@ -21,18 +21,24 @@ exports.create = function(options) {
 	});
 	for(var i=0;i<webConfig.servlets.length;i++) {
 		var servletFile = "webapps/" + name + "/WEB-INF/classes/" + webConfig.servlets[i].servletClass;
-		var servletData = fs.readFileSync(servletFile);
-		var servletOptions = eval("("+ servletData.toString() +")");
-		// Instantiate Servlet
-		var newServlet = HttpServlet.create(servletOptions);
-		var servletConfig = ServletConfig.create({
-			name : webConfig.servlets[i].name,
-			initParameters : webConfig.servlets[i].initParams,
-			servletContext : context
-		});
-		newServlet.init(servletConfig);
-		servlets.push(newServlet);
-		console.log(" Servlet [" + servlets[i].getServletConfig().getServletName() + "] created and inititialized.");
+		try{
+			var servletData = fs.readFileSync(servletFile);
+			var servletOptions = eval("("+ servletData.toString() +")");
+			// Instantiate Servlet
+			var newServlet = HttpServlet.create(servletOptions);
+			var servletConfig = ServletConfig.create({
+				name : webConfig.servlets[i].name,
+				initParameters : webConfig.servlets[i].initParams,
+				servletContext : context
+			});
+			newServlet.init(servletConfig);
+			servlets.push(newServlet);
+			console.log(" Servlet [" + servlets[i].getServletConfig().getServletName() + "] created and inititialized.");
+		}catch(e){
+			console.log("Error initializing servlet [" + webConfig.servlets[i].name + "]\n\
+File: [" + servletFile + "].");
+		}
+		
 	}
 	// Public
 	return {

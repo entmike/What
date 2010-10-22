@@ -1,5 +1,25 @@
 {
 	doGet : function(request, response) {
+		var getContents = function(path){
+			var wa = fs.readdirSync(path);
+			var arr = [];
+			for(var i=0;i<wa.length;i++) {
+				var stats = fs.statSync(path + "/" + wa[i]);
+				if(stats.isDirectory()) {
+					arr.push({
+						text : wa[i],
+						children : getContents(path + "/" + wa[i])
+					});
+				}else{
+					arr.push({
+						text : wa[i],
+						leaf : true
+					});				
+				}
+
+			}
+			return arr;
+		}
 		// Get writer
 		var w = response.getWriter();
 		// Get apps
@@ -10,9 +30,10 @@
 		for(var i=0;i<apps.length;i++) {
 			var app = apps[i];
 			var s = app.getServlets();
-			var arrs = [];
+			var MIME = getContents("webapps/" + app.getName());
+			var arrServlets = [];
 			for(var j=0;j<s.length;j++) {
-				arrs.push({
+				arrServlets.push({
 					id : s[j].getServletConfig().getServletName(),
 					text : s[j].getServletConfig().getServletName(),
 					cls : "servlet",
@@ -25,10 +46,10 @@
 				children : [
 					{
 						text : "Servlets",
-						children : arrs
+						children : arrServlets
 					},{
 						text : "MIMEs",
-						children : []
+						children : MIME
 					}
 				]
 			}

@@ -25,7 +25,11 @@ exports.create = function(options) {
 		var servletFile = "webapps/" + name + "/WEB-INF/classes/" + webConfig.servlets[i].servletClass;
 		try{
 			var servletData = fs.readFileSync(servletFile);
-			var servletOptions = eval("("+ servletData.toString() +")");
+			try{
+				var servletOptions = eval("("+ servletData.toString() +")");
+			}catch(e2){
+				console.log(e2.stack);
+			}
 			// Instantiate Servlet
 			var newServlet = HttpServlet.create(servletOptions);
 			var servletConfig = ServletConfig.create({
@@ -69,6 +73,9 @@ File: [" + servletFile + "].");
 				for(var j=0;j<translation.source.length;j++) if(translation.source[j] == source) return translation.target;
 			}
 			return null;
+		},
+		getServlets : function() {
+			return servlets;
 		},
 		getServlet : function(name) {
 			for(var i=0;i<servlets.length;i++) if(servlets[i].getServletConfig().getServletName()==name) return servlets[i];

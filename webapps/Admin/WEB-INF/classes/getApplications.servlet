@@ -8,8 +8,32 @@
 		var arr = [];
 		// Run through apps
 		for(var i=0;i<apps.length;i++) {
-			arr.push({name : apps[i].getName()});
+			var app = apps[i];
+			var s = app.getServlets();
+			var arrs = [];
+			for(var j=0;j<s.length;j++) {
+				arrs.push({
+					id : s[j].getServletConfig().getServletName(),
+					text : s[j].getServletConfig().getServletName(),
+					cls : "servlet",
+					leaf : true
+				});
+			}
+			var obj = {
+				id : app.getName(),
+				text : app.getName(),
+				children : [
+					{
+						text : "Servlets",
+						children : arrs
+					},{
+						text : "MIMEs",
+						children : []
+					}
+				]
+			}
+			arr.push(obj);
 		}
-		w.write(JSON.stringify({applications: arr}));
+		w.write(JSON.stringify(arr));
 	}
 }

@@ -103,22 +103,33 @@ var adminDashboard = {
 							activeTab : 0,
 							items : [
 								{
-									xtype : "grid",
+									xtype : "treepanel",
 									title : "Applications",
 									tbar : {
 										items : [
 											{
 												text : "Refresh",
 												handler: function(){
-													adminDashboard.dsApplications.load();
+													// adminDashboard.dsApplications.load();
 												}
 											}
 										]
 									},
-									store : this.dsApplications,
-									columns : [
-										{ id: "application", header: "Application", width: 150, sortable: true, dataIndex : "name"},
-									]
+									animate:true, 
+									autoScroll:true,
+									loader: new Ext.tree.TreeLoader({
+										dataUrl:'/Admin/getApplications',
+										requestMethod : "GET"
+									}),
+									containerScroll: true,
+									border: false,
+									root: {
+										nodeType: 'async',
+										text: 'Applications',
+										draggable: false,
+										id: 'source'
+									},
+									dropConfig: {appendOnly:true}
 								}
 							]
 						},{

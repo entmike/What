@@ -71,6 +71,7 @@ exports.create = function() {
 						// Push WebApp into collection
 						webapps.push(webApp);
 					}catch(e){
+						debug.log(e);
 						// No web.js file.  Not a web app.
 					}
 				}

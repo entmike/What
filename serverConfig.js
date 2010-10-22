@@ -1,6 +1,6 @@
 {
 	debug : true,
-	port : 81,
+	port : 80,
 	allowDirectoryListing : true,
 	webroot : "webroot",
 	translations : [

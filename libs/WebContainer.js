@@ -56,12 +56,18 @@ exports.create = function() {
 						var data = fs.readFileSync("webapps/" + wa[i] + "/WEB-INF/web.js");
 						// Load Web Config for App
 						var webConfig = eval("(" + fs.readFileSync("webapps/" + wa[i] + "/WEB-INF/web.js").toString() + ")");
-						// Create Web App
-						var webApp = WebApplication.create({
+						var initObj = {
 							appName : wa[i],
 							webConfig : webConfig,
 							containerServices : containerServices
-						});
+						}
+						// Is it an administration servlet, if so, allow access to WebContainer.
+						if(config.adminApp == wa[i]) {
+							debug.log("Admin Servlet [" + wa[i] + "] Found.  Assigning Admin Services");
+							initObj.adminServices = adminServices;
+						}
+						// Create Web App
+						var webApp = WebApplication.create(initObj);
 						// Push WebApp into collection
 						webapps.push(webApp);
 					}catch(e){
@@ -173,6 +179,14 @@ exports.create = function() {
 		}
 		return MIME;
 	}
+	var getTranslation = function (source) {
+		if(!config.translations) return null;
+		for(var i=0;i<config.translations.length;i++) {
+			var translation = config.translations[i];
+			for(var j=0;j<translation.source.length;j++) if(translation.source[j] == source) return translation.target;
+		}
+		return null;
+	};
 	var listener = function(req, res) {
 		// Create HttpServletRequest and HttpServletResponse objects from NodeJS ones.
 		var request = new HttpServletRequest.HttpServletRequest(req);
@@ -181,11 +195,15 @@ exports.create = function() {
 		// Node.JS listener handler
 		status.counter++;		// Internal Counter
 		var URL = url.parse(req.url, true);
-		debug.log("Incoming Request : [" + URL.pathname + "]");
-		var webApp = getWebApp(URL.pathname);
+		var pathName = URL.pathname;
+		var pathName = (getTranslation(pathName))?getTranslation(pathName):pathName;
+		debug.log("Incoming Request : [" + pathName + "]");
+		var webApp = getWebApp(pathName);
 		if(webApp) {			// Web App
 			debug.log("Found App: [" + webApp.getName() + "]");
-			var webAppURL = URL.pathname.substring(webApp.getName().length + 1); 	// Slice off webapp portion of URL
+			var webAppURL = pathName.substring(webApp.getName().length + 1); 	// Slice off webapp portion of URL
+			webAppURL = (webApp.getTranslation(webAppURL))?(webApp.getTranslation(webAppURL)):webAppURL;
+			debug.log(webAppURL);
 			var mapping = webApp.getMapping(webAppURL);
 			if(mapping) {
 				var servlet = webApp.getServlet(mapping.name);
@@ -203,7 +221,7 @@ exports.create = function() {
 					writer.write(template);
 				}
 			}else{	// No mapping, try a MIME from webapps/[app]/...
-				var MIMEPath = "webapps" + URL.pathname;
+				var MIMEPath = "webapps/" + webApp.getName() + webAppURL;
 				var forbidPath = "webapps/" + webApp.getName() + "/WEB-INF";
 				if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
 					debug.log("Forbidding WEB-INF: [" + forbidPath + "]");
@@ -214,7 +232,7 @@ exports.create = function() {
 					template = template.replace("<@title>", "WEB-INF listing is forbidden.");
 					writer.write(template);
 				}else{	// Non-forbidden, check MIMEs
-					var MIME = getMIME(MIMEPath, URL.pathname);
+					var MIME = getMIME(MIMEPath, pathName);
 					if(MIME.found) {
 						if(MIME.ext == "nsp") {		// NSP page
 							var servlet = webApp.getServlet(MIMEPath);
@@ -243,7 +261,7 @@ exports.create = function() {
 				}
 			}
 		}else{ // Not a webapp, try a MIME from webroot
-			var MIME = getMIME(config.webroot + URL.pathname, URL.pathname);
+			var MIME = getMIME(config.webroot + pathName, pathName);
 			response.setStatus(MIME.status);
 			response.setHeader("Content-Type", MIME.mimeType.mimeType);
 			if(!MIME.found) {
@@ -261,8 +279,15 @@ exports.create = function() {
 		addContext : addContext,
 		getContext : getContext
 	};
+	var adminServices = {
+		getApplications : function() { return webapps; },
+		getEnvironment : function() { return process.env; }
+	};
 	// Public Section
 	return {
+		toString : function() {
+			return "Web Container";
+		},
 		start : function() {
 			if(status.running) {
 				console.log("Web Container already running!");

@@ -1,0 +1,9 @@
+{
+	doGet : function(request, response) {
+		// Get writer
+		var w = response.getWriter();
+		// Get environment
+		var env = this.getServletContext().getAdminServices().getEnvironment();
+		w.write("{environment: " + JSON.stringify(env) + "}");
+	}
+}

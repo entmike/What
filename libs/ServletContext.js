@@ -7,9 +7,17 @@ createServletContext = function(options) {
 	//Private
 	theLog = [];
 	var attributes = [];
+	var adminServices = options.adminServices;
+	var containerServices = options.containerServices;	
 	var initParameters = options.initParameters || {};
 	//Public
 	var context = {
+		getAdminServices : function() {
+			return adminServices;
+		},
+		getContainerServices : function() {
+			return containerServices;
+		},
 		log: function(msg) {
 			// Writes the specified message to a servlet log file, usually an event log.
 			theLog.push(msg);

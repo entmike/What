@@ -14,10 +14,12 @@ exports.create = function(options) {
 	var servlets = [];
 	// Servlet Mappings
 	var servletMappings = webConfig.servletMappings;
+	var translations = webConfig.translations;
 	var context = ServletContext.ServletContext({
 		path : name,
 		initParameters : webConfig.contextParams,
-		containerServices : options.containerServices
+		containerServices : options.containerServices,
+		adminServices : options.adminServices
 	});
 	for(var i=0;i<webConfig.servlets.length;i++) {
 		var servletFile = "webapps/" + name + "/WEB-INF/classes/" + webConfig.servlets[i].servletClass;
@@ -57,6 +59,14 @@ File: [" + servletFile + "].");
 				if(urlPattern == servletMappings[i].urlPattern) {
 					return servletMappings[i];
 				}
+			}
+			return null;
+		},
+		getTranslation : function (source) {
+			if(!translations) return null;
+			for(var i=0;i<translations.length;i++) {
+				var translation = translations[i];
+				for(var j=0;j<translation.source.length;j++) if(translation.source[j] == source) return translation.target;
 			}
 			return null;
 		},

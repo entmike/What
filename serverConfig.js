@@ -3,6 +3,10 @@
 	port : 81,
 	allowDirectoryListing : true,
 	webroot : "webroot",
+	translations : [
+		{ target : "/index.html", source : ["/", "index.htm"] }
+	],
+	adminApp : "Admin",
 	mimeTypes : [
 		{ ext : ".323",		mimeType : "text/h323" },
 		{ ext : ".3gp",		mimeType : "video/3gpp" },

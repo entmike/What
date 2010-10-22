@@ -1,4 +1,4 @@
-Ext.BLANK_IMAGE_URL = '/ext-3.3.0/resources/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = 'ext-3.3.0/resources/images/default/s.gif';
 Ext.onReady(function() {	// Main Entry Method
 	Ext.QuickTips.init();	// Enable Quick Tooltips
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
@@ -6,7 +6,7 @@ Ext.onReady(function() {	// Main Entry Method
 });
 var adminDashboard = {
 	dsServerStatus : new Ext.data.Store({
-		url : "/getServerStatus",
+		url : "getServerStatus",
 		autoLoad : true,
 		reader : new Ext.data.JsonReader({
 			root : "status",
@@ -19,24 +19,24 @@ var adminDashboard = {
 		}
 	}),
 	dsEnv : new Ext.data.Store({
-		url : "/getEnv",
+		url : "getEnvironment",
 		autoLoad : true,
 		reader : new Ext.data.JsonReader({
-			root : "env",
+			root : "environment",
 			fields: []
 		}),	
 		listeners : {
 			"load" : function() {
-				Ext.getCmp("envPropertyGrid").setSource(this.reader.jsonData.env);
+				Ext.getCmp("envPropertyGrid").setSource(this.reader.jsonData.environment);
 			}
 		}
 	}),
-	dsServlets : new Ext.data.Store({ 			// Console Datastore
-		url : "/getServlets",
+	dsApplications : new Ext.data.Store({ 			// Console Datastore
+		url : "getApplications",
 		autoLoad: true,
 		reader: new Ext.data.JsonReader({ 	// Console Reader Object
-			root: 'servlets', 
-			fields: ['rtype', 'name', 'persist', 'running', 'executions']
+			root: 'applications', 
+			fields: ['name']
 		}),
 		listeners: {
 			'load' : function() {
@@ -104,23 +104,20 @@ var adminDashboard = {
 							items : [
 								{
 									xtype : "grid",
-									title : "Servlets",
+									title : "Applications",
 									tbar : {
 										items : [
 											{
 												text : "Refresh",
 												handler: function(){
-													adminDashboard.dsServlets.load();
+													adminDashboard.dsApplications.load();
 												}
 											}
 										]
 									},
-									store : this.dsServlets,
+									store : this.dsApplications,
 									columns : [
-										{ id: "servlet", header: "Servlet", width: 150, sortable: true, dataIndex : "name"},
-										{ id: "persist", header: "Persistant", width: 50, sortable: true, dataIndex : "persist"},
-										{ id: "running", header: "Running", width: 50, sortable: true, dataIndex : "running"},
-										{ id: "executions", header: "Executions", width: 50, sortable: true, dataIndex : "executions"}
+										{ id: "application", header: "Application", width: 150, sortable: true, dataIndex : "name"},
 									]
 								}
 							]

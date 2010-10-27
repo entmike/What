@@ -47,35 +47,38 @@ exports.create = function() {
 		var wa = fs.readdirSync("webapps");
 		for(var i=0;i<wa.length;i++) {
 			// Get 'webapps' directory contents
-			var wb = fs.readdirSync("webapps/"+wa[i]);
-			for(var j=0;j<wb.length;j++) {
-				// Look for 'WEB-INF' directory
-				if(wb[j]=="WEB-INF") {
-					try{	// See if there's a web.js file
-						// Look for 'web.js' file
-						var data = fs.readFileSync("webapps/" + wa[i] + "/WEB-INF/web.js");
-						// Load Web Config for App
-						var webConfig = eval("(" + fs.readFileSync("webapps/" + wa[i] + "/WEB-INF/web.js").toString() + ")");
-						var initObj = {
-							appName : wa[i],
-							webConfig : webConfig,
-							containerServices : containerServices
-						}
-						// Is it an administration servlet, if so, allow access to WebContainer.
-						if(config.adminApp == wa[i]) {
-							debug.log("Admin Servlet [" + wa[i] + "] Found.  Assigning Admin Services");
-							initObj.adminServices = adminServices;
-						}
-						// Create Web App
-						var webApp = WebApplication.create(initObj);
-						// Push WebApp into collection
-						webapps.push(webApp);
-					}catch(e){
-						debug.log(e);
-						// No web.js file.  Not a web app.
-					}
-				}
-			}
+			var stats = fs.statSync("webapps/"+wa[i]);
+			if(stats.isDirectory()) {   // Only Directories 
+                var wb = fs.readdirSync("webapps/"+wa[i]);
+                for(var j=0;j<wb.length;j++) {
+                    // Look for 'WEB-INF' directory
+                    if(wb[j]=="WEB-INF") {
+                        try{	// See if there's a web.js file
+                            // Look for 'web.js' file
+                            var data = fs.readFileSync("webapps/" + wa[i] + "/WEB-INF/web.js");
+                            // Load Web Config for App
+                            var webConfig = eval("(" + fs.readFileSync("webapps/" + wa[i] + "/WEB-INF/web.js").toString() + ")");
+                            var initObj = {
+                                appName : wa[i],
+                                webConfig : webConfig,
+                                containerServices : containerServices
+                            }
+                            // Is it an administration servlet, if so, allow access to WebContainer.
+                            if(config.adminApp == wa[i]) {
+                                debug.log("Admin Servlet [" + wa[i] + "] Found.  Assigning Admin Services");
+                                initObj.adminServices = adminServices;
+                            }
+                            // Create Web App
+                            var webApp = WebApplication.create(initObj);
+                            // Push WebApp into collection
+                            webapps.push(webApp);
+                        }catch(e){
+                            debug.log(e);
+                            // No web.js file.  Not a web app.
+                        }
+                    }
+                }
+            }
 		}
 	};
 	var debug = {

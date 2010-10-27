@@ -36,16 +36,18 @@
 				arrServlets.push({
 					id : s[j].getServletConfig().getServletName(),
 					text : s[j].getServletConfig().getServletName(),
-					cls : "servlet",
+					iconCls : "servletNode",
 					leaf : true
 				});
 			}
 			var obj = {
 				id : app.getName(),
 				text : app.getName(),
+				iconCls : "webAppNode",
 				children : [
 					{
 						text : "Servlets",
+						iconCls : "servletNode",
 						children : arrServlets
 					},{
 						text : "MIMEs",

@@ -9,6 +9,8 @@ var HttpServletResponse = require('./HttpServletResponse');
 var ServletContext = require('./ServletContext');
 var ServletConfig = require('./ServletConfig');
 var WebApplication = require('./WebApplication');
+var formidable = require('./formidable');
+
 exports.create = function() {
 	/*
 	===============================================
@@ -192,16 +194,37 @@ exports.create = function() {
 		return null;
 	};
 	var listener = function(req, res) {
-		// Create HttpServletRequest and HttpServletResponse objects from NodeJS ones.
-		var request = new HttpServletRequest.HttpServletRequest(req);
+        if(req.method=="POST") {
+            var form = new formidable.IncomingForm();
+            form.parse(req, function(err, fields, files) {
+                req.formData = {
+                    err : err,
+                    fields : fields,
+                    files : files
+                };
+                requestComplete(req, res);
+            });
+        }else{
+            requestComplete(req, res);
+        }
+    };
+    var requestComplete = function(req, res) {		
+        // Create HttpServletRequest and HttpServletResponse objects from NodeJS ones.
+        var request = new HttpServletRequest.HttpServletRequest(req);
 		var response = new HttpServletResponse.HttpServletResponse(res);
 		var writer = response.getWriter();
 		// Node.JS listener handler
 		status.counter++;		// Internal Counter
-		var URL = url.parse(req.url, true);
+		if(req.formData) {
+            debug.log(JSON.stringify(req.formData.fields));
+            if(req.formData.files) {
+                debug.log(JSON.stringify(req.formData.files));
+            }
+        }
+        var URL = url.parse(req.url, true);
 		var pathName = URL.pathname;
 		var pathName = (getTranslation(pathName))?getTranslation(pathName):pathName;
-		debug.log("Incoming Request : [" + pathName + "]");
+		debug.log("Incoming Request : [" + pathName + "] - Method [" + req.method + "]");
 		var webApp = getWebApp(pathName);
 		if(webApp) {			// Web App
 			debug.log("Found App: [" + webApp.getName() + "]");

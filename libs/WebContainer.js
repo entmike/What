@@ -302,12 +302,12 @@ exports.create = function() {
 			}
 			writer.setStream(MIME.content);
 		}
+        response.flushBuffer();
 		// Get End Time
         var endMS = new Date().getTime();
         // Get Duration
         var duration = endMS - startMS;
         debug.log("Response complete - Status Code [" + response.getStatus() + "] - Duration [" + duration + "ms]");
-		response.flushBuffer();
 	};
 	// Services
 	var containerServices = {

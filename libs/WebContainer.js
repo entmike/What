@@ -85,7 +85,7 @@ exports.create = function() {
 	};
 	var debug = {
 		log : function(msg) { if(config.debug) 
-			console.log("[" + status.counter + " " + new Date() + " ]" + msg); 
+			console.log("[" + status.counter + " " + new Date().getTime() + " ]" + msg); 
 		}
 	};
 	var getContexts = function() {
@@ -213,6 +213,8 @@ exports.create = function() {
         }
     };
     var requestComplete = function(req, res) {		
+        // Get Start Time of request
+        var startMS = new Date().getTime();
         // Create HttpServletRequest and HttpServletResponse objects from NodeJS ones.
         var request = new HttpServletRequest.HttpServletRequest(req);
 		var response = new HttpServletResponse.HttpServletResponse(res);
@@ -300,7 +302,11 @@ exports.create = function() {
 			}
 			writer.setStream(MIME.content);
 		}
-		debug.log("Response complete - Status Code [" + response.getStatus() + "]");
+		// Get End Time
+        var endMS = new Date().getTime();
+        // Get Duration
+        var duration = endMS - startMS;
+        debug.log("Response complete - Status Code [" + response.getStatus() + "] - Duration [" + duration + "ms]");
 		response.flushBuffer();
 	};
 	// Services

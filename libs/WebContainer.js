@@ -85,7 +85,7 @@ exports.create = function() {
 	};
 	var debug = {
 		log : function(msg) { if(config.debug) 
-			console.log("[" + status.counter + "]" + msg); 
+			console.log("[" + status.counter + " " + new Date() + " ]" + msg); 
 		}
 	};
 	var getContexts = function() {
@@ -163,7 +163,8 @@ exports.create = function() {
 				}
 			}
 			if(stats.isFile()){
-				data = fs.readFileSync(path);
+				debug.log("Opening file [" + path + "]");
+                data = fs.readFileSync(path);
 				MIME.status = 200;
 				MIME.found = true;
 				MIME.ext = ext;
@@ -189,7 +190,10 @@ exports.create = function() {
 		if(!config.translations) return null;
 		for(var i=0;i<config.translations.length;i++) {
 			var translation = config.translations[i];
-			for(var j=0;j<translation.source.length;j++) if(translation.source[j] == source) return translation.target;
+			for(var j=0;j<translation.source.length;j++) if(translation.source[j] == source) {
+                debug.log("Translating [" + source + "] to [" + translation.target + "].");
+                return translation.target;
+            }
 		}
 		return null;
 	};

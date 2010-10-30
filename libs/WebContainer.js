@@ -9,7 +9,9 @@ var HttpServletResponse = require('./HttpServletResponse');
 var ServletContext = require('./ServletContext');
 var ServletConfig = require('./ServletConfig');
 var WebApplication = require('./WebApplication');
+// 3rd Party plugins
 var formidable = require('./formidable');
+require('./colors');
 
 exports.create = function() {
 	/*
@@ -45,7 +47,7 @@ exports.create = function() {
 		/* 
 		Scan Web Container's webapps folder for Applications
 		*/
-		debug.log ("Scanning for webapps...");
+		debug.log ("Scanning for webapps...".blue.bold);
 		var wa = fs.readdirSync("webapps");
 		for(var i=0;i<wa.length;i++) {
 			// Get 'webapps' directory contents
@@ -67,7 +69,7 @@ exports.create = function() {
                             }
                             // Is it an administration servlet, if so, allow access to WebContainer.
                             if(config.adminApp == wa[i]) {
-                                debug.log("Admin Servlet [" + wa[i] + "] Found.  Assigning Admin Services");
+                                debug.log(("Admin Servlet [" + wa[i] + "] Found.  Assigning Admin Services").green.bold);
                                 initObj.adminServices = adminServices;
                             }
                             // Create Web App
@@ -85,7 +87,7 @@ exports.create = function() {
 	};
 	var debug = {
 		log : function(msg) { if(config.debug) 
-			console.log("[" + status.counter + " " + new Date().getTime() + " ]" + msg); 
+			console.log(("[" + status.counter + "] [" + new Date().toGMTString() + "]: ").grey.bold + msg);
 		}
 	};
 	var getContexts = function() {
@@ -307,7 +309,7 @@ exports.create = function() {
         var endMS = new Date().getTime();
         // Get Duration
         var duration = endMS - startMS;
-        debug.log("Response complete - Status Code [" + response.getStatus() + "] - Duration [" + duration + "ms]");
+        debug.log("Response complete - Status Code [" + response.getStatus().toString().green + "] - Duration [" + duration + "ms]");
 	};
 	// Services
 	var containerServices = {

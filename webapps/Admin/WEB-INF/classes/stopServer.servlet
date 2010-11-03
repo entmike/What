@@ -1,0 +1,5 @@
+{
+	doGet : function(request, response) {
+		this.getServletContext().getAdminServices().stopServer();
+	}
+}

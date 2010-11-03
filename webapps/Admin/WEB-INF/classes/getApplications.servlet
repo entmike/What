@@ -30,7 +30,6 @@
 		for(var i=0;i<apps.length;i++) {
 			var app = apps[i];
 			var s = app.getServlets();
-			var MIME = getContents("webapps/" + app.getName());
 			var arrServlets = [];
 			for(var j=0;j<s.length;j++) {
 				arrServlets.push({
@@ -49,9 +48,6 @@
 						text : "Servlets",
 						iconCls : "servletNode",
 						children : arrServlets
-					},{
-						text : "MIMEs",
-						children : MIME
 					}
 				]
 			}

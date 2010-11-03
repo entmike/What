@@ -111,8 +111,9 @@ exports.create = function() {
 	}
 	var	MIMEinfo = function(ext) {
 		// Get MIME type for extension
+		ext = "." + ext;
 		for(var i=0;i<config.mimeTypes.length;i++) {
-			if(config.mimeTypes.ext == ext) return config.mimeTypes[i]
+			if(config.mimeTypes[i].ext == ext) return config.mimeTypes[i];
 		}
 		return "text/plain";
 	}
@@ -320,7 +321,11 @@ exports.create = function() {
 	};
 	var adminServices = {
 		getApplications : function() { return webapps; },
-		getEnvironment : function() { return process.env; }
+		getEnvironment : function() { return process.env; },
+		stopServer : function() {
+			// status.running = false;
+			// httpServer.close();
+		}
 	};
 	// Public Section
 	return {

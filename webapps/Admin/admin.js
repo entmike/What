@@ -130,6 +130,71 @@ var adminDashboard = {
 										id: 'source'
 									},
 									dropConfig: {appendOnly:true}
+								},
+								{
+									// Wrapper Panel
+									xtype:"panel",
+									title:"MIMEs",
+									layout: "fit",
+									items:[
+										new Ext.ux.tree.ColumnTree({
+											//rootVisible:false,
+											autoheight: true,
+											title: "MIMEs",
+											//layout: "fit",
+											autoScroll:true,
+											autoExpandColumn : "filename",
+											columns:[{
+												header:'File Name',
+												width:300,
+												dataIndex:'filename'
+											},{
+												header:'File Size',
+												width:100,
+												dataIndex:'filesize',
+												renderer : function (value, metaData, record, rowIndex, colIndex, store) {
+													// provide the logic depending on business rules
+													// name of your own choosing to manipulate the cell depending upon
+													// the data in the underlying Record object.
+													// if (value == 'whatever') {
+														//metaData.css : String : A CSS class name to add to the TD element of the cell.
+														//metaData.attr : String : An html attribute definition string to apply to
+														//                         the data container element within the table
+														//                         cell (e.g. 'style="color:red;"').
+														// metaData.css = 'name-of-css-class-you-will-define';
+													// }
+													amount = value.toString();
+													amount = amount.replace(/^0+/, ''); 
+													amount += '';
+													x = amount.split('.');
+													x1 = x[0];
+													x2 = x.length > 1 ? '.' + x[1] : '';
+													var rgx = /(\d+)(\d{3})/;
+													while (rgx.test(x1)) x1 = x1.replace(rgx, '$1' + ',' + '$2');
+													return x1 + x2;
+											   }
+											},{
+												header:'Permissions',
+												width:100,
+												dataIndex:'permissions',
+												renderer : function (value, metaData, record, rowIndex, colIndex, store) {
+													return "<span style=\"font-family: Courier New\">" + value + "</span>";
+												}
+											}],
+											loader: new Ext.tree.TreeLoader(
+												{
+													dataUrl:'/Admin/getMIMEs',
+													requestMethod : "GET",
+													uiProviders: {
+														col : Ext.ux.tree.ColumnNodeUI
+													}
+												}
+											),
+											root: new Ext.tree.AsyncTreeNode({
+												text: 'MIMEs'
+											})
+										})
+									]
 								}
 							]
 						},{

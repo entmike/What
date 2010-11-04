@@ -31,6 +31,13 @@ var adminDashboard = {
 			}
 		}
 	}),
+	appTreeLoader : new Ext.tree.TreeLoader({
+		dataUrl:'/Admin/getApplications',
+		requestMethod : "GET",
+		uiProviders: {
+			col : Ext.ux.tree.ColumnNodeUI
+		}
+	}),
 	dsApplications : new Ext.data.Store({ 			// Console Datastore
 		url : "getApplications",
 		autoLoad: true,
@@ -111,7 +118,8 @@ var adminDashboard = {
 									layout: "fit",
 									items:[
 										new Ext.ux.tree.ColumnTree({
-											//rootVisible:false,
+											rootVisible:false,
+											id : "applicationTree",
 											listeners : {
                                                 click : function(node, event){
                                                     if(node.attributes.type == "servletOption"){
@@ -140,7 +148,18 @@ var adminDashboard = {
                                                 }
                                             },
                                             autoheight: true,
-											title: "MIMEs",
+											title: "Applications",
+											border : false,
+											tbar : {
+												items : [
+													{
+														text : "Refresh",
+														handler: function(){
+															adminDashboard.appTreeLoader.load(Ext.getCmp("applicationTree").getRootNode());
+														}
+													}
+												]
+											},
 											//layout: "fit",
 											autoScroll:true,
 											autoExpandColumn : "filename",
@@ -153,15 +172,7 @@ var adminDashboard = {
 												width:200,
 												dataIndex:'description'
                                             }],
-											loader: new Ext.tree.TreeLoader(
-												{
-													dataUrl:'/Admin/getApplications',
-													requestMethod : "GET",
-													uiProviders: {
-														col : Ext.ux.tree.ColumnNodeUI
-													}
-												}
-											),
+											loader: adminDashboard.appTreeLoader,
 											root: new Ext.tree.AsyncTreeNode({
 												text: 'Apps'
 											})

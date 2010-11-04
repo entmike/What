@@ -19,11 +19,14 @@ Ext.ux.tree.ColumnTree = Ext.extend(Ext.tree.TreePanel, {
     onRender : function(){
         Ext.tree.ColumnTree.superclass.onRender.apply(this, arguments);
 		// Try to put in title header first.
-		if(this.header){
+		if(this.tbar) {
+			this.headers = this.tbar.createChild({cls:'x-tree-headers-tbar'});
+		}else if(this.header){
 			this.headers = this.header.createChild({cls:'x-tree-headers'});
 		}else{
 			this.headers = this.innerCt.createChild({cls:'x-tree-headers'});
 		}
+		
 		var cols = this.columns, c;
         var totalWidth = 0;
         var scrollOffset = 19; // similar to Ext.grid.GridView default

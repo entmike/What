@@ -23,7 +23,29 @@ exports.create = function(options) {
 		containerServices : options.containerServices,
 		adminServices : options.adminServices
 	});
-    // Load Servlets
+    var loadServlet = function(options) {
+		// Create Servlet Metadata Wrapper
+		var meta = options.meta;
+		var servletOptions = options.servletOptions;
+		// Create servlet Metadata Object
+		var servletMeta = {};
+		servletMeta.options = servletOptions;
+		servletMeta.meta = meta;
+		// Instantiate Servlet
+		var newServlet = HttpServlet.create(servletOptions);
+		var servletConfig = ServletConfig.create({
+			name : meta.name,
+			initParameters : meta.initParams,
+			servletContext : context
+		});
+		servletMeta.servlet = newServlet;
+		// Attach Initialization Options to Metadata
+		newServlet.init(servletConfig);
+		servlets.push(servletMeta);
+		console.log(" Servlet [" + newServlet.getServletConfig().getServletName() + "] created and inititialized.");
+		return newServlet;
+	};
+	// Load Servlets
 	for(var i=0;i<webConfig.servlets.length;i++) {
 		var servletFile = "webapps/" + name + "/WEB-INF/classes/" + webConfig.servlets[i].servletClass;
 		try{
@@ -31,28 +53,17 @@ exports.create = function(options) {
 			try{
 				var servletOptions = eval("("+ servletData.toString() +")");
 			}catch(e2){
-				console.log(e2.stack);
+				console.log(e2.stack.red);
 			}
-			// Create Servlet Metadata Wrapper
-            var servletMeta = webConfig.servlets[i];
-			// Instantiate Servlet
-			var newServlet = HttpServlet.create(servletOptions);
-			var servletConfig = ServletConfig.create({
-				name : servletMeta.name,
-				initParameters : servletMeta.initParams,
-				servletContext : context
-			});
-			// Attach Servlet Reference to Metadata
-            servletMeta.servlet = newServlet;
-			// Attach Initialization Options to Metadata
-			servletMeta.options = servletOptions;
-			newServlet.init(servletConfig);
-            servlets.push(servletMeta);
-			console.log(" Servlet [" + servlets[i].servlet.getServletConfig().getServletName() + "] created and inititialized.");
+			var options = {
+				servletOptions : servletOptions,
+				meta : webConfig.servlets[i]
+			};
+			loadServlet(options);
 		}catch(e){
 			console.log("Error initializing servlet [" + webConfig.servlets[i].name + "]\n\
 File: [" + servletFile + "].");
-            console.log(e.stack);
+            console.log(e.stack.green);
 		}
 		
 	}
@@ -61,7 +72,8 @@ File: [" + servletFile + "].");
 		getConfig : function() {
             return webConfig;
         },
-        addServlet : function(servlet) {
+        loadServlet : loadServlet,
+		addServlet : function(servlet) {
 			servlets.push(servlet);
 		},
 		getName : function() {

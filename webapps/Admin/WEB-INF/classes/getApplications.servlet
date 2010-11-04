@@ -24,7 +24,7 @@
 					id : servlets[j].servlet.getServletConfig().getServletName(),
 					text : servlets[j].servlet.getServletConfig().getServletName(),
 					iconCls : "servletNode",
-					description : servlets[j].description,
+					description : servlets[j].meta.description,
 					uiProvider: "col",
 					children : optionsNode
 				});

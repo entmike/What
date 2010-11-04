@@ -274,13 +274,16 @@ exports.create = function() {
 							var servlet = webApp.getServlet(MIMEPath);
 							if(!servlet) {			// Initial NSP request, create servlet.
 								debug.log("Creating Servlet for: [" + MIMEPath + "] from NSP...");
-								servlet = HttpServlet.create(HttpServlet.parseNSP(MIME.content.toString()));
-									var servletConfig = ServletConfig.create({
-									name : MIMEPath,
-									servletContext : webApp.getContext()
-								});
-								servlet.init(servletConfig);
-								webApp.addServlet(servlet);
+								var servletOptions = HttpServlet.parseNSP(MIME.content.toString());
+								var options = {
+									servletOptions : servletOptions,
+									meta : {
+										name : MIMEPath,
+										description : "NSP File",
+										servletClass : ".NSP"
+									}
+								};
+								servlet = webApp.loadServlet(options);
 							}
 							// Call Servlet Service
 							servlet.service(request, response);

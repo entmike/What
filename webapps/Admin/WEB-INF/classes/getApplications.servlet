@@ -33,18 +33,38 @@
 			var arrServlets = [];
 			for(var j=0;j<s.length;j++) {
 				arrServlets.push({
-					id : s[j].getServletConfig().getServletName(),
-					text : s[j].getServletConfig().getServletName(),
+					id : s[j].servlet.getServletConfig().getServletName(),
+					text : s[j].servlet.getServletConfig().getServletName(),
 					iconCls : "servletNode",
+					description : s[j].description,
+					uiProvider: "col",
+					leaf : true
+				});
+			}
+			var params = [];
+			var ps = app.getContext().getInitParameterNames();
+			console.log(ps);
+			for(var j=0;j<ps.length;j++) {
+				params.push({
+					text : ps[j],
+					description : app.getContext().getInitParameter(ps[j]),
+					uiProvider: "col",
 					leaf : true
 				});
 			}
 			var obj = {
 				id : app.getName(),
 				text : app.getName(),
+				component : app.getName(),
+				description : app.getConfig().description,
+				uiProvider: "col",
 				iconCls : "webAppNode",
 				children : [
 					{
+						text : "Init Parameters",
+						iconCls : "attributeNode",
+						children : params
+					},{
 						text : "Servlets",
 						iconCls : "servletNode",
 						children : arrServlets

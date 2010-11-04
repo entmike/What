@@ -2,7 +2,8 @@
 	displayName : "Adminstration",
 	description : "Web Container Administration",
 	contextParams : {
-		author : "Mike Howles"
+		author : "Mike Howles",
+        version : "1.0"
 	},
 	servlets : [
 		{

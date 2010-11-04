@@ -5,7 +5,6 @@
 			var arr = [];
 			for(var i=0;i<wa.length;i++) {
 				var stats = fs.statSync(path + "/" + wa[i]);
-				console.log(stats.isDirectory());
 				var readablePerms = "";
 				var permissions = stats.mode.toString(8);
 				var rwx = permissions.substring(permissions.length-3, permissions.length);

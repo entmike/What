@@ -14,13 +14,16 @@ exports.create = function(options) {
 	var servlets = [];
 	// Servlet Mappings
 	var servletMappings = webConfig.servletMappings;
-	var translations = webConfig.translations;
-	var context = ServletContext.ServletContext({
+	// Path Translations
+    var translations = webConfig.translations;
+	// Application Context
+    var context = ServletContext.ServletContext({
 		path : name,
 		initParameters : webConfig.contextParams,
 		containerServices : options.containerServices,
 		adminServices : options.adminServices
 	});
+    // Load Servlets
 	for(var i=0;i<webConfig.servlets.length;i++) {
 		var servletFile = "webapps/" + name + "/WEB-INF/classes/" + webConfig.servlets[i].servletClass;
 		try{
@@ -31,24 +34,30 @@ exports.create = function(options) {
 				console.log(e2.stack);
 			}
 			// Instantiate Servlet
+            var servletMeta = webConfig.servlets[i];
 			var newServlet = HttpServlet.create(servletOptions);
 			var servletConfig = ServletConfig.create({
-				name : webConfig.servlets[i].name,
-				initParameters : webConfig.servlets[i].initParams,
+				name : servletMeta.name,
+				initParameters : servletMeta.initParams,
 				servletContext : context
 			});
+            servletMeta.servlet = newServlet;
 			newServlet.init(servletConfig);
-			servlets.push(newServlet);
-			console.log(" Servlet [" + servlets[i].getServletConfig().getServletName() + "] created and inititialized.");
+            servlets.push(servletMeta);
+			console.log(" Servlet [" + servlets[i].servlet.getServletConfig().getServletName() + "] created and inititialized.");
 		}catch(e){
 			console.log("Error initializing servlet [" + webConfig.servlets[i].name + "]\n\
 File: [" + servletFile + "].");
+            console.log(e.stack);
 		}
 		
 	}
 	// Public
 	return {
-		addServlet : function(servlet) {
+		getConfig : function() {
+            return webConfig;
+        },
+        addServlet : function(servlet) {
 			servlets.push(servlet);
 		},
 		getName : function() {
@@ -57,7 +66,7 @@ File: [" + servletFile + "].");
 		getContext : function() {
 			return context;
 		},
-		getMapping : function(urlPattern) {
+        getMapping : function(urlPattern) {
 			// To-do: pattern matching
 			for(var i=0;i<servletMappings.length;i++) {
 				if(urlPattern == servletMappings[i].urlPattern) {
@@ -78,8 +87,12 @@ File: [" + servletFile + "].");
 			return servlets;
 		},
 		getServlet : function(name) {
-			for(var i=0;i<servlets.length;i++) if(servlets[i].getServletConfig().getServletName()==name) return servlets[i];
+			for(var i=0;i<servlets.length;i++) if(servlets[i].servlet.getServletConfig().getServletName()==name) return servlets[i].servlet;
 			return null;
-		}
+		},
+        getServletMeta : function(name) {
+			for(var i=0;i<servlets.length;i++) if(servlets[i].servlet.getServletConfig().getServletName()==name) return servlets[i];
+			return null;
+        }
 	};
 }

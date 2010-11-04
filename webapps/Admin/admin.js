@@ -103,33 +103,47 @@ var adminDashboard = {
 							activeTab : 0,
 							items : [
 								{
-									xtype : "treepanel",
-									title : "Applications",
-									tbar : {
-										items : [
-											{
-												text : "Refresh",
-												handler: function(){
-													// adminDashboard.dsApplications.load();
+									// Wrapper Panel
+									xtype:"panel",
+									title:"Applications",
+									layout: "fit",
+									items:[
+										new Ext.ux.tree.ColumnTree({
+											//rootVisible:false,
+											listeners : {
+                                                click : function(node, event){
+                                                    
+                                                    alert(node);
+                                                }
+                                            },
+                                            autoheight: true,
+											title: "MIMEs",
+											//layout: "fit",
+											autoScroll:true,
+											autoExpandColumn : "filename",
+											columns:[{
+												header:'Component',
+												width:300,
+												dataIndex:'component'
+											},{
+												header:'Description',
+												width:200,
+												dataIndex:'description'
+                                            }],
+											loader: new Ext.tree.TreeLoader(
+												{
+													dataUrl:'/Admin/getApplications',
+													requestMethod : "GET",
+													uiProviders: {
+														col : Ext.ux.tree.ColumnNodeUI
+													}
 												}
-											}
-										]
-									},
-									animate:true, 
-									autoScroll:true,
-									loader: new Ext.tree.TreeLoader({
-										dataUrl:'/Admin/getApplications',
-										requestMethod : "GET"
-									}),
-									containerScroll: true,
-									border: false,
-									root: {
-										nodeType: 'async',
-										text: 'Applications',
-										draggable: false,
-										id: 'source'
-									},
-									dropConfig: {appendOnly:true}
+											),
+											root: new Ext.tree.AsyncTreeNode({
+												text: 'Apps'
+											})
+										})
+									]
 								},
 								{
 									// Wrapper Panel
@@ -199,6 +213,7 @@ var adminDashboard = {
 							]
 						},{
 							xtype : "panel",
+                            id : "details",
 							split : true,
 							title : "Details",
 							height : 200,

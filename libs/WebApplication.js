@@ -65,7 +65,6 @@ exports.create = function(options) {
 File: [" + servletFile + "].");
             console.log(e.stack.green);
 		}
-		
 	}
 	// Public
 	return {
@@ -101,6 +100,37 @@ File: [" + servletFile + "].");
 		},
 		getServlets : function() {
 			return servlets;
+		},
+		removeServlet : function(name) {
+			for(var i=0;i<servlets.length;i++) {
+				if(servlets[i].servlet.getServletConfig().getServletName()==name) {
+					var servlet = servlets[i];
+					servlets.splice(i,1);
+					return servlet;
+				}
+			}
+			return null;
+		},
+		restartServlet : function(name) {
+			var servlet = this.removeServlet(name);
+			console.log(servlet.meta.servletClass);
+			var servletFile = "webapps/" + this.getName() + "/WEB-INF/classes/" + servlet.meta.servletClass;
+			try{
+				var servletData = fs.readFileSync(servletFile);
+				try{
+					var servletOptions = eval("("+ servletData.toString() +")");
+				}catch(e2){
+					console.log(e2.stack.red);
+				}
+				var options = {
+					servletOptions : servletOptions,
+					meta : servlet.meta
+				};
+				loadServlet(options);
+			}catch(e){
+				console.log("Error initializing servlet [" + webConfig.servlets[i].name + "]\nFile: [" + servletFile + "].");
+				console.log(e.stack.green);
+			}
 		},
 		getServlet : function(name) {
 			for(var i=0;i<servlets.length;i++) if(servlets[i].servlet.getServletConfig().getServletName()==name) return servlets[i].servlet;

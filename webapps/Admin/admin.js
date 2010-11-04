@@ -122,7 +122,79 @@ var adminDashboard = {
 											id : "applicationTree",
 											listeners : {
                                                 click : function(node, event){
-                                                    if(node.attributes.type == "servletOption"){
+												if(node.attributes.type == "webApp") {
+													var details = Ext.getCmp("details");
+													details.removeAll(true);
+													details.add({
+														xtype : "panel",
+														layout : "fit",
+														tbar : {
+															items : [
+																{
+																	text : "Restart",
+																	handler : function() {
+																		Ext.Ajax.request({
+																			url: 'restartApp',
+																			params : {
+																				webApp : node.attributes.text																			},
+																			method : "GET",
+																			success : function(response, opts) {
+																				Ext.Msg.alert('Status', Ext.decode(response.responseText).msg);
+																			},
+																			failure : function(response, opts) {
+																				alert('server-side failure with status code ' + response.status);
+																			}
+																		});
+																	}
+																}
+															]
+														}
+													});
+													new Ext.Template(
+														'<div style="padding: 5px;font-size:8pt;font-family:Arial, Tahoma, Verdana">',
+														'<strong>{text}</strong> - {description}',
+														'</div>'
+													).overwrite(details.body, node.attributes);
+													Ext.getCmp("details").doLayout();
+												}
+												if(node.attributes.type == "servlet") {
+														var details = Ext.getCmp("details");
+														details.removeAll(true);
+														details.add({
+															xtype : "panel",
+															layout : "fit",
+															tbar : {
+																items : [
+																	{
+																		text : "Restart",
+																		handler : function() {
+																			Ext.Ajax.request({
+																				url: 'restartServlet',
+																				params : {
+																					webApp : node.parentNode.parentNode.attributes.text,
+																					servlet : node.attributes.text
+																				},
+																				method : "GET",
+																				success : function(response, opts) {
+																					Ext.Msg.alert('Status', Ext.decode(response.responseText).msg);
+																				},
+																				failure : function(response, opts) {
+																					alert('server-side failure with status code ' + response.status);
+																				}
+																			});
+																		}
+																	}
+																]
+															}
+														});
+														new Ext.Template(
+															'<div style="padding: 5px;font-size:8pt;font-family:Arial, Tahoma, Verdana">',
+															'<strong>{text}</strong> - {description}',
+															'</div>'
+														).overwrite(details.body, node.attributes);
+														Ext.getCmp("details").doLayout();
+													}
+													if(node.attributes.type == "servletOption"){
 														var params = {
 															webApp : node.parentNode.parentNode.parentNode.attributes.text,
 															servlet : node.parentNode.attributes.text,
@@ -253,7 +325,6 @@ var adminDashboard = {
 							title : "Details",
 							height : 200,
 							region : "south",
-							padding : 0,
 							tpl : new Ext.Template("<div>Hello {0}.</div>")
 						}
 					]

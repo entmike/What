@@ -23,6 +23,14 @@
 			description : "Get Servlet Option",
 			servletClass : "getServletOption.servlet"
 		},{
+			name : "restartApp",
+			description : "Restart a WebApp - Requires: (webApp)",
+			servletClass : "restartApp.servlet"
+		},{
+			name : "restartServlet",
+			description : "Restart a Servlet - Requires: (webApp, servlet)",
+			servletClass : "restartServlet.servlet"
+		},{
 			name : "stopServer",
 			description : "Stop the Web Container",
 			servletClass : "stopServer.servlet"
@@ -44,6 +52,12 @@
 		},{
 			name : "getMIMEs",
 			urlPattern : "/getMIMEs"
+		},{
+			name : "restartServlet",
+			urlPattern : "/restartServlet"
+		},{
+			name : "restartApp",
+			urlPattern : "/restartApp"
 		}
 	],
 	translations : [

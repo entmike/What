@@ -23,6 +23,7 @@
 				servletsNode.push({				// Push Servlets Node
 					id : servlets[j].servlet.getServletConfig().getServletName(),
 					text : servlets[j].servlet.getServletConfig().getServletName(),
+					type : "servlet",
 					iconCls : "servletNode",
 					description : servlets[j].meta.description,
 					uiProvider: "col",
@@ -41,6 +42,7 @@
 			}
 			var appNode = {						// Create App Node entry
 				id : app.getName(),
+				type : "webApp",
 				text : app.getName(),
 				component : app.getName(),
 				description : app.getConfig().description,

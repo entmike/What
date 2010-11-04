@@ -1,0 +1,15 @@
+{
+	doGet : function(request, response) {
+	/*
+		Get Servlet's Init Option
+	*/
+		var adminServices = this.getServletContext().getAdminServices()
+		var params = require('querystring').parse(request.getQueryString());
+		adminServices.getWebApp(params.webApp).restartServlet(params.servlet);
+		response.getWriter().write(JSON.stringify({
+			success : true,
+			msg : "Servlet [" + params.servlet + "] restarted successfully."
+		}));
+		
+	}
+}

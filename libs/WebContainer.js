@@ -105,7 +105,7 @@ exports.create = function() {
 	var getWebApp = function(name) {
 		// Get WebApp by name
 		for(var i=0;i<webapps.length;i++) {
-			if(name.indexOf(webapps[i].getName()) == 1) return webapps[i];
+			if(name.indexOf(webapps[i].getName())==0) return webapps[i];
 		}
 		return null;
 	}
@@ -234,7 +234,7 @@ exports.create = function() {
 		var pathName = URL.pathname;
 		var pathName = (getTranslation(pathName))?getTranslation(pathName):pathName;
 		debug.log("Incoming Request : [" + pathName + "] - Method [" + req.method + "]");
-		var webApp = getWebApp(pathName);
+		var webApp = getWebApp(pathName.substring(1));		// Trim off leading "/"
 		if(webApp) {			// Web App
 			debug.log("Found App: [" + webApp.getName() + "]");
 			var webAppURL = pathName.substring(webApp.getName().length + 1); 	// Slice off webapp portion of URL
@@ -321,6 +321,7 @@ exports.create = function() {
 	};
 	var adminServices = {
 		getApplications : function() { return webapps; },
+		getWebApp : getWebApp,
 		getEnvironment : function() { return process.env; },
 		stopServer : function() {
 			// status.running = false;

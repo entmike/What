@@ -45,6 +45,8 @@ var adminDashboard = {
 		}
 	}), 
 	init : function() {
+		SyntaxHighlighter.all();
+		SyntaxHighlighter.defaults.toolbar = false;
 		new Ext.Viewport({
 			layout:'border', 
 			items:[
@@ -112,8 +114,29 @@ var adminDashboard = {
 											//rootVisible:false,
 											listeners : {
                                                 click : function(node, event){
-                                                    
-                                                    alert(node);
+                                                    if(node.attributes.type == "servletOption"){
+														var params = {
+															webApp : node.parentNode.parentNode.parentNode.attributes.text,
+															servlet : node.parentNode.attributes.text,
+															option : node.attributes.text
+														}
+														Ext.Ajax.request({
+															url: 'getServletOption',
+															params : params,
+															method : "GET",
+															success: function(response, opts) {
+																var obj = Ext.decode(response.responseText);
+																obj.source = Ext.util.Format.htmlEncode(obj.source);
+																new Ext.Template(
+																	'<pre class="brush: js;" style="font-size:8pt;margin:0px;">{source}</pre>'
+																).overwrite(Ext.getCmp("details").body, obj);
+																SyntaxHighlighter.highlight();
+															},
+															failure: function(response, opts) {
+																alert('server-side failure with status code ' + response.status);
+															}
+														});
+													}
                                                 }
                                             },
                                             autoheight: true,
@@ -213,11 +236,14 @@ var adminDashboard = {
 							]
 						},{
 							xtype : "panel",
+							autoScroll : true,
                             id : "details",
 							split : true,
 							title : "Details",
 							height : 200,
-							region : "south"
+							region : "south",
+							padding : 0,
+							tpl : new Ext.Template("<div>Hello {0}.</div>")
 						}
 					]
 				}

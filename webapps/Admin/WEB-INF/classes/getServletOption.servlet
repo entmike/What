@@ -1,0 +1,14 @@
+{
+	doGet : function(request, response) {
+	/*
+		Get Servlet's Init Option
+	*/
+		var adminServices = this.getServletContext().getAdminServices()
+		var params = require('querystring').parse(request.getQueryString());
+		response.getWriter().write(JSON.stringify({
+			success : true,
+			source : adminServices.getWebApp(params.webApp).getServletMeta(params.servlet).options[params.option].toString()
+		}));
+		
+	}
+}

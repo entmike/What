@@ -19,6 +19,10 @@
 			description : "Get Environment from Server",
 			servletClass : "getEnvironment.servlet"
 		},{
+			name : "getServletOption",
+			description : "Get Servlet Option",
+			servletClass : "getServletOption.servlet"
+		},{
 			name : "stopServer",
 			description : "Stop the Web Container",
 			servletClass : "stopServer.servlet"
@@ -31,6 +35,9 @@
 		},{
 			name : "getEnvironment",
 			urlPattern : "/getEnvironment"
+		},{
+			name : "getServletOption",
+			urlPattern : "/getServletOption"
 		},{
 			name : "stopServer",
 			urlPattern : "/stopServer"

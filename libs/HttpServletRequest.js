@@ -21,7 +21,8 @@ exports.HttpServletRequest = function(req) {
 		getPathTranslated : function() { /* Stub */ },
 		getContextPath : function() { /* Stub */ },
 		getQueryString : function() {
-			return require('url').parse(request.url).query;
+			var obj = require('url').parse(request.url).query;
+			return obj || "";
 		},
 		isUserInRole : function(role) { /* Stub */ },
 		getUserPrincipal : function() { /* Stub */ },

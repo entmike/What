@@ -33,15 +33,19 @@ exports.create = function(options) {
 			}catch(e2){
 				console.log(e2.stack);
 			}
-			// Instantiate Servlet
+			// Create Servlet Metadata Wrapper
             var servletMeta = webConfig.servlets[i];
+			// Instantiate Servlet
 			var newServlet = HttpServlet.create(servletOptions);
 			var servletConfig = ServletConfig.create({
 				name : servletMeta.name,
 				initParameters : servletMeta.initParams,
 				servletContext : context
 			});
+			// Attach Servlet Reference to Metadata
             servletMeta.servlet = newServlet;
+			// Attach Initialization Options to Metadata
+			servletMeta.options = servletOptions;
 			newServlet.init(servletConfig);
             servlets.push(servletMeta);
 			console.log(" Servlet [" + servlets[i].servlet.getServletConfig().getServletName() + "] created and inititialized.");

@@ -1,58 +1,45 @@
 {
 	doGet : function(request, response) {
-		var getContents = function(path){
-			var wa = fs.readdirSync(path);
-			var arr = [];
-			for(var i=0;i<wa.length;i++) {
-				var stats = fs.statSync(path + "/" + wa[i]);
-				if(stats.isDirectory()) {
-					arr.push({
-						text : wa[i],
-						children : getContents(path + "/" + wa[i])
-					});
-				}else{
-					arr.push({
-						text : wa[i],
-						leaf : true
-					});				
-				}
-
-			}
-			return arr;
-		}
-		// Get writer
-		var w = response.getWriter();
-		// Get apps
+	/*
+		Get Web Container Application and Servlet Information to return to ExtJS Admin Page
+	*/
+		// Get apps collection
 		var apps = this.getServletContext().getAdminServices().getApplications();
-		// Create Collection
-		var arr = [];
-		// Run through apps
-		for(var i=0;i<apps.length;i++) {
+		var rootNode = [];						// Create Root Node
+		for(var i=0;i<apps.length;i++) {		// Run through apps
 			var app = apps[i];
-			var s = app.getServlets();
-			var arrServlets = [];
-			for(var j=0;j<s.length;j++) {
-				arrServlets.push({
-					id : s[j].servlet.getServletConfig().getServletName(),
-					text : s[j].servlet.getServletConfig().getServletName(),
+			var servlets = app.getServlets();	// Get current app's servlet metadata collection
+			var servletsNode = [];				// Create Servlets Node
+			for(var j=0;j<servlets.length;j++) {	// Run through servlets collection
+				var optionsNode = [];			// Create Options Node
+				for(option in servlets[j].options){	// Run through options
+					optionsNode.push({			// Push Option Leaf
+						type : "servletOption",
+						text : option,
+						leaf : true,
+						uiProvider : "col"
+					});
+				}
+				servletsNode.push({				// Push Servlets Node
+					id : servlets[j].servlet.getServletConfig().getServletName(),
+					text : servlets[j].servlet.getServletConfig().getServletName(),
 					iconCls : "servletNode",
-					description : s[j].description,
+					description : servlets[j].description,
+					uiProvider: "col",
+					children : optionsNode
+				});
+			}
+			var initParamNode = [];						// Create Initialization Param. Node
+			var initParamNames = app.getContext().getInitParameterNames();	// Get Init Parameter Collection
+			for(var j=0;j<initParamNames.length;j++) {	// Run through init params
+				initParamNode.push({					// Push Init Param Leaf
+					text : initParamNames[j],
+					description : app.getContext().getInitParameter(initParamNames[j]),
 					uiProvider: "col",
 					leaf : true
 				});
 			}
-			var params = [];
-			var ps = app.getContext().getInitParameterNames();
-			console.log(ps);
-			for(var j=0;j<ps.length;j++) {
-				params.push({
-					text : ps[j],
-					description : app.getContext().getInitParameter(ps[j]),
-					uiProvider: "col",
-					leaf : true
-				});
-			}
-			var obj = {
+			var appNode = {						// Create App Node entry
 				id : app.getName(),
 				text : app.getName(),
 				component : app.getName(),
@@ -63,16 +50,16 @@
 					{
 						text : "Init Parameters",
 						iconCls : "attributeNode",
-						children : params
+						children : initParamNode
 					},{
 						text : "Servlets",
 						iconCls : "servletNode",
-						children : arrServlets
+						children : servletsNode
 					}
 				]
 			}
-			arr.push(obj);
+			rootNode.push(appNode);				// Push App Node to Root Node
 		}
-		w.write(JSON.stringify(arr));
+		response.getWriter().write(JSON.stringify(rootNode));	// Write out Treenode JSON
 	}
 }

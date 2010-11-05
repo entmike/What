@@ -62,5 +62,5 @@ exports.HttpServletResponse = function(res) {
 			this.getWriter().write(msg.message);
 			this.flushBuffer();
 		}
-	}
-}
+	};
+};

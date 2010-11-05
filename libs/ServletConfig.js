@@ -20,5 +20,5 @@ exports.create = function(options) {
 		getServletName : function(){
 			return servletName;
 		}
-	}
-}
+	};
+};

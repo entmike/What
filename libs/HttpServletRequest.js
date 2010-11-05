@@ -1,9 +1,10 @@
 exports.HttpServletRequest = function(req) {
 	// Private
 	var request = req;
+	var parameters = req.formData;
 	// Public
 	return {
-		toString : function() { return "HttpServletRequest" },
+		toString : function() { return "HttpServletRequest"; },
 		getAuthType : function() { /* Stub */ },
 		getCookies : function() { /* Stub */ },
 		getDateHeader : function(name) { /* Stub */ },
@@ -18,6 +19,14 @@ exports.HttpServletRequest = function(req) {
 			return request.method;
 		},
 		getPathInfo : function() { /* Stub */ },
+		getParameter : function(name) {
+			return parameters[name];
+		},
+		getParameterNames : function() {
+			var arr = [];
+			for(p in parameters) arr.push(p);
+			return arr;
+		},
 		getPathTranslated : function() { /* Stub */ },
 		getContextPath : function() { /* Stub */ },
 		getFormData : function() {

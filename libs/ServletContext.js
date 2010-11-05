@@ -2,7 +2,7 @@ exports.ServletContext = function(options) {
 	options = options || {};
 	if(!options.path) options.path = "/";
 	return options.containerServices.getContext(options.path) || createServletContext(options);
-}
+};
 createServletContext = function(options) {
 	//Private
 	theLog = [];
@@ -76,7 +76,7 @@ createServletContext = function(options) {
 		setAttribute : function(name, obj) {
 			attributes[name] = obj;
 		}
-	}
+	};
 	options.containerServices.addContext({path: options.path, context: context});
 	console.log("Context [" + options.path + "] created.");
 	return context;

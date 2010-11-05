@@ -168,7 +168,7 @@ IncomingForm.prototype.handlePart = function(part) {
   var file = new File({
     path: this._uploadPath(part.filename),
     filename: part.filename,
-    mime: part.mime,
+    mime: part.mime
   });
 
   this.emit('fileBegin', part.name, file);

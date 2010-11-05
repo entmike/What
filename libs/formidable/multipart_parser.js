@@ -1,4 +1,4 @@
-var Buffer = require('buffer').Buffer
+var Buffer = require('buffer').Buffer;
     s = 0,
     S =
     { PARSER_UNINITIALIZED: s++,
@@ -13,13 +13,13 @@ var Buffer = require('buffer').Buffer
       PART_DATA_START: s++,
       PART_DATA: s++,
       PART_END: s++,
-      END: s++,
+      END: s++
     },
 
     f = 1,
     F =
     { PART_BOUNDARY: f,
-      LAST_BOUNDARY: f *= 2,
+      LAST_BOUNDARY: f *= 2
     },
 
     LF = 10,
@@ -200,7 +200,7 @@ MultipartParser.prototype.write = function(buffer) {
         state = S.PART_DATA_START;
         break;
       case S.PART_DATA_START:
-        state = S.PART_DATA
+        state = S.PART_DATA;
         mark('partData');
       case S.PART_DATA:
         prevIndex = index;

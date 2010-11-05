@@ -1,6 +1,5 @@
 /*
 	Example Server
 */
-var wc = require('./libs/WebContainer');
-var webCont = wc.create();
+var webCont = require('./libs/WebContainer').create();
 webCont.start();

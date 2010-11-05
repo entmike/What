@@ -211,6 +211,7 @@ var adminDashboard = {
 																									fieldLabel: 'Source',
 																									name:"source",
 																									xtype : "textarea",
+																									cls : "bespin",
 																									style : {
 																										fontFamily : "Courier New"
 																									},
@@ -225,7 +226,7 @@ var adminDashboard = {
 																						buttons : [
 																							{
 																								text : "Cancel",
-																								handler : function() {editWin.close()}
+																								handler : function() {editWin.close();}
 																							},"-",{
 																								text : "Save",
 																								handler : function() {
@@ -240,7 +241,7 @@ var adminDashboard = {
 																								}
 																							}
 																						]
-																					})
+																					});
 																					editWin.show();
 																				},
 																				failure : function(response, opts) {
@@ -264,7 +265,7 @@ var adminDashboard = {
 															webApp : node.parentNode.parentNode.parentNode.attributes.text,
 															servlet : node.parentNode.attributes.text,
 															option : node.attributes.text
-														}
+														};
 														Ext.Ajax.request({
 															url: 'getServletOption',
 															params : params,
@@ -413,4 +414,4 @@ var adminDashboard = {
 			]
 		});
 	}
-}
+};

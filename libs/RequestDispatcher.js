@@ -9,5 +9,5 @@ exports.RequestDispatcher = function() {
 		include : function(request, response) {
 		
 		}
-	}
-}
+	};
+};

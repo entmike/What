@@ -7,7 +7,7 @@ var ServletConfig = require('./ServletConfig');
 exports.parseNSP = function(contents) {
 	var steps = [];
 	var externalSteps = [];
-	var tags = { start : "<%", writer : "=", global : "!", end : "%>" }
+	var tags = { start : "<%", writer : "=", global : "!", end : "%>" };
 	var lines = contents.split(new RegExp( "\\n", "g" ));
 	var inScript = false;
 	var currentScript =[];
@@ -70,7 +70,7 @@ exports.parseNSP = function(contents) {
 		doPost : eval("(function(request, response){" + instructions.toString() + "})"),
 		doDelete : eval("(function(request, response){" + instructions.toString() + "})"),
 		doPut : eval("(function(request, response){" + instructions.toString() + "})")
-	}
+	};
 	return servletOptions;	
 };
 
@@ -162,4 +162,4 @@ exports.create = function(options) {
 			}
 		}
 	};
-}
+};

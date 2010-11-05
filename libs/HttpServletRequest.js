@@ -20,6 +20,9 @@ exports.HttpServletRequest = function(req) {
 		getPathInfo : function() { /* Stub */ },
 		getPathTranslated : function() { /* Stub */ },
 		getContextPath : function() { /* Stub */ },
+		getFormData : function() {
+			return req.formData;
+		},
 		getQueryString : function() {
 			var obj = require('url').parse(request.url).query;
 			return obj || "";

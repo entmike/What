@@ -27,6 +27,10 @@
 			description : "Restart a WebApp - Requires: (webApp)",
 			servletClass : "restartApp.servlet"
 		},{
+			name : "restartApps",
+			description : "Restart all WebApps",
+			servletClass : "restartApps.servlet"
+		},{
 			name : "restartServlet",
 			description : "Restart a Servlet - Requires: (webApp, servlet)",
 			servletClass : "restartServlet.servlet"
@@ -34,7 +38,11 @@
 			name : "stopServer",
 			description : "Stop the Web Container",
 			servletClass : "stopServer.servlet"
-		}
+		},{
+			name : "editServlet",
+			description : "Edit a Servlet - Requires: (webApp, servlet)",
+			servletClass : "editServlet.servlet"
+		},
 	],
 	servletMappings : [
 		{
@@ -58,6 +66,12 @@
 		},{
 			name : "restartApp",
 			urlPattern : "/restartApp"
+		},{
+			name : "restartApps",
+			urlPattern : "/restartApps"
+		},{
+			name : "editServlet",
+			urlPattern : "/editServlet"
 		}
 	],
 	translations : [

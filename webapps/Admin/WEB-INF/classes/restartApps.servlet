@@ -1,0 +1,17 @@
+{
+	doGet : function(request, response) {
+	/*
+		Restart WebApp
+	*/
+		var adminServices = this.getServletContext().getAdminServices()
+		var apps = adminServices.getApplications();
+		for(i=0;i<apps.length;i++) {
+			adminServices.restartApp(apps[i].getName());
+		}
+		response.getWriter().write(JSON.stringify({
+			success : true,
+			msg : "All WebApps restarted successfully."
+		}));
+		
+	}
+}

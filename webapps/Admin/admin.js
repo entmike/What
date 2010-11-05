@@ -183,6 +183,71 @@ var adminDashboard = {
 																				}
 																			});
 																		}
+																	},"-",{
+																		text : "Edit",
+																		handler : function() {
+																			Ext.Ajax.request({
+																				url: 'editServlet',
+																				params : {
+																					webApp : node.parentNode.parentNode.attributes.text,
+																					servlet : node.attributes.text
+																				},
+																				method : "GET",
+																				success : function(response, opts) {
+																					var servletOptions = Ext.decode(response.responseText).servletOptions;
+																					var editWin = new Ext.Window({
+																						title : "Edit",
+																						modal : true,
+																						width : "80%",
+																						height : 400,
+																						closeAction : "close",
+																						bodyStyle : "padding:5px",
+																						items : [
+																							{xtype:"form",labelAlign: 'top',border: false,id:"editSource",
+																							items : [
+																								{ xtype : "hidden", name : "servlet", value : node.attributes.text },
+																								{ xtype : "hidden", name : "webApp", value : node.parentNode.parentNode.attributes.text },
+																								{
+																									fieldLabel: 'Source',
+																									name:"source",
+																									xtype : "textarea",
+																									style : {
+																										fontFamily : "Courier New"
+																									},
+																									anchor : "100%",
+																									height : "100%",
+																									name: 'source',
+																									value : servletOptions,
+																									allowBlank:false
+																								}
+																							]}
+																						],
+																						buttons : [
+																							{
+																								text : "Cancel",
+																								handler : function() {editWin.close()}
+																							},"-",{
+																								text : "Save",
+																								handler : function() {
+																									es = Ext.getCmp("editSource").getForm();
+																									es.submit({
+																										url : "editServlet",
+																										success : function(form, action){
+																											Ext.Msg.alert("Success", action.result.msg);
+																											editWin.close();
+																										}
+																									});
+																								}
+																							}
+																						]
+																					})
+																					editWin.show();
+																				},
+																				failure : function(response, opts) {
+																					alert('server-side failure with status code ' + response.status);
+																				}
+																			});
+																		}
 																	}
 																]
 															}
@@ -228,6 +293,22 @@ var adminDashboard = {
 														text : "Refresh",
 														handler: function(){
 															adminDashboard.appTreeLoader.load(Ext.getCmp("applicationTree").getRootNode());
+														}
+													},
+													"-",
+													{
+														text : "Restart All Apps",
+														handler : function() {
+															Ext.Ajax.request({
+																url: 'restartApps',
+																method : "GET",
+																success : function(response, opts) {
+																	Ext.Msg.alert('Status', Ext.decode(response.responseText).msg);
+																},
+																failure : function(response, opts) {
+																	alert('server-side failure with status code ' + response.status);
+																}
+															});
 														}
 													}
 												]

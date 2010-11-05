@@ -61,8 +61,7 @@ exports.create = function(options) {
 			};
 			loadServlet(options);
 		}catch(e){
-			console.log("Error initializing servlet [" + webConfig.servlets[i].name + "]\n\
-File: [" + servletFile + "].");
+			console.log("Error initializing servlet [" + webConfig.servlets[i].name + "]\n\File: [" + servletFile + "].");
             console.log(e.stack.green);
 		}
 	}

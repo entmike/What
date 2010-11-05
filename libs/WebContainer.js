@@ -249,9 +249,9 @@ exports.create = function() {
 		// Node.JS listener handler
 		status.counter++;		// Internal Counter
 		if(req.formData) {
-            debug.log(JSON.stringify(req.formData.fields));
+            // debug.log(JSON.stringify(req.formData.fields));
             if(req.formData.files) {
-                debug.log(JSON.stringify(req.formData.files));
+                //debug.log(JSON.stringify(req.formData.files));
             }
         }
         var URL = url.parse(req.url, true);

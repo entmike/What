@@ -10,6 +10,7 @@ var HttpServletResponse = require('./HttpServletResponse');
 var ServletContext = require('./ServletContext');
 var ServletConfig = require('./ServletConfig');
 var WebApplication = require('./WebApplication');
+var Utils = require('./Utils');
 // 3rd Party add-ons
 var formidable = require('./formidable');
 require('./colors');
@@ -33,7 +34,7 @@ try{ // Load Config
 }catch(e){
 	console.log(e);
 	console.log("Bad or missing serverConfig.js file.  Ending now.".red.bold);
-	return;
+	return null;
 };
 /**
  * Removes App From App Collection
@@ -158,15 +159,7 @@ function getWebApp(name) {
 	}
 	return null;
 };
-/**
- * Get Template from filename in templates/ dir.
- * @param template Template file name
- * @return Template Contents [String]
- */
-function getTemplate(template) {
-	var template = fs.readFileSync("templates/" + template).toString();
-	return template;
-};
+
 /**
  * Get Path Translation for path
  * @param source Requested Pathname
@@ -221,7 +214,17 @@ var listener = function(req, res) {
 			res : res});
 	}
 };
+var completeResponse = function(request, response){
+	response.flushBuffer();
+	// Get End Time
+	var endMS = new Date().getTime();
+	// Get Duration
+	// var duration = endMS - startMS;
+	var duration = 0;
+	debug.log("Response complete - Status Code [" + response.getStatus().toString().green + "] - Duration [" + duration + "ms]");
+}
 var listenerCallback = function(options) {	
+	// Get Node.JS Request and Response objects
 	var req = options.req;
 	var res = options.res;
 	var formData = options.formData || {};
@@ -234,174 +237,42 @@ var listenerCallback = function(options) {
 	var writer = response.getWriter();
 	// Node.JS listener handler
 	status.counter++;		// Internal Counter
-	if(req.formData) {
-		// debug.log(JSON.stringify(req.formData.fields));
-		if(req.formData.files) {
-			//debug.log(JSON.stringify(req.formData.files));
-		}
+	if(req.formData && req.formData.files) {
+		// Todo: File Handling
 	}
+	// Get Request URL
 	var URL = url.parse(req.url, true);
 	var pathName = URL.pathname;
-	var pathName = (getTranslation(pathName))?getTranslation(pathName):pathName;
+	pathName = (getTranslation(pathName))?getTranslation(pathName):pathName;
 	debug.log("Incoming Request : [" + pathName + "] - Method [" + req.method + "]");
+	// See if there's a WebApp
 	var webApp = getWebApp(pathName.substring(1));		// Trim off leading "/"
-	if(webApp) {			// Web App
+	if(webApp) { // Web App
 		debug.log("Found App: [" + webApp.getName() + "]");
-		var webAppURL = pathName.substring(webApp.getName().length + 1); 	// Slice off webapp portion of URL
+		var webAppURL = pathName.substring(webApp.getName().length + 1);  // Slice off webapp portion of URL
 		webAppURL = (webApp.getTranslation(webAppURL))?(webApp.getTranslation(webAppURL)):webAppURL;
-		var mapping = webApp.getMapping(webAppURL);
-		if(mapping) {
-			var servlet = webApp.getServlet(mapping.name);
-			if(servlet) {	// Servlet Exists
-				debug.log("Found Servlet: [" + servlet.getServletConfig().getServletName() + "]");
-				servlet.service(request, response);
-			}else{
-				// Should be a servlet but there's not one.  To-do: Error message
-				response.setStatus(500);
-				response.setHeader("Content-Type", "text/html");
-				var template = getTemplate("500.tmpl");
-				template = template.replace("<@title>", "Servlet Not Found!");
-				template = template.replace("<@message>", "Servlet Not Found!");
-				template = template.replace("<@error>", "The requested Servlet is not running.");
-				writer.write(template);
-			}
-		}else{	// No mapping, try a MIME from webapps/[app]/...
-			var MIMEPath = "webapps/" + webApp.getName() + webAppURL;
-			var forbidPath = "webapps/" + webApp.getName() + "/WEB-INF";
-			if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
-				debug.log("Forbidding WEB-INF: [" + forbidPath + "]");
-				response.setStatus(403);
-				response.setHeader("Content-Type", "text/html");
-				var template = getTemplate("403.tmpl");
-				template = template.replace("<@message>", "WEB-INF listing is forbidden.");
-				template = template.replace("<@title>", "WEB-INF listing is forbidden.");
-				writer.write(template);
-			}else{	// Non-forbidden, check MIMEs
-				var MIME = getMIME(MIMEPath, pathName);
-				if(MIME.found) {
-					if(MIME.ext == "nsp") {		// NSP page
-						var servlet = webApp.getServlet(MIMEPath);
-						if(!servlet) {			// Initial NSP request, create servlet.
-							debug.log("Creating Servlet for: [" + MIMEPath + "] from NSP...");
-							var servletOptions = HttpServlet.parseNSP(MIME.content.toString());
-							var options = {
-								servletOptions : servletOptions,
-								meta : {
-									name : MIMEPath,
-									description : "NSP File",
-									servletClass : ".NSP"
-								}
-							};
-							servlet = webApp.loadServlet(options);
-						}
-						// Call Servlet Service
-						servlet.service(request, response);
-					}else{// General MIME type
-						response.setStatus(MIME.status);
-						response.setHeader("Content-Type", MIME.mimeType.mimeType);
-						writer.setStream(MIME.content);
-					}
-				}else{
-					response.setStatus(MIME.status);
-					response.setHeader("Content-Type", MIME.mimeType.mimeType);
-					writer.setStream(MIME.content);
-				}
-			}
-		}
+		webApp.handle({
+			URL : webAppURL,
+			request : request,
+			response : response,
+			callback : completeResponse
+		});
 	}else{ // Not a webapp, try a MIME from webroot
-		var MIME = getMIME(config.webroot + pathName, pathName);
-		response.setStatus(MIME.status);
-		response.setHeader("Content-Type", MIME.mimeType.mimeType);
-		if(!MIME.found) {
-			/* To-do Logging 404 Logic maybe */
-		}
-		writer.setStream(MIME.content);
-	}
-	response.flushBuffer();
-	// Get End Time
-	var endMS = new Date().getTime();
-	// Get Duration
-	var duration = endMS - startMS;
-	debug.log("Response complete - Status Code [" + response.getStatus().toString().green + "] - Duration [" + duration + "ms]");
-};
-
-
-var	MIMEinfo = function(ext) {
-	// Get MIME type for extension
-	ext = "." + ext;
-	for(var i=0;i<config.mimeTypes.length;i++) {
-		if(config.mimeTypes[i].ext == ext) return config.mimeTypes[i];
-	}
-	return "text/plain";
-};
-var getMIME = function(path, reqPath) {
-	// Load MIME Resource and return as object w/some feedback
-	var ext;
-	var dots = path.split(".");
-	if(dots.length>0) ext=(dots[dots.length-1]);
-	var MIME = {};
-	var data = null;
-	try{
-		var stats = fs.statSync(path);
-		if(stats.isDirectory()) {
-			if(path.substring(path.length-1)!="/") path+="/";
-			if(reqPath.substring(reqPath.length-1)!="/") reqPath+="/";
-			MIME.found = true;
-			MIME.path = path;
-			MIME.folder = true;
-			if(config.allowDirectoryListing){
-				MIME.status = 200;
-				MIME.mimeType = MIMEinfo("html");
-				var template = getTemplate("directoryListing.tmpl");
-				MIME.content = template;
-				var listing = "<TABLE id=\"listing\"><TR>";
-				listing+="<TH>File</TH>";
-				listing+="<TH>Date Modified</TH>";
-				listing+="</TR>";
-				var items = fs.readdirSync(path);
-				for(var i = 0;i<items.length;i++){
-					var item = fs.statSync(MIME.path + "/" + items[i]);
-					listing+="<TR>";
-					listing+="<TD><A href = \"" + reqPath + items[i] + "\">" + items[i] + "</A></TD>";
-					listing+="<TD>" + item.mtime + "</TD>";
-					listing+="</TR>";
-				}					
-				listing += "</TABLE>";
-				MIME.content = MIME.content.replace("<@title>", "Directory Listing of: [" + path + "]");
-				MIME.content = MIME.content.replace("<@header>", "Directory Listing of: [" + path + "]");
-				MIME.content = MIME.content.replace("<@listing>", listing);
-			}else{
-				MIME.status = 501;
-				MIME.mimeType = MIMEinfo("html");
-				var template = getTemplate("directoryListing.tmpl");
-				MIME.content = template;
-				MIME.content = MIME.content.replace("<@message>", "Directory Listing not allowed.");
+		Utils.getMIME({
+			path: config.webroot + pathName,
+			relPath : pathName,
+			callback: function(MIME) {
+				response.setStatus(MIME.status);
+				response.setHeader("Content-Type", MIME.mimeType.mimeType);
+				response.getWriter().setStream(MIME.content);
+				completeResponse(request, response);
 			}
-		}
-		if(stats.isFile()){
-			debug.log("Opening file [" + path + "]");
-			data = fs.readFileSync(path);
-			MIME.status = 200;
-			MIME.found = true;
-			MIME.ext = ext;
-			MIME.path = path;
-			MIME.content = data;
-			MIME.mimeType = MIMEinfo(ext);			
-		}
-	}catch(e){
-		debug.log("MIME not found.");
-		debug.log(e);
-		MIME.found = false;
-		MIME.status = 404;
-		MIME.path = path;
-		MIME.mimeType = MIMEinfo("html");
-		var template = getTemplate("404.tmpl");
-		template = template.replace("<@title>", "404 - Resource Not Found!");
-		template = template.replace("<@message>", "The requested resource [" + reqPath + "] was not found.");
-		MIME.content = template;
+		});
 	}
-	return MIME;
 };
+
+
+
 exports.create=function(){
 	// Public
 	return {

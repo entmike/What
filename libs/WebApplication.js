@@ -2,6 +2,7 @@ var fs = require('fs');
 var ServletContext = require('./ServletContext');
 var ServletConfig = require('./ServletConfig');
 var HttpServlet = require('./HttpServlet');
+var Utils = require('./Utils');
 
 exports.create = function(options) {
 	// Private
@@ -67,6 +68,86 @@ exports.create = function(options) {
 	}
 	// Public
 	return {
+		/**
+		 * Request Handler
+		 * @param {Object} options
+		 */
+		handle : function(options){
+			// See if there's a servlet
+			var mapping = this.getMapping(options.URL);
+			var URL = options.URL;
+			var request = options.request;
+			var response = options.response;
+			var callback = options.callback;
+			var that = this;	// I suck at scope, ok?
+			var writer = response.getWriter();
+			if(mapping) {
+				var servlet = this.getServlet(mapping.name);
+				if(servlet) {	// Servlet Exists
+					console.log("Found Servlet: [" + servlet.getServletConfig().getServletName() + "]");
+					servlet.service(request, response);
+				}else{
+					// Should be a servlet but there's not one.  To-do: Error message
+					response.setStatus(500);
+					response.setHeader("Content-Type", "text/html");
+					var template = getTemplate("500.tmpl");
+					template = template.replace("<@title>", "Servlet Not Found!");
+					template = template.replace("<@message>", "Servlet Not Found!");
+					template = template.replace("<@error>", "The requested Servlet is not running.");
+					writer.write(template);
+				}
+				callback(request, response);
+			}else{	// No mapping, try a MIME from webapps/[app]/...
+				var MIMEPath = "webapps/" + this.getName() + URL;
+				var forbidPath = "webapps/" + this.getName() + "/WEB-INF";
+				if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
+					console.log("Forbidding WEB-INF: [" + forbidPath + "]");
+					response.setStatus(403);
+					response.setHeader("Content-Type", "text/html");
+					var template = getTemplate("403.tmpl");
+					template = template.replace("<@message>", "WEB-INF listing is forbidden.");
+					template = template.replace("<@title>", "WEB-INF listing is forbidden.");
+					writer.write(template);
+				}else{	// Non-forbidden, check MIMEs
+					console.log("Starting async req...");
+					Utils.getMIME({
+						path : MIMEPath,
+						relPath : "/" + this.getName() + URL,
+						callback: function(MIME) {
+							if(MIME.found) {
+								if(MIME.ext == "nsp") {		// NSP page
+									var servlet = that.getServlet(MIMEPath);
+									if(!servlet) {			// Initial NSP request, create servlet.
+										console.log("Creating Servlet for: [" + MIMEPath + "] from NSP...");
+										var servletOptions = HttpServlet.parseNSP(MIME.content.toString());
+										var options = {
+											servletOptions : servletOptions,
+											meta : {
+												name : MIMEPath,
+												description : "NSP File",
+												servletClass : ".NSP"
+											}
+										};
+										servlet = that.loadServlet(options);
+									}
+									// Call Servlet Service
+									servlet.service(request, response);
+								}else{// General MIME type
+									response.setStatus(MIME.status);
+									response.setHeader("Content-Type", MIME.mimeType.mimeType);
+									writer.setStream(MIME.content);
+								}
+							}else{
+								response.setStatus(MIME.status);
+								response.setHeader("Content-Type", MIME.mimeType.mimeType);
+								writer.setStream(MIME.content);
+							};
+							callback(request, response);
+						}
+					});
+				}
+			}
+		},
 		getConfig : function() {
             return webConfig;
         },

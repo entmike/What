@@ -1,4 +1,5 @@
 var PrintWriter = require('./PrintWriter');
+var gzip = require('./gzip').gzip;
 
 exports.HttpServletResponse = function(res) {
 	var response = res;
@@ -13,9 +14,14 @@ exports.HttpServletResponse = function(res) {
 		},
 		flushBuffer : function() {
 			this.getWriter().flush();
+			var that = this;	// I suck at scope
 			response.writeHead(this.getStatus(), this.getHeaders());
-			response.write(this.getOutputStream(), "binary");
-			response.end();
+			gzip(this.getOutputStream(), function(err, data){
+				that.getWriter().setStream(data);
+				console.log("zipped");
+				response.write(that.getOutputStream(), "binary");
+				response.end();
+			});
 		},
 		setHeader : function(key, value) {
 			headers[key] = value;

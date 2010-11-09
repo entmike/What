@@ -7,7 +7,6 @@ exports.gzip = function(data) {
       isBuffer = buffer.isBuffer(data),
       args = Array.prototype.slice.call(arguments, 1),
       callback;
-  
   if (!isBuffer && typeof args[0] === 'string') {
     enc = args.shift();
   }
@@ -21,14 +20,22 @@ exports.gzip = function(data) {
   
   var gzip = spawn('gzip', ['-' + (rate-0),'-c', '-']);
   
-  var output = new buffer(0);
+  var chunk = [];
   
   gzip.stdout.on('data', function(data) {  
-    output = data;
+	chunk.push(data);
   });
   
   gzip.on('exit', function(code) {
-    callback(code, output);
+	var size=0;
+	var offset = 0;
+	for(var i=0;i<chunk.length;i++) size+=chunk[i].length;	// Count Total Buffer Size
+	var output = new buffer(size);							// Create new buffer
+	for(var i=0;i<chunk.length;i++){						// Chunk it all together
+		chunk[i].copy(output, offset, 0, chunk[i].length);
+		offset+=chunk[i].length;
+	}
+	callback(code, output);
   });
   
   if (isBuffer) {    

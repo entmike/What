@@ -15,10 +15,12 @@ exports.HttpServletResponse = function(res) {
 		flushBuffer : function() {
 			this.getWriter().flush();
 			var that = this;	// I suck at scope
+			this.setHeader("Content-Encoding", "gzip");
 			response.writeHead(this.getStatus(), this.getHeaders());
 			gzip(this.getOutputStream(), function(err, data){
-				that.getWriter().setStream(data);
-				console.log("zipped");
+				var writer = that.getWriter();
+				writer.setStream(data);
+				writer.flush();
 				response.write(that.getOutputStream(), "binary");
 				response.end();
 			});

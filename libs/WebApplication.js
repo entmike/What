@@ -79,6 +79,7 @@ exports.create = function(options) {
 			var request = options.request;
 			var response = options.response;
 			var callback = options.callback;
+			var scope = options.scope || this;
 			var that = this;	// I suck at scope, ok?
 			var writer = response.getWriter();
 			if(mapping) {
@@ -111,38 +112,57 @@ exports.create = function(options) {
 				}else{	// Non-forbidden, check MIMEs
 					console.log("Starting async req...");
 					Utils.getMIME({
+						modSince : request.getHeader("If-Modified-Since"),
+						cacheControl : request.getHeader("Cache-Control"),
 						path : MIMEPath,
 						relPath : "/" + this.getName() + URL,
+						scope : this,
 						callback: function(MIME) {
-							if(MIME.found) {
-								if(MIME.ext == "nsp") {		// NSP page
-									var servlet = that.getServlet(MIMEPath);
-									if(!servlet) {			// Initial NSP request, create servlet.
-										console.log("Creating Servlet for: [" + MIMEPath + "] from NSP...");
-										var servletOptions = HttpServlet.parseNSP(MIME.content.toString());
-										var options = {
-											servletOptions : servletOptions,
-											meta : {
-												name : MIMEPath,
-												description : "NSP File",
-												servletClass : ".NSP"
-											}
-										};
-										servlet = that.loadServlet(options);
+							switch(MIME.status) {
+								// OK
+								case 200:
+									if(MIME.ext == "nsp") {		// NSP page
+										var servlet = this.getServlet(MIMEPath);
+										if(!servlet) {			// Initial NSP request, create servlet.
+											console.log("Creating Servlet for: [" + MIMEPath + "] from NSP...");
+											var servletOptions = HttpServlet.parseNSP(MIME.content.toString());
+											var options = {
+												servletOptions : servletOptions,
+												meta : {
+													name : MIMEPath,
+													description : "NSP File",
+													servletClass : ".NSP"
+												}
+											};
+											servlet = this.loadServlet(options);
+										}
+										// Call Servlet Service
+										servlet.service(request, response);
+									}else{// General MIME type
+										response.setStatus(MIME.status);
+										response.setHeader("Content-Type", MIME.mimeType.mimeType);
+										response.setHeader("Last-Modified", MIME.modTime);
+										writer.setStream(MIME.content);
 									}
-									// Call Servlet Service
-									servlet.service(request, response);
-								}else{// General MIME type
+								break;
+								// Cache
+								case 304:
+									response.setStatus(MIME.status);
+									response.setHeader("Content-Type", "");
+								break;
+								// Not found
+								case 404:
 									response.setStatus(MIME.status);
 									response.setHeader("Content-Type", MIME.mimeType.mimeType);
 									writer.setStream(MIME.content);
-								}
-							}else{
-								response.setStatus(MIME.status);
-								response.setHeader("Content-Type", MIME.mimeType.mimeType);
-								writer.setStream(MIME.content);
-							};
-							callback(request, response);
+								break;
+								// All others
+								default:
+									response.setStatus(MIME.status);
+									response.setHeader("Content-Type", MIME.mimeType.mimeType);
+									writer.setStream(MIME.content);
+							}
+							callback.call (scope, request, response);
 						}
 					});
 				}

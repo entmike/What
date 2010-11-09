@@ -12,17 +12,27 @@ exports.HttpServletResponse = function(res) {
 		toString : function() {
 			return "HttpServletResponse";
 		},
-		flushBuffer : function() {
-			this.getWriter().flush();
-			var that = this;	// I suck at scope
-			this.setHeader("Content-Encoding", "gzip");
-			response.writeHead(this.getStatus(), this.getHeaders());
-			gzip(this.getOutputStream(), function(err, data){
-				var writer = that.getWriter();
+		bufferCallback : function(err, data) {
+			console.log(this.getStatus().toString().yellow);
+			if(this.getStatus() != 304) {
+				var writer = this.getWriter();
 				writer.setStream(data);
 				writer.flush();
-				response.write(that.getOutputStream(), "binary");
-				response.end();
+				console.log(this.getStatus());
+				response.write(this.getOutputStream(), "binary");
+			}
+			response.end();
+		},
+		flushBuffer : function() {
+			this.getWriter().flush();
+			var self = this;	// I suck at scope
+			this.setHeader("Content-Encoding", "gzip");
+			console.log(this.getStatus().toString.blue);
+			response.writeHead(this.getStatus(), this.getHeaders());
+			gzip({
+				data: this.getOutputStream(),
+				callback : self.bufferCallback,
+				scope : self
 			});
 		},
 		setHeader : function(key, value) {

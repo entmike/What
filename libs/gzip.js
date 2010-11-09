@@ -1,25 +1,17 @@
 var spawn = require('child_process').spawn,
     buffer = require('buffer').Buffer;
 
-exports.gzip = function(data) {
-  var rate = 8,
-      enc = 'utf8',
-      isBuffer = buffer.isBuffer(data),
-      args = Array.prototype.slice.call(arguments, 1),
-      callback;
-  if (!isBuffer && typeof args[0] === 'string') {
-    enc = args.shift();
-  }
-  
-  if (typeof args[0] === 'number') {
-    rate = args.shift() - 0;
-  }
-  callback = args[0];
-  
+exports.gzip = function(options) {
+  var options = options || {};
+  var rate = options.rate || 8,
+      enc = options.enc || 'utf8',
+	  data = options.data || null,
+      isBuffer = buffer.isBuffer(options.data),
+      scope = options.scope || this,
+	  callback = options.callback || null;
+ 
   if (!callback) return;
-  
   var gzip = spawn('gzip', ['-' + (rate-0),'-c', '-']);
-  
   var chunk = [];
   
   gzip.stdout.on('data', function(data) {  
@@ -35,7 +27,7 @@ exports.gzip = function(data) {
 		chunk[i].copy(output, offset, 0, chunk[i].length);
 		offset+=chunk[i].length;
 	}
-	callback(code, output);
+	callback.call(scope, code, output);
   });
   
   if (isBuffer) {    

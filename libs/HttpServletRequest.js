@@ -8,7 +8,9 @@ exports.HttpServletRequest = function(req) {
 		getAuthType : function() { /* Stub */ },
 		getCookies : function() { /* Stub */ },
 		getDateHeader : function(name) { /* Stub */ },
-		getHeader : function(name) { /* Stub */ },
+		getHeader : function(name) { 
+			return(request.headers[name.toLowerCase()]);
+		},
 		getHeaders : function() { 
 			// Returns all header values
 			return(request.headers);

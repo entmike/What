@@ -357,6 +357,8 @@ exports.getMIME = function(options) {
 	var path = options.path;
 	var relPath = options.relPath;
 	var callback = options.callback;
+	var modSince = options.modSince;
+	var scope = options.scope || this;
 	// Load MIME Resource and return as object w/some feedback
 	var ext;
 	// Get file extension
@@ -376,7 +378,7 @@ exports.getMIME = function(options) {
 			template = template.replace("<@title>", "404 - Resource Not Found!");
 			template = template.replace("<@message>", "The requested resource [" + relPath + "] was not found.");
 			MIME.content = template;
-			callback(MIME);
+			callback.call(scope, MIME);
 			return;
 		}
 		if (stats.isDirectory()) {
@@ -418,10 +420,22 @@ exports.getMIME = function(options) {
 				MIME.content = template;
 				MIME.content = MIME.content.replace("<@message>", "Directory Listing not allowed.");
 			}
-			callback(MIME);
+			callback.call(scope, MIME);
 		}
 		if (stats.isFile()) {
 			console.log("Opening file [" + path + "]");
+			var useCache = false;
+			if(modSince) {
+				console.log(options.cacheControl);
+				var mTime = new Date(stats.mtime);
+				var mSince = new Date(modSince);
+				var diff = mTime.getTime() - mSince.getTime();
+				if(diff<=0) useCache = true;
+			}
+			if(useCache) {
+				MIME.status=304;
+				callback.call(scope, MIME);
+			};
 			fs.readFile(path, function(err, data){
 				if (err) {
 					console.log("MIME not found.");
@@ -437,13 +451,14 @@ exports.getMIME = function(options) {
 				}
 				else {
 					MIME.status = 200;
+					MIME.modTime = stats.mtime;
 					MIME.found = true;
 					MIME.ext = ext;
 					MIME.path = path;
 					MIME.content = data;
 					MIME.mimeType = exports.MIMEinfo(ext);
 				}
-				callback(MIME);
+				callback.call(scope, MIME);
 			});
 		}
 	});

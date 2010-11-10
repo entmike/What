@@ -3,6 +3,7 @@ var HttpServletRequest = require('./HttpServletRequest');
 var HttpServletResponse = require('./HttpServletResponse');
 var ServletContext = require('./ServletContext');
 var ServletConfig = require('./ServletConfig');
+var Cookie = require('./Cookie');
 
 exports.parseNSP = function(contents) {
 	var steps = [];
@@ -154,6 +155,10 @@ exports.create = function(options, meta) {
 						break;
 					default:
 				}
+				// See if session exists.  If not, don't make a new one.
+				var session = request.getSession(false);
+				// Add JSESSIONID cookie if session exists
+				if(session) response.addCookie(Cookie.create("JSESSIONID", session.id));
 				response.setStatus(200);
 				stats.executions++;
 			}catch(e){	// Exception Handler

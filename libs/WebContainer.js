@@ -11,6 +11,7 @@ var ServletContext = require('./ServletContext');
 var ServletConfig = require('./ServletConfig');
 var WebApplication = require('./WebApplication');
 var Utils = require('./Utils');
+var Cookie = require('./Cookie');
 // 3rd Party add-ons
 var formidable = require('./formidable');
 require('./colors');
@@ -19,6 +20,26 @@ var httpServer = null;			// NodeJS HTTP Server
 var webapps = []; 				// Web Applications
 var contexts = []; 				// ServletContext Collection
 var requestLog = []; 			// HTTP Request Log
+var sessionManager = {
+	sessions : [],
+	S4 : function () {
+		return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+	},
+	guid : function() {
+		return (this.S4()+this.S4()+"-"+this.S4()+"-"+this.S4()+"-"+this.S4()+"-"+this.S4()+this.S4()+this.S4());
+	},
+	getSession : function(SID){
+		for(var i=0;i<this.sessions.length;i++) if(this.sessions[i].id==SID) return this.sessions[i];
+		return null;
+	},
+	newSession : function() {
+		var session = {};
+		session.id = this.guid();
+		this.sessions.push(session);
+		console.log("New Session Created: [" + session.id + "]");
+		return session;
+	}
+}
 /**
  * Web Container Configuration Object
  */
@@ -231,9 +252,33 @@ var listenerCallback = function(options) {
 	req.formData = formData; // Temp
 	// Get Start Time of request
 	var startMS = new Date().getTime();
+	// Create Cookies Collection from Node.JS Header for Servlet Request Constructor
+	var cookieHeader = req.headers["cookie"];
+	var cookies = [];
+	if(cookieHeader){
+		var arrCookies = cookieHeader.split(";");
+		for(var i=0;i<arrCookies.length;i++) {
+			var kv = arrCookies[i].split("=");
+			if(kv.length>1) {
+				var key = kv[0].replace(/^\s*|\s*$/g,'');	// Trim Whitespace
+				var val = kv[1];
+				cookies.push(Cookie.create(key, val));
+			};
+		}
+	}
+	var JSESSIONID;
+	for(var i=0;i<cookies.length;i++) if(cookies[i].getName() == "JSESSIONID") JSESSIONID = cookies[i].getValue();
+
 	// Create HttpServletRequest and HttpServletResponse objects from NodeJS ones.
-	var request = new HttpServletRequest.HttpServletRequest(req);
-	var response = new HttpServletResponse.HttpServletResponse(res);
+	var request = new HttpServletRequest.create({
+		req : req,					// Node.JS Request Obj
+		JSESSIONID : JSESSIONID,	// Requested SessionID
+		cookies : cookies,			// Cookies Collection
+		sessionManager : sessionManager
+	});
+	var response = new HttpServletResponse.create({
+		res : res
+	});
 	var writer = response.getWriter();
 	// Node.JS listener handler
 	status.counter++;		// Internal Counter

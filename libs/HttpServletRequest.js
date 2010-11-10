@@ -1,12 +1,18 @@
-exports.HttpServletRequest = function(req) {
+exports.create = function(options) {
 	// Private
-	var request = req;
-	var parameters = req.formData;
+	var request = options.req;
+	var parameters = request.formData;
+	var cookies = options.cookies;
+	var JSESSIONID = options.JSESSIONID;
+	var session;
+	var sessionManager = options.sessionManager;
 	// Public
 	return {
 		toString : function() { return "HttpServletRequest"; },
 		getAuthType : function() { /* Stub */ },
-		getCookies : function() { /* Stub */ },
+		getCookies : function() { 
+			return cookies;
+		},
 		getDateHeader : function(name) { /* Stub */ },
 		getHeader : function(name) { 
 			return(request.headers[name.toLowerCase()]);
@@ -32,7 +38,7 @@ exports.HttpServletRequest = function(req) {
 		getPathTranslated : function() { /* Stub */ },
 		getContextPath : function() { /* Stub */ },
 		getFormData : function() {
-			return req.formData;
+			return request.formData;
 		},
 		getQueryString : function() {
 			var obj = require('url').parse(request.url).query;
@@ -40,15 +46,32 @@ exports.HttpServletRequest = function(req) {
 		},
 		isUserInRole : function(role) { /* Stub */ },
 		getUserPrincipal : function() { /* Stub */ },
-		getRequestedSessionId : function() { /* Stub */ },
+		getRequestedSessionId : function() { 
+			return JSESSIONID;
+		},
 		getRequestURI : function() {
 			return require('url').parse(request.url).pathname;
 		},
 		getServletPath : function() {
 			return require('url').parse(request.url).pathname;
 		},
-		getSession : function(create) { /* Stub */ },
-		isRequestedSessionIdValid : function() { /* Stub */ },
+		getSession : function(create) { 
+			if(session) return session
+			var s = sessionManager.getSession(JSESSIONID);
+			if(!s && create) {
+				console.log("Could not find requested session [" + JSESSIONID + "].  Creating new session.");
+				s = sessionManager.newSession();
+			}
+			session = s;
+			return s;
+		},
+		isRequestedSessionIdValid : function() { 
+			if(sessionManager.getSession(JSESSIONID)) {
+				return true;
+			}else{
+				return false;
+			}
+		},
 		isRequestedSessionIdFromCookie : function() { /* Stub */ },
 		isRequestedSessionIdFromURL : function() { /* Stub */ }
 	};

@@ -1,13 +1,15 @@
 var Utils = require('./Utils');
 var PrintWriter = require('./PrintWriter');
+var Cookie = require('./Cookie');
 var gzip = require('./gzip').gzip;
 
-exports.HttpServletResponse = function(res) {
-	var response = res;
+exports.create = function(options) {
+	var response = options.res;
 	var status = null;
 	var contentLength = 0;
 	var printWriter = new PrintWriter.PrintWriter(response);
 	var headers = {};
+	var cookies = [];
 	// Public
 	return {
 		toString : function() {
@@ -28,6 +30,11 @@ exports.HttpServletResponse = function(res) {
 			this.getWriter().flush();
 			var self = this;	// I suck at scope
 			this.setHeader("Content-Encoding", "gzip");
+			var cookieHeader = "";
+			for(var i=0;i<cookies.length;i++){
+				// Need to figure out how to set multiple cookies
+				this.setHeader("Set-Cookie", cookies[i].getName() + "=" + cookies[i].getValue() + ";path=/;");
+			}
 			response.writeHead(this.getStatus(), this.getHeaders());
 			gzip({
 				data: this.getOutputStream(),
@@ -62,7 +69,9 @@ exports.HttpServletResponse = function(res) {
 		setContentLength : function(contentLength) {
 			this.contentLength = contentLength;
 		},
-		addCookie : function(cookie) { },
+		addCookie : function(cookie) {
+			cookies.push(cookie);
+		},
 		getWriter : function() {
 			return printWriter;
 		},

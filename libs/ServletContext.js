@@ -12,15 +12,13 @@ createServletContext = function(options) {
 	var initParameters = options.initParameters || {};
 	//Public
 	var context = {
+		// WARNING: Specific to What WebContainer, not a standard interface method
 		getAdminServices : function() {
 			return adminServices;
 		},
+		// WARNING: Specific to What WebContainer, not a standard interface method
 		getContainerServices : function() {
 			return containerServices;
-		},
-		log: function(msg) {
-			// Writes the specified message to a servlet log file, usually an event log.
-			theLog.push(msg);
 		},
 		getAttribute : function(name) {
 			// Returns the servlet container attribute with the given name, or null if there is no attribute by that name.
@@ -68,7 +66,12 @@ createServletContext = function(options) {
 		
 		},
 		getServletContextName : function() {
-		
+			/* Returns the name of this web application correponding to this ServletContext as specified in 
+			the deployment descriptor for this web application by the display-name element.*/
+		},
+		log: function(msg) {
+			// Writes the specified message to a servlet log file, usually an event log.
+			theLog.push(msg);
 		},
 		removeAttribute : function() {
 		

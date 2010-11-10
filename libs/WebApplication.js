@@ -110,7 +110,6 @@ exports.create = function(options) {
 					template = template.replace("<@title>", "WEB-INF listing is forbidden.");
 					writer.write(template);
 				}else{	// Non-forbidden, check MIMEs
-					console.log("Starting async req...");
 					Utils.getMIME({
 						modSince : request.getHeader("If-Modified-Since"),
 						cacheControl : request.getHeader("Cache-Control"),
@@ -162,7 +161,7 @@ exports.create = function(options) {
 									response.setHeader("Content-Type", MIME.mimeType.mimeType);
 									writer.setStream(MIME.content);
 							}
-							callback.call (scope, request, response);
+							callback.call(scope, request, response);
 						}
 					});
 				}

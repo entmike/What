@@ -261,10 +261,20 @@ var listenerCallback = function(options) {
 		Utils.getMIME({
 			path: config.webroot + pathName,
 			relPath : pathName,
+			modSince : request.getHeader("If-Modified-Since"),
+			cacheControl : request.getHeader("Cache-Control"),
 			callback: function(MIME) {
 				response.setStatus(MIME.status);
-				response.setHeader("Content-Type", MIME.mimeType.mimeType);
-				response.getWriter().setStream(MIME.content);
+				switch(MIME.status) {
+					// Cache (Not Changed)
+					case 304:
+						response.setHeader("Content-Type", "");
+					break;
+					default:
+						response.setHeader("Content-Type", MIME.mimeType.mimeType);
+						response.setHeader("Last-Modified", MIME.modTime);
+						response.getWriter().setStream(MIME.content);
+				}
 				completeResponse(request, response);
 			}
 		});

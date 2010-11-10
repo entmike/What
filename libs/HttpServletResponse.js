@@ -13,13 +13,14 @@ exports.HttpServletResponse = function(res) {
 			return "HttpServletResponse";
 		},
 		bufferCallback : function(err, data) {
-			console.log(this.getStatus().toString().yellow);
 			if(this.getStatus() != 304) {
 				var writer = this.getWriter();
 				writer.setStream(data);
 				writer.flush();
 				console.log(this.getStatus());
 				response.write(this.getOutputStream(), "binary");
+			}else{
+				console.log(this.getStatus());
 			}
 			response.end();
 		},
@@ -27,7 +28,6 @@ exports.HttpServletResponse = function(res) {
 			this.getWriter().flush();
 			var self = this;	// I suck at scope
 			this.setHeader("Content-Encoding", "gzip");
-			console.log(this.getStatus().toString.blue);
 			response.writeHead(this.getStatus(), this.getHeaders());
 			gzip({
 				data: this.getOutputStream(),

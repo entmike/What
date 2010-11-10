@@ -390,11 +390,9 @@ exports.getMIME = function(options) {
 			MIME.path = path;
 			MIME.folder = true;
 			if (true) { // To-do: Directory Listing
-				console.log(path);
-				console.log(relPath);
 				MIME.status = 200;
-				MIME.mimeType = this.MIMEinfo("html");
-				var template = this.getTemplate("directoryListing.tmpl");
+				MIME.mimeType = exports.MIMEinfo("html");
+				var template = exports.getTemplate("directoryListing.tmpl");
 				MIME.content = template;
 				var listing = "<TABLE id=\"listing\"><TR>";
 				listing += "<TH>File</TH>";
@@ -435,31 +433,32 @@ exports.getMIME = function(options) {
 			if(useCache) {
 				MIME.status=304;
 				callback.call(scope, MIME);
-			};
-			fs.readFile(path, function(err, data){
-				if (err) {
-					console.log("MIME not found.");
-					console.log(e);
-					MIME.found = false;
-					MIME.status = 404;
-					MIME.path = path;
-					MIME.mimeType = exports.MIMEinfo("html");
-					var template = exports.getTemplate("404.tmpl");
-					template = template.replace("<@title>", "404 - Resource Not Found!");
-					template = template.replace("<@message>", "The requested resource [" + relPath + "] was not found.");
-					MIME.content = template;
-				}
-				else {
-					MIME.status = 200;
-					MIME.modTime = stats.mtime;
-					MIME.found = true;
-					MIME.ext = ext;
-					MIME.path = path;
-					MIME.content = data;
-					MIME.mimeType = exports.MIMEinfo(ext);
-				}
-				callback.call(scope, MIME);
-			});
+			}else{
+				fs.readFile(path, function(err, data){
+					if (err) {
+						console.log("MIME not found.");
+						console.log(e);
+						MIME.found = false;
+						MIME.status = 404;
+						MIME.path = path;
+						MIME.mimeType = exports.MIMEinfo("html");
+						var template = exports.getTemplate("404.tmpl");
+						template = template.replace("<@title>", "404 - Resource Not Found!");
+						template = template.replace("<@message>", "The requested resource [" + relPath + "] was not found.");
+						MIME.content = template;
+					}
+					else {
+						MIME.status = 200;
+						MIME.modTime = stats.mtime;
+						MIME.found = true;
+						MIME.ext = ext;
+						MIME.path = path;
+						MIME.content = data;
+						MIME.mimeType = exports.MIMEinfo(ext);
+					}
+					callback.call(scope, MIME);
+				});
+			}
 		}
 	});
 };

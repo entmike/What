@@ -74,12 +74,13 @@ exports.parseNSP = function(contents) {
 	return servletOptions;	
 };
 
-exports.create = function(options) {
+exports.create = function(options, meta) {
 	// Constructor/Private
 	var options = options || {};
+	var stats = meta.stats || {};
+	stats.executions = 0;
+	stats.errors = 0;
 	var running = false;
-	var executions = 0;
-	var errors = 0;
 	var servletConfig = null;
 	// Public
 	return {
@@ -154,11 +155,10 @@ exports.create = function(options) {
 					default:
 				}
 				response.setStatus(200);
-				executions++;
-			}catch(e){	// Exeception Handler
-				console.log(e);
+				stats.executions++;
+			}catch(e){	// Exception Handler
 				response.sendError(500, e);
-				errors++;
+				stats.errors++;
 			}
 		}
 	};

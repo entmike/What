@@ -29,11 +29,13 @@ exports.create = function(options) {
 		var meta = options.meta;
 		var servletOptions = options.servletOptions;
 		// Create servlet Metadata Object
-		var servletMeta = {};
-		servletMeta.options = servletOptions;
-		servletMeta.meta = meta;
+		var servletMeta = {
+			options : servletOptions,
+			meta : meta,
+			stats : {}
+		};
 		// Instantiate Servlet
-		var newServlet = HttpServlet.create(servletOptions);
+		var newServlet = HttpServlet.create(servletOptions, servletMeta);
 		var servletConfig = ServletConfig.create({
 			name : meta.name,
 			initParameters : meta.initParams,
@@ -91,10 +93,10 @@ exports.create = function(options) {
 					// Should be a servlet but there's not one.  To-do: Error message
 					response.setStatus(500);
 					response.setHeader("Content-Type", "text/html");
-					var template = getTemplate("500.tmpl");
+					var template = Utils.getTemplate("500.tmpl");
 					template = template.replace("<@title>", "Servlet Not Found!");
-					template = template.replace("<@message>", "Servlet Not Found!");
-					template = template.replace("<@error>", "The requested Servlet is not running.");
+					template = template.replace("<@message>", "Servlet Not Loaded");
+					template = template.replace("<@error>", "Servlet is not loaded but contains a mapping.  Check your class files.");
 					writer.write(template);
 				}
 				callback(request, response);

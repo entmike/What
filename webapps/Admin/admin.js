@@ -262,8 +262,8 @@ var adminDashboard = {
 													}
 													if(node.attributes.type == "servletOption"){
 														var params = {
-															webApp : node.parentNode.parentNode.parentNode.attributes.text,
-															servlet : node.parentNode.attributes.text,
+															webApp : node.parentNode.parentNode.parentNode.parentNode.attributes.text,
+															servlet : node.parentNode.parentNode.attributes.text,
 															option : node.attributes.text
 														};
 														Ext.Ajax.request({

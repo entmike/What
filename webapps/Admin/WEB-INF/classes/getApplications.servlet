@@ -11,9 +11,34 @@
 			var servlets = app.getServlets();	// Get current app's servlet metadata collection
 			var servletsNode = [];				// Create Servlets Node
 			for(var j=0;j<servlets.length;j++) {	// Run through servlets collection
-				var optionsNode = [];			// Create Options Node
+				var statsNode = {
+					iconCls : "statsNode",
+					type : "statsNode",
+					text : "Stats",
+					uiProvider : "col",
+					children : [
+					{
+							iconCls : "statsNode",
+							text : "Executions",
+							uiProvider : "col",
+							description : servlets[j].stats.executions,
+							leaf : true
+						},{
+							iconCls : "statsNode",
+							text : "Errors",
+							uiProvider : "col",
+							description : servlets[j].stats.errors,
+							leaf : true
+						}
+					]
+				}
+				var optionsNode = {				// Create Options Node
+					text : "Options",
+					uiProvider : "col",
+					children : []
+				}
 				for(option in servlets[j].options){	// Run through options
-					optionsNode.push({			// Push Option Leaf
+					optionsNode.children.push({			// Push Option Leaf
 						type : "servletOption",
 						text : option,
 						leaf : true,
@@ -27,7 +52,7 @@
 					iconCls : "servletNode",
 					description : servlets[j].meta.description,
 					uiProvider: "col",
-					children : optionsNode
+					children : [statsNode, optionsNode]
 				});
 			}
 			var initParamNode = [];						// Create Initialization Param. Node

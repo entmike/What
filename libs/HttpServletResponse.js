@@ -1,3 +1,4 @@
+var Utils = require('./Utils');
 var PrintWriter = require('./PrintWriter');
 var gzip = require('./gzip').gzip;
 
@@ -74,9 +75,13 @@ exports.HttpServletResponse = function(res) {
 			this.flushBuffer();
 		},
 		sendError : function(status, msg) {
+			var template=Utils.getTemplate("500.tmpl");
 			this.setStatus(status);
-			this.setHeaders({"Content-Type" : "text/plain"});
-			this.getWriter().write(msg.message);
+			this.setHeaders({"Content-Type" : "text/html"});
+			template = template.replace("<@title>", msg.message);
+			template = template.replace("<@message>", msg.message);
+			template = template.replace("<@error>", "<pre>" + msg.stack + "</pre>");
+			this.getWriter().write(template);
 			this.flushBuffer();
 		}
 	};

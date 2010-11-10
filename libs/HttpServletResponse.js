@@ -17,10 +17,9 @@ exports.HttpServletResponse = function(res) {
 				var writer = this.getWriter();
 				writer.setStream(data);
 				writer.flush();
-				console.log(this.getStatus());
 				response.write(this.getOutputStream(), "binary");
 			}else{
-				console.log(this.getStatus());
+				// 304, do not write anything to response body
 			}
 			response.end();
 		},

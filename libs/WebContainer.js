@@ -1,4 +1,3 @@
-var exports = exports || {};
 // Required Packages
 var http = require('http');
 var url = require('url');
@@ -15,34 +14,22 @@ var Cookie = require('./Cookie');
 // 3rd Party add-ons
 var formidable = require('./formidable');
 require('./colors');
+var gzip = require('./gzip').gzip;
+var DateFormat = require('./DateFormat');
 // Private
 var httpServer = null;			// NodeJS HTTP Server
 var webapps = []; 				// Web Applications
 var contexts = []; 				// ServletContext Collection
 var requestLog = []; 			// HTTP Request Log
-var sessionManager = {
-	sessions : [],
-	S4 : function () {
-		return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-	},
-	guid : function() {
-		return (this.S4()+this.S4()+"-"+this.S4()+"-"+this.S4()+"-"+this.S4()+"-"+this.S4()+this.S4()+this.S4());
-	},
-	getSession : function(SID){
-		for(var i=0;i<this.sessions.length;i++) if(this.sessions[i].id==SID) return this.sessions[i];
-		return null;
-	},
-	newSession : function() {
-		var session = {};
-		session.id = this.guid();
-		this.sessions.push(session);
-		console.log("New Session Created: [" + session.id + "]");
-		return session;
-	}
-}
+var sessionManager = require('./SessionManager').create({
+	timeoutDefault : (3600 * 24 * 365)	// 1 Year
+});
 /**
  * Web Container Configuration Object
  */
+var dateMask = "mm/dd/yy HH:MM:ss";
+var dateOffset = 1000 * 3600 * 6;
+
 var config = {};				// Web Container Configuration
 var status = {					// Web Container Status
 	startupTime : new Date(),	// Start Time
@@ -133,7 +120,7 @@ function loadWebApps() {
  */
 var debug = {
 	log : function(msg) { if(config.debug) 
-		console.log(("[" + status.counter + "] [" + new Date().toGMTString() + "]: ").grey.bold + msg);
+		console.log(msg);
 	}
 };
 /**
@@ -191,7 +178,7 @@ function getTranslation(source) {
 	for(var i=0;i<config.translations.length;i++) {
 		var translation = config.translations[i];
 		for(var j=0;j<translation.source.length;j++) if(translation.source[j] == source) {
-			debug.log("Translating [" + source + "] to [" + translation.target + "].");
+			// debug.log("Translating [" + source + "] to [" + translation.target + "].");
 			return translation.target;
 		}
 	}
@@ -216,6 +203,7 @@ var adminServices = { // Services Available to Admin Contexts
 	stopServer : function() { /*Stub*/ }
 };
 var listener = function(req, res) {
+	// Preprocessing of Node.JS request
 	if(req.method=="POST") { // Handle form fields with async formidable addon
 		var form = new formidable.IncomingForm();
 		form.parse(req, function(err, fields, files) {
@@ -236,15 +224,43 @@ var listener = function(req, res) {
 	}
 };
 var completeResponse = function(request, response){
-	response.flushBuffer();
+	if(request.getHeader("accept-encoding").toLowerCase().indexOf("gzip") > -1) {  // Accepts GZIP
+		if(!response.isCommited()) {
+			response.setHeader("Content-Encoding", "gzip");
+			gzip({
+				data : response.getOutputStream(),
+				scope : response,
+				callback : function(err, data) {
+					this.setOutputStream(data);
+					this.close();
+				}
+			});
+		}else{ // Response is commited, cannot GZIP.
+			response.close();
+		}
+	}else{ // Browser does not accept GZIP.
+		response.close();
+	}
+	var status = response.getStatus().toString();
+	switch (status){
+		case "200" : status = status.green; break;
+		case "304" : status = status.cyan; break;
+		case "404" : status = status.red.bold; break;
+		case "302" : status = status.yellow; break;
+		case "500" : status = status.red.bold; break;
+		default : status = status.grey;
+	}
+	var now = new Date(new Date() - dateOffset);
+	console.log("[" + response.getId() + "]\t[" + now.format(dateMask) + "] [" + status + "] [" + request.getRequestURI() + "]");
+	// debug.log("Response complete - Status Code [" + response.getStatus().toString().green + "] - Duration [" + duration + "ms]");
 	// Get End Time
 	var endMS = new Date().getTime();
 	// Get Duration
 	// var duration = endMS - startMS;
 	var duration = 0;
-	debug.log("Response complete - Status Code [" + response.getStatus().toString().green + "] - Duration [" + duration + "ms]");
-}
+};
 var listenerCallback = function(options) {	
+	// Node.JS listener handler
 	// Get Node.JS Request and Response objects
 	var req = options.req;
 	var res = options.res;
@@ -271,17 +287,17 @@ var listenerCallback = function(options) {
 
 	// Create HttpServletRequest and HttpServletResponse objects from NodeJS ones.
 	var request = new HttpServletRequest.create({
+		id : status.counter,		// Tag Request with an ID
 		req : req,					// Node.JS Request Obj
 		JSESSIONID : JSESSIONID,	// Requested SessionID
 		cookies : cookies,			// Cookies Collection
 		sessionManager : sessionManager
 	});
 	var response = new HttpServletResponse.create({
+		id : status.counter,
 		res : res
 	});
-	var writer = response.getWriter();
-	// Node.JS listener handler
-	status.counter++;		// Internal Counter
+	status.counter++; // Internal Counter
 	if(req.formData && req.formData.files) {
 		// Todo: File Handling
 	}
@@ -289,11 +305,20 @@ var listenerCallback = function(options) {
 	var URL = url.parse(req.url, true);
 	var pathName = URL.pathname;
 	pathName = (getTranslation(pathName))?getTranslation(pathName):pathName;
-	debug.log("Incoming Request : [" + pathName + "] - Method [" + req.method + "]");
+	var method = request.getMethod();
+	switch (method){
+		case "GET" : method = method.green.bold; break;
+		case "POST" : method = method.blue.bold; break;
+		case "DELETE" : method = method.red.bold; break;
+		case "OPTIONS" : method = method.yellow; break;
+		case "TRACE" : method = method.yellow.bold; break;
+		default : method = method.grey;
+	}
+	var now = new Date(new Date() - dateOffset);
+	console.log("[" + request.getId() + "]\t[" + now.format(dateMask) + "] [" + method + "] [" + request.getRequestURI() + "]");
 	// See if there's a WebApp
-	var webApp = getWebApp(pathName.substring(1));		// Trim off leading "/"
+	var webApp = getWebApp(pathName.substring(1));	// Trim off leading "/"
 	if(webApp) { // Web App
-		debug.log("Found App: [" + webApp.getName() + "]");
 		var webAppURL = pathName.substring(webApp.getName().length + 1);  // Slice off webapp portion of URL
 		webAppURL = (webApp.getTranslation(webAppURL))?(webApp.getTranslation(webAppURL)):webAppURL;
 		webApp.handle({
@@ -302,7 +327,7 @@ var listenerCallback = function(options) {
 			response : response,
 			callback : completeResponse
 		});
-	}else{ // Not a webapp, try a MIME from webroot
+	}else{ // Not a webapp, try a MIME from webroot -- Need to make a MIME Handler, this is ugly here.
 		Utils.getMIME({
 			path: config.webroot + pathName,
 			relPath : pathName,
@@ -311,14 +336,13 @@ var listenerCallback = function(options) {
 			callback: function(MIME) {
 				response.setStatus(MIME.status);
 				switch(MIME.status) {
-					// Cache (Not Changed)
-					case 304:
+					case 304:	// Cache (Not Changed)
 						response.setHeader("Content-Type", "");
 					break;
 					default:
 						response.setHeader("Content-Type", MIME.mimeType.mimeType);
 						response.setHeader("Last-Modified", MIME.modTime);
-						response.getWriter().setStream(MIME.content);
+						response.setOutputStream(MIME.content);
 				}
 				completeResponse(request, response);
 			}
@@ -339,6 +363,15 @@ exports.create=function(){
 				console.log("Web Container already running!");
 				return;
 			}else{
+				console.log([
+				" WW         WW HH      HH     AAA     TTTTTTTT",
+				"  WW   W   WW  HH      HH    AA AA       TT   ",
+				"   WW WWW WW   HHHHHHHHHH   AAAAAAA      TT   ",
+				"    WWW WWW    HH      HH  AA     AA     TT   ",
+				"     W   W     HH      HH AA       AA    TT   ",
+				"",
+				"A Node.JS Web Container."
+				].join("\n"));
 				loadWebApps();
 				status.running = true;
 				status.startupTime = new Date();

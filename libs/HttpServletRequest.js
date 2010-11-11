@@ -1,5 +1,6 @@
 exports.create = function(options) {
 	// Private
+	var id = options.id;
 	var request = options.req;
 	var parameters = request.formData;
 	var cookies = options.cookies;
@@ -9,6 +10,9 @@ exports.create = function(options) {
 	// Public
 	return {
 		toString : function() { return "HttpServletRequest"; },
+		getId : function() {
+			return id;
+		},
 		getAuthType : function() { /* Stub */ },
 		getCookies : function() { 
 			return cookies;

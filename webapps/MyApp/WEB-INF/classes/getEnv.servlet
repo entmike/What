@@ -2,7 +2,6 @@
 	doGet : function(request, response) {
 		var w = response.getWriter();
 		var session = request.getSession(true);
-		w.write(JSON.stringify(request.getCookies()));
-		w.write(JSON.stringify({success: true}));
+		w.write(JSON.stringify(session));
 	}
 }

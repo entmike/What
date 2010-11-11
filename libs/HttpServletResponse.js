@@ -1,49 +1,68 @@
 var Utils = require('./Utils');
 var PrintWriter = require('./PrintWriter');
 var Cookie = require('./Cookie');
-var gzip = require('./gzip').gzip;
 
 exports.create = function(options) {
+	// Private
+	var servletOutputStream;
+	var commited = false;
 	var response = options.res;
 	var status = null;
 	var contentLength = 0;
-	var printWriter = new PrintWriter.PrintWriter(response);
+	var id = options.id;
+	var printWriter = new PrintWriter.create({
+		response : response
+	});
+	var outputStream;
 	var headers = {};
 	var cookies = [];
 	// Public
 	return {
+		// Non-interface method.  Ends Node.JS response
+		close : function() {
+			this.flushBuffer();
+			if(this.getStatus()==304) {
+				this.getWriter().close();
+				return;
+			}
+			if(!servletOutputStream) {
+				this.getWriter().close();
+			}else{
+				response.end(servletOutputStream, "binary");
+			}
+		},
+		getId : function() {
+			return id;
+		},
+		// Standard Interface Methods
+		isCommited : function() {
+			return commited;
+		},
 		toString : function() {
 			return "HttpServletResponse";
 		},
-		bufferCallback : function(err, data) {
-			if(this.getStatus() != 304) {
-				var writer = this.getWriter();
-				writer.setStream(data);
-				writer.flush();
-				response.write(this.getOutputStream(), "binary");
-			}else{
-				// 304, do not write anything to response body
-			}
-			response.end();
-		},
 		flushBuffer : function() {
-			this.getWriter().flush();
-			var self = this;	// I suck at scope
-			this.setHeader("Content-Encoding", "gzip");
-			var cookieHeader = "";
-			for(var i=0;i<cookies.length;i++){
-				// Need to figure out how to set multiple cookies
-				this.setHeader("Set-Cookie", cookies[i].getName() + "=" + cookies[i].getValue() + ";path=/;");
+			if(!commited){
+				var cookieHeader = "";
+				// Serialize since Node won't allow duplicate headers GRRRR...
+				for(var i=0;i<cookies.length;i++) cookieHeader+=cookies[i];
+				if(cookieHeader != "") this.setHeader("Set-Cookie", cookieHeader);
+				response.writeHead(this.getStatus(), this.getHeaders());
+				commited = true;
 			}
-			response.writeHead(this.getStatus(), this.getHeaders());
-			gzip({
-				data: this.getOutputStream(),
-				callback : self.bufferCallback,
-				scope : self
-			});
+			if(this.getStatus()==304)return;
+			if(!servletOutputStream) {
+				this.getWriter().flush();
+			}else{
+				this.getWriter().setStream(servletOutputStream);
+			}
 		},
 		setHeader : function(key, value) {
-			headers[key] = value;
+			if(!commited) {
+				headers[key] = value;
+			}else{
+				console.log("Response already commited.  Cannot write to the header.");
+			}
 		},
 		getHeader : function(key) {
 			return header[key];
@@ -55,7 +74,11 @@ exports.create = function(options) {
 			return headers;
 		},
 		setStatus : function(s) {
-			status = s;
+			if(!commited) {
+				status = s;
+			}else{
+				console.log("Response already commited.  Cannot write to the header.");
+			}
 		},
 		getStatus : function() {
 			return status;
@@ -75,8 +98,15 @@ exports.create = function(options) {
 		getWriter : function() {
 			return printWriter;
 		},
+		setOutputStream : function(stream) {
+			servletOutputStream = stream;
+		},
 		getOutputStream : function() { 
-			return this.getWriter().getStream();
+			if(servletOutputStream) {
+				return servletOutputStream;
+			}else{
+				return printWriter.getStream();
+			}
 		},
 		sendRedirect : function(location) {
 			this.setStatus(302);

@@ -366,10 +366,8 @@ exports.getMIME = function(options) {
 	if(dots.length>0) ext=(dots[dots.length-1]);
 	// MIME Object
 	var MIME = {};
-	var data = null;
 	fs.stat(path, function(err, stats){
-		if(err){
-			console.log(err);
+		if(err){ // Not a valid file or directory
 			MIME.found = false;
 			MIME.status = 404;
 			MIME.path = path;
@@ -381,11 +379,10 @@ exports.getMIME = function(options) {
 			callback.call(scope, MIME);
 			return;
 		}
-		if (stats.isDirectory()) {
-			if (path.substring(path.length - 1) != "/") 
-				path += "/";
-			if (relPath.substring(relPath.length - 1) != "/") 
-				relPath += "/";
+		// Valid Directory/File Found.
+		if (stats.isDirectory()) {	// DIRECTORY LISTING
+			if (path.substring(path.length - 1) != "/") path += "/";
+			if (relPath.substring(relPath.length - 1) != "/") relPath += "/";
 			MIME.found = true;
 			MIME.path = path;
 			MIME.folder = true;
@@ -420,24 +417,20 @@ exports.getMIME = function(options) {
 			}
 			callback.call(scope, MIME);
 		}
-		if (stats.isFile()) {
-			console.log("Opening file [" + path + "]");
+		if (stats.isFile()) {	// FILE
 			var useCache = false;
-			if(modSince) {
-				console.log(options.cacheControl);
+			if(modSince) {	// Browser passed a mod-since header, let's see if our file is newer...
 				var mTime = new Date(stats.mtime);
 				var mSince = new Date(modSince);
 				var diff = mTime.getTime() - mSince.getTime();
 				if(diff<=0) useCache = true;
 			}
-			if(useCache) {
+			if(useCache) {	// MIME should be in browser cache.  Send a not modified 304 response...
 				MIME.status=304;
 				callback.call(scope, MIME);
 			}else{
 				fs.readFile(path, function(err, data){
 					if (err) {
-						console.log("MIME not found.");
-						console.log(e);
 						MIME.found = false;
 						MIME.status = 404;
 						MIME.path = path;

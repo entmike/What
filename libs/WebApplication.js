@@ -87,7 +87,6 @@ exports.create = function(options) {
 			if(mapping) {
 				var servlet = this.getServlet(mapping.name);
 				if(servlet) {	// Servlet Exists
-					console.log("Found Servlet: [" + servlet.getServletConfig().getServletName() + "]");
 					servlet.service(request, response);
 				}else{
 					// Should be a servlet but there's not one.  To-do: Error message
@@ -104,13 +103,13 @@ exports.create = function(options) {
 				var MIMEPath = "webapps/" + this.getName() + URL;
 				var forbidPath = "webapps/" + this.getName() + "/WEB-INF";
 				if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
-					console.log("Forbidding WEB-INF: [" + forbidPath + "]");
 					response.setStatus(403);
 					response.setHeader("Content-Type", "text/html");
-					var template = getTemplate("403.tmpl");
+					var template = Utils.getTemplate("403.tmpl");
 					template = template.replace("<@message>", "WEB-INF listing is forbidden.");
 					template = template.replace("<@title>", "WEB-INF listing is forbidden.");
 					writer.write(template);
+					callback.call(scope, request, response);
 				}else{	// Non-forbidden, check MIMEs
 					Utils.getMIME({
 						modSince : request.getHeader("If-Modified-Since"),
@@ -143,7 +142,7 @@ exports.create = function(options) {
 										response.setStatus(MIME.status);
 										response.setHeader("Content-Type", MIME.mimeType.mimeType);
 										response.setHeader("Last-Modified", MIME.modTime);
-										writer.setStream(MIME.content);
+										response.setOutputStream(MIME.content);
 									}
 								break;
 								// Cache
@@ -155,13 +154,13 @@ exports.create = function(options) {
 								case 404:
 									response.setStatus(MIME.status);
 									response.setHeader("Content-Type", MIME.mimeType.mimeType);
-									writer.setStream(MIME.content);
+									response.setOutputStream(MIME.content);
 								break;
 								// All others
 								default:
 									response.setStatus(MIME.status);
 									response.setHeader("Content-Type", MIME.mimeType.mimeType);
-									writer.setStream(MIME.content);
+									response.setOutputStream(MIME.content);
 							}
 							callback.call(scope, request, response);
 						}

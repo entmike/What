@@ -21,6 +21,15 @@ exports.create = function(name, value) {
 	var version = 1;
 	// Public
 	return {
+		// Non-Interface Method, returns cookie in terms of header string
+		toString : function() {
+			var s=this.getName() + "=" + this.getValue() + ";";
+			s+="path=" + this.getPath() + ";";
+			// Add expiry date - maxAge in s * 1000 (Convert to MS for Date obj)
+			if(this.getMaxAge() > -1) s+="expires=" + new Date(new Date().getTime() + (this.getMaxAge() * 1000)) + ";";
+			// To-do: Domain
+			return s;
+		},
 		clone : function(){
 			// Return a copy of this cookie. - Stub
 		},

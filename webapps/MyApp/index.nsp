@@ -1,3 +1,4 @@
+<%var session = request.getSession(true);%>
 <html>
 	<head>
 	<style type="text/css">
@@ -23,9 +24,37 @@
 	<body>
 	<h1>NSP Example</h1>
 	This page is an example of how you can host script pages similar to PHP, ASP, JSP, BSP, etc.<br/><br/>
+	It also demos key functionalities such as session tracking and cookie handling.<br/><br/>
+	<span style="color:009966;font-weight:bold;">
+	<%
+	if(session.isNew()){
+	writer.write("Welcome, this is a new session for you I see.  Enjoy your stay!");
+	}else{
+	writer.write("Welcome Back!  We haven't seen you since " + session.getAttribute("lastVisit"));
+	}
+	%>
+	</span>
 	<ul>
 		<li>The current system date is: <b><%=new Date()%></b></li>
 		<li>Web Application Author: <b><%=pageContext.getInitParameter("author")%></b></li>
+		<li>Your Session ID: <b><%=session.getId()%></b><br/>
+			Session New: <%=session.isNew()%><br/>
+			Session Created On: <%=session.getCreationTime()%><br/>
+			Session Attributes:<ul>
+			<%
+			attrNames = session.getAttributeNames();
+			for(var i=0;i<attrNames.length;i++){
+			%><li><%=attrNames[i]%> - <%=session.getAttribute(attrNames[i])%></li><%}%>
+			</ul>
+		</li>
+		<li>Your browser passed the following cookies:
+			<ul><%
+			var cookies = request.getCookies();
+			for(var i=0;i<cookies.length;i++){
+				%><li><%=cookies[i].getName()%> - <%=cookies[i].getValue()%></li>
+			<%}%>
+			</ul>
+		</li>
 	</ul>
 	The code is found below:
 	<div class="code"><%
@@ -39,3 +68,4 @@
 	%></div>
 	</body>
 </html>
+<%session.setAttribute("lastVisit", new Date());%>

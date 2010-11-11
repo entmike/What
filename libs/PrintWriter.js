@@ -1,39 +1,32 @@
-exports.PrintWriter = function() {
-	var buffer = "";
-	var stream;
+exports.create = function(options) {
+	var response = options.response;	// Node.JS Response Object
+	var stringBuffer = "";
 	// Public
 	return {
 		toString : function() {
 			return "PrintWriter";
 		},
 		flush : function() {
-			if(typeof buffer == "string") {
-				stream = new Buffer(buffer);
-			}else{
-				stream = buffer;
-			}
-			buffer = "";
+			response.write(stringBuffer);
+			stringBuffer = "";
+		},
+		close : function() {
+			response.end();
 		},
 		getStream : function() {
-			return stream;
-		},
-		println : function(string) {
-			buffer+=string+"\n";
-		},
-		print : function(string) {
-			buffer+=string;
+			return stringBuffer;
 		},
 		setStream : function(strm) {
 			buffer = strm;
 		},
-		write : function(string) {
-			if(typeof string == "string" || typeof string == "integer") {
-				this.print(string);
+		write : function(input) {
+			if(typeof input == "string" || typeof input == "integer") {
+				stringBuffer += input
 			}else{
-				if(string.toString) {
-					this.print(string.toString());
+				if(input.toString) {
+					stringBuffer += input.toString();
 				}else{
-					this.print("Object");
+					stringBuffer += "[Object]";
 				}
 			}
 		}

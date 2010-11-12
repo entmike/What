@@ -1,0 +1,21 @@
+{
+	doGet : function(request, response) {
+	/*
+		Set Trace Status
+	*/
+		var adminServices = this.getServletContext().getAdminServices();
+		var params = require('querystring').parse(request.getQueryString());
+		traceStatus = params.traceStatus;
+		if(traceStatus == "true" || traceStatus == true) {
+			traceStatus = true
+		}else{
+			traceStatus = false;
+		}
+		adminServices.setTrace(traceStatus);
+		response.getWriter().write(JSON.stringify({
+			success : true,
+			msg : "Trace Status set to: " + traceStatus
+		}));
+		
+	}
+}

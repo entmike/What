@@ -21,6 +21,7 @@ var httpServer = null;			// NodeJS HTTP Server
 var webapps = []; 				// Web Applications
 var contexts = []; 				// ServletContext Collection
 var requestLog = []; 			// HTTP Request Log
+var traces = [];				// Trace Collection
 var sessionManager = require('./SessionManager').create({
 	timeoutDefault : (3600 * 24 * 365)	// 1 Year
 });
@@ -34,7 +35,8 @@ var config = {};				// Web Container Configuration
 var status = {					// Web Container Status
 	startupTime : new Date(),	// Start Time
 	running : false,			// Running Flag
-	counter: 0					// Hit Counter
+	counter: 0,					// Hit Counter
+	trace: false				// Trace Mode
 };
 try{ // Load Config
 	var data = fs.readFileSync("serverConfig.js");
@@ -43,6 +45,12 @@ try{ // Load Config
 	console.log(e);
 	console.log("Bad or missing serverConfig.js file.  Ending now.".red.bold);
 	return null;
+};
+function addTrace(options){
+	traces.push(options);
+};
+function setTrace(flag) {
+	status.trace = flag;
 };
 /**
  * Removes App From App Collection
@@ -198,6 +206,10 @@ var containerServices = { // Services Available to all Contexts
 var adminServices = { // Services Available to Admin Contexts
 	getApplications : function() { return webapps; },
 	getWebApp : getWebApp,
+	setTrace : setTrace,
+	getTraces : function() {
+		return traces;
+	},
 	getEnvironment : function() { return process.env; },
 	restartApp : restartApp,		
 	stopServer : function() { /*Stub*/ }
@@ -241,23 +253,24 @@ var completeResponse = function(request, response){
 	}else{ // Browser does not accept GZIP.
 		response.close();
 	}
-	var status = response.getStatus().toString();
-	switch (status){
-		case "200" : status = status.green; break;
-		case "304" : status = status.cyan; break;
-		case "404" : status = status.red.bold; break;
-		case "302" : status = status.yellow; break;
-		case "500" : status = status.red.bold; break;
-		default : status = status.grey;
+	var rStatus = response.getStatus().toString();
+	switch (rStatus){
+		case "200" : rStatus = rStatus.green; break;
+		case "304" : rStatus = rStatus.cyan; break;
+		case "404" : rStatus = rStatus.red.bold; break;
+		case "302" : rStatus = rStatus.yellow; break;
+		case "500" : rStatus = rStatus.red.bold; break;
+		default : rStatus = rStatus.grey;
 	}
 	var now = new Date(new Date() - dateOffset);
-	console.log("[" + response.getId() + "]\t[" + now.format(dateMask) + "] [" + status + "] [" + request.getRequestURI() + "]");
-	// debug.log("Response complete - Status Code [" + response.getStatus().toString().green + "] - Duration [" + duration + "ms]");
-	// Get End Time
+	console.log("[" + response.getId() + "]\t[" + now.format(dateMask) + "] [" + rStatus + "] [" + request.getRequestURI() + "]");
 	var endMS = new Date().getTime();
-	// Get Duration
-	// var duration = endMS - startMS;
-	var duration = 0;
+	if(status.trace){
+		addTrace({
+			request : request,
+			response : response
+		});
+	}
 };
 var listenerCallback = function(options) {	
 	// Node.JS listener handler

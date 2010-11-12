@@ -31,6 +31,15 @@ var adminDashboard = {
 			}
 		}
 	}),
+	dsTraces : new Ext.data.Store({
+		url : "getTraces",
+		autoLoad : true,
+		reader : new Ext.data.JsonReader({
+			fields : [
+				"id", "request", "response"
+			]
+		})
+	}),
 	appTreeLoader : new Ext.tree.TreeLoader({
 		dataUrl:'/Admin/getApplications',
 		requestMethod : "GET",
@@ -332,9 +341,7 @@ var adminDashboard = {
 											})
 										})
 									]
-								},
-								{
-									// Wrapper Panel
+								},{	// Wrapper Panel
 									xtype:"panel",
 									title:"MIMEs",
 									layout: "fit",
@@ -343,6 +350,9 @@ var adminDashboard = {
 											//rootVisible:false,
 											autoheight: true,
 											title: "MIMEs",
+											tbar : {
+												items : "Stub"
+											},
 											//layout: "fit",
 											autoScroll:true,
 											autoExpandColumn : "filename",
@@ -397,6 +407,52 @@ var adminDashboard = {
 											})
 										})
 									]
+								},{
+									xtype : "grid",
+									store : this.dsTraces,
+									autoExpandColumn : 1,
+									columns : [
+										{
+										id : "id", header : "ID", dataIndex : "id", width : 30, sortable : true
+										},{
+										header : "Request", dataIndex : "request", sortable : true
+										},{
+										header : "Response", dataIndex : "response", width : 75, sortable : true
+										}
+									],
+									title : "Trace Logs",
+									tbar : {
+										items : [
+											{
+												text : "Toggle Trace",
+												allowDepress : true,
+												enableToggle : true,
+												toggleHandler : function(button, state) {
+													button.disable();
+													Ext.Ajax.request({
+														url: 'setTrace',
+														params : {
+															traceStatus : state
+														},
+														method : "GET",
+														success : function(response, opts) {
+															// Ext.Msg.alert('Status', Ext.decode(response.responseText).msg);
+															button.enable();
+														},
+														failure : function(response, opts) {
+															alert('server-side failure with status code ' + response.status);
+															button.enable();
+														}
+													});
+												}
+											},"-",{
+												text : "Refresh" ,
+												handler : function() {
+													adminDashboard.dsTraces.load();
+												}
+											}
+										]
+									}
 								}
 							]
 						},{

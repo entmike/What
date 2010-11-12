@@ -7,6 +7,14 @@
 	},
 	servlets : [
 		{
+			name : "setTrace",
+			description : "Set Trace Status",
+			servletClass : "setTrace.servlet"
+		},{
+			name : "getTraces",
+			description : "Get Trace Log",
+			servletClass : "getTraces.servlet"
+		},{
 			name : "getApplications",
 			description : "Get Application List",
 			servletClass : "getApplications.servlet"
@@ -46,6 +54,12 @@
 	],
 	servletMappings : [
 		{
+			name : "setTrace",
+			urlPattern : "/setTrace"
+		},{
+			name : "getTraces",
+			urlPattern : "/getTraces"
+		},{
 			name : "getApplications",
 			urlPattern : "/getApplications"
 		},{

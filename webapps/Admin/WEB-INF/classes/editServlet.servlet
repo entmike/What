@@ -1,39 +1,69 @@
 {
-	doGet : function(request, response) {
-	/*
-		Return Servlet Init Options
-	*/
-		var adminServices = this.getServletContext().getAdminServices();
-		var params = require('querystring').parse(request.getQueryString());
-		var servletFile = "webapps/" + params.webApp + "/WEB-INF/classes/" + adminServices.getWebApp(params.webApp).getServletMeta(params.servlet).meta.servletClass;
-		var fs=require("fs");
-		try{
-			var servletData = fs.readFileSync(servletFile);
-			var servletOptions = servletData.toString();
-		}catch(e){
-			console.log("Error reading servlet [" + webConfig.servlets[i].name + "]\n\File: [" + servletFile + "].");
-            console.log(e.stack.green);
+	doGet : {
+		parameters : [
+			{
+				name : "webApp",
+				description : "Web Application of the Servlet",
+				required : true
+			}, {
+				name : "servlet",
+				description : "Name of Servlet to Edit",
+				required : true
+			}
+		],
+		method: function(request, response) {
+		/*
+			Return Servlet Init Options
+		*/
+			var adminServices = this.getServletContext().getAdminServices();
+			var params = require('querystring').parse(request.getQueryString());
+			var servletFile = "webapps/" + params.webApp + "/WEB-INF/classes/" + adminServices.getWebApp(params.webApp).getServletMeta(params.servlet).meta.servletClass;
+			var fs=require("fs");
+			try{
+				var servletData = fs.readFileSync(servletFile);
+				var servletOptions = servletData.toString();
+			}catch(e){
+				console.log("Error reading servlet [" + webConfig.servlets[i].name + "]\n\File: [" + servletFile + "].");
+				console.log(e.stack.green);
+			}
+			response.getWriter().write(JSON.stringify({
+				success : true,
+				servletOptions : servletOptions
+			}));
+			
 		}
-		response.getWriter().write(JSON.stringify({
-			success : true,
-			servletOptions : servletOptions
-		}));
-		
-	},doPost : function(request, response) {
-		// Save file
-		var adminServices = this.getServletContext().getAdminServices();
-		var params = request.getFormData().fields;
-		var servletData = params.source;
-		var servletFile = "webapps/" + params.webApp + "/WEB-INF/classes/" + adminServices.getWebApp(params.webApp).getServletMeta(params.servlet).meta.servletClass;
-		try{
-			fs.writeFileSync(servletFile, servletData);
-		}catch(e){
-			console.log("Error writing to file [" + servletFile + "].");
-            console.log(e.stack.red);
+	},doPost : {
+		parameters : [
+		{
+				name : "webApp",
+				description : "Web Application of the Servlet",
+				required : true
+			}, {
+				name : "servlet",
+				description : "Name of Servlet to Edit",
+				required : true
+			}, {
+				name : "servletData",
+				description : "File Contents",
+				required : true
+			}
+		],
+		method : function(request, response) {
+			// Save file
+			var adminServices = this.getServletContext().getAdminServices();
+			var params = request.getFormData().fields;
+			var servletData = params.source;
+			var servletFile = "webapps/" + params.webApp + "/WEB-INF/classes/" + adminServices.getWebApp(params.webApp).getServletMeta(params.servlet).meta.servletClass;
+			try{
+				fs.writeFileSync(servletFile, servletData);
+			}catch(e){
+				console.log("Error writing to file [" + servletFile + "].");
+				console.log(e.stack.red);
+			}
+			response.getWriter().write(JSON.stringify({
+				success : true,
+				msg : "File Saved."
+			}));		
 		}
-		response.getWriter().write(JSON.stringify({
-			success : true,
-			msg : "File Saved."
-		}));		
 	}
 }

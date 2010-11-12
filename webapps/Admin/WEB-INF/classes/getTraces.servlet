@@ -1,18 +1,20 @@
 {
-	doGet : function(request, response) {
-	/*
-		Get Web Container Trace Log
-	*/
-		// Get Trace Log
-		var traces = this.getServletContext().getAdminServices().getTraces();
-		var tr = [];
-		for(var i=0;i<traces.length;i++){
-			tr.push({
-				id: i,
-				request: traces[i].request.getRequestURI(),
-				response : traces[i].response.getStatus()
-			});
+	doGet : {
+		parameters : [ ],
+		method : function(request, response) {
+			/**
+				Get Web Container Trace Log
+			*/
+			var traces = this.getServletContext().getAdminServices().getTraces();
+			var tr = [];
+			for(var i=0;i<traces.length;i++){
+				tr.push({
+					id: i,
+					request: traces[i].request.getRequestURI(),
+					response : traces[i].response.getStatus()
+				});
+			}
+			response.getWriter().write(JSON.stringify(tr));
 		}
-		response.getWriter().write(JSON.stringify(tr));
 	}
 }

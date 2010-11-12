@@ -22,15 +22,15 @@ var webapps = []; 				// Web Applications
 var contexts = []; 				// ServletContext Collection
 var requestLog = []; 			// HTTP Request Log
 var traces = [];				// Trace Collection
-var sessionManager = require('./SessionManager').create({
-	timeoutDefault : (3600 * 24 * 365)	// 1 Year
-});
+
 /**
  * Web Container Configuration Object
  */
 var dateMask = "mm/dd/yy HH:MM:ss";
 var dateOffset = 1000 * 3600 * 6;
-
+var sessionManager = require('./SessionManager').create({
+	timeoutDefault : (3600 * 24 * 365)	// 1 Year
+});
 var config = {};				// Web Container Configuration
 var status = {					// Web Container Status
 	startupTime : new Date(),	// Start Time
@@ -210,10 +210,14 @@ var adminServices = { // Services Available to Admin Contexts
 	getTraces : function() {
 		return traces;
 	},
+	getSessions : function() {
+		return sessionManager.adminServices.getSessions();
+	},
 	getEnvironment : function() { return process.env; },
 	restartApp : restartApp,		
 	stopServer : function() { /*Stub*/ }
 };
+
 var listener = function(req, res) {
 	// Preprocessing of Node.JS request
 	if(req.method=="POST") { // Handle form fields with async formidable addon
@@ -304,7 +308,7 @@ var listenerCallback = function(options) {
 		req : req,					// Node.JS Request Obj
 		JSESSIONID : JSESSIONID,	// Requested SessionID
 		cookies : cookies,			// Cookies Collection
-		sessionManager : sessionManager
+		sessionManager : sessionManager.services
 	});
 	var response = new HttpServletResponse.create({
 		id : status.counter,

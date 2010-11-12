@@ -4,6 +4,80 @@ Ext.onReady(function() {	// Main Entry Method
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 	adminDashboard.init();
 });
+var getForm = function(options) {
+	var methods = options.methodOptions.split(", ");
+	var servletOptions = eval("("+options.servletOptions+")");
+	var tabItems = [];
+	for(var i=0;i<methods.length;i++) {
+		var paramItems;
+			switch(methods[i]) {
+				case "GET" :
+					paramItems = servletOptions.doGet; break;
+				case "PUT" :
+					paramItems = servletOptions.doPut; break;
+				case "POST" :
+					paramItems = servletOptions.doPost;break;
+				case "DELETE" :
+					paramItems = servletOptions.doDelete; break;
+				default:
+		};
+		var formItems = [];
+		if(paramItems) {
+			for (var j=0;j<paramItems.length;j++) {
+				var fieldLabel;
+				var toolTip;
+				if(typeof paramItems[j] == "string") {
+					fieldLabel = paramItems[j];
+					toolTip = paramItems[j];
+				}else{
+					fieldLabel = paramItems[j].name;
+					toolTip = paramItems[j].description;
+				}
+				formItems.push({
+					xtype : "textfield",
+					fieldLabel : fieldLabel,
+				});
+			}
+		}
+		var formPanel = {
+			title : methods[i],
+			xtype : "form",
+			defaultType : "textfield",
+			bodyStyle : "padding:5px;",
+			bbar : {
+				items : "Go"
+			}
+		};
+		if(formItems) formPanel.items = formItems;
+		tabItems.push(formPanel);
+	}
+	var resultsPanel = {
+		xtype : "panel",
+		title : "Response",
+		layout : "fit",
+		border: false,
+		region : "south",
+		height : 100,
+		split : true
+	};
+	var paramFieldSet = {
+		id : "paramFieldSet",
+		xtype : "fieldset",
+		title : "Parameters",
+		autoHeight : true,
+		defaultType : "text",
+		items : paramItems
+	}
+	var tabPanel = {
+		xtype : "tabpanel",
+		activeTab : 0,
+		frame: true,
+		items : tabItems,
+		border: false,
+		region : "center"
+	};
+	return [tabPanel, resultsPanel]
+};
 var adminDashboard = {
 	dsServerStatus : new Ext.data.Store({
 		url : "getServerStatus",
@@ -40,6 +114,15 @@ var adminDashboard = {
 			]
 		})
 	}),
+	dsSessions : new Ext.data.Store({
+		url : "getSessions",
+		autoLoad : true,
+		reader : new Ext.data.JsonReader({
+			fields : [
+				"id", "createdOn", "lastAccessed"
+			]
+		})
+	}),
 	appTreeLoader : new Ext.tree.TreeLoader({
 		dataUrl:'/Admin/getApplications',
 		requestMethod : "GET",
@@ -63,6 +146,7 @@ var adminDashboard = {
 	init : function() {
 		SyntaxHighlighter.all();
 		SyntaxHighlighter.defaults.toolbar = false;
+		Ext.QuickTips.init();
 		new Ext.Viewport({
 			layout:'border', 
 			items:[
@@ -193,6 +277,46 @@ var adminDashboard = {
 																			});
 																		}
 																	},"-",{
+																		text : "Options",
+																		handler : function() {
+																			Ext.Ajax.request({
+																				method : "OPTIONS",
+																				url : ("/" + node.parentNode.parentNode.attributes.text +
+																				node.attributes.mappings[0]),
+																				callback : function(options, success, response) {
+																					alert(response.getResponseHeader("Allow"));
+																					var servletOptions = response.getResponseHeader("Servlet-Parameters");
+																					if(servletOptions) alert(servletOptions);
+																				}
+																			});
+																		}
+																	},"-",{
+																		text : "Test",
+																		handler : function() {
+																			Ext.Ajax.request({
+																				method : "OPTIONS",
+																				url : ("/" + node.parentNode.parentNode.attributes.text +
+																				node.attributes.mappings[0]),
+																				callback : function(options, success, response) {
+																					var allow = response.getResponseHeader("Allow");
+																					var servletOptions = response.getResponseHeader("Servlet-Parameters");
+																					var testWin = new Ext.Window({
+																						title : "Test Servlet",
+																						height : 400,
+																						layout : "border",
+																						border : true,
+																						width : "80%",
+																						closeAction : "close",
+																						items : getForm({
+																							methodOptions : allow,
+																							servletOptions : servletOptions
+																						})
+																					});
+																					testWin.show();
+																				}
+																			});
+																		}
+																	},"-",{
 																		text : "Edit",
 																		handler : function() {
 																			Ext.Ajax.request({
@@ -295,7 +419,7 @@ var adminDashboard = {
                                                 }
                                             },
                                             autoheight: true,
-											title: "Applications",
+											// title: "Applications",
 											border : false,
 											tbar : {
 												items : [
@@ -347,9 +471,10 @@ var adminDashboard = {
 									layout: "fit",
 									items:[
 										new Ext.ux.tree.ColumnTree({
+											border : false,
 											//rootVisible:false,
 											autoheight: true,
-											title: "MIMEs",
+											//title: "MIMEs",
 											tbar : {
 												items : "Stub"
 											},
@@ -453,6 +578,30 @@ var adminDashboard = {
 											}
 										]
 									}
+								},{
+									title : "Sessions",
+									xtype : "grid",
+									tbar : {
+										items : [
+											{
+												text : "Refresh",
+												handler : function() {
+													adminDashboard.dsSessions.load();
+												}
+											}
+										]
+									},
+									store : this.dsSessions,
+									// autoExpandColumn : 1,
+									columns : [
+										{
+										id : "id", header : "JESSIONID", dataIndex : "id", width : 250, sortable : true
+										},{
+										header : "Created On", dataIndex : "createdOn", sortable : true, width: 150
+										},{
+										header : "Last Accessed", dataIndex : "lastAccessed", width : 150, sortable : true
+										}
+									],
 								}
 							]
 						},{

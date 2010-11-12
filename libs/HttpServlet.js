@@ -78,10 +78,10 @@ exports.parseNSP = function(contents) {
 	}
 	// Create servlet options for servlet constructor
 	var servletOptions = {
-		doGet : doFunction,
-		doPost : doFunction,
-		doDelete : doFunction,
-		doPut : doFunction
+		doGet : { method : doFunction },
+		doPost : { method : doFunction },
+		doDelete : { method : doFunction },
+		doPut : { method : doFunction }
 	};
 	return servletOptions;	
 };
@@ -132,6 +132,26 @@ exports.create = function(options, meta) {
 			There's no need to override this method unless the servlet implements new HTTP methods, 
 			beyond those implemented by HTTP 1.1.
 			*/
+			var allowHeader = "OPTIONS, TRACE";
+			var servletParameters = {};
+			if(options.doGet) {
+				allowHeader += ", GET";
+				if(options.doGet.parameters) servletParameters.doGet = options.doGet.parameters;
+			}
+			if(options.doPost) {
+				allowHeader += ", POST";
+				if(options.doGet.parameters) servletParameters.doPost = options.doPost.parameters;
+			}
+			if(options.doDelete) {
+				allowHeader += ", DELETE";
+				if(options.doGet.parameters) servletParameters.doGet = options.doDelete.parameters;
+			}
+			if(options.doPut) {
+				allowHeader += ", PUT";
+				if(options.doGet.parameters) servletParameters.doGet = options.doPut.parameters;
+			}
+			response.setHeader("Allow", allowHeader);
+			response.setHeader("Servlet-Parameters", JSON.stringify(servletParameters));
 		},
 		doTrace : function(request, response) {
 			/* Called by the server (via the service method) to allow a servlet to handle a TRACE request. 
@@ -147,16 +167,16 @@ exports.create = function(options, meta) {
 			try{		// Execute Servlet Code
 				switch (request.getMethod()) {
 					case "GET" :
-						options.doGet.call(this, request, response);
+						options.doGet.method.call(this, request, response);
 						break;
 					case "POST" :
-						options.doPost.call(this, request, response);
+						options.doPost.method.call(this, request, response);
 						break;
 					case "DELETE" :
-						options.doDelete.call(this, request, response);
+						options.doDelete.method.call(this, request, response);
 						break;
 					case "PUT" :
-						options.doPut.call(this, request, response);
+						options.doPut.method.call(this, request, response);
 						break;
 					case "OPTIONS" :
 						this.doOptions(request, response);

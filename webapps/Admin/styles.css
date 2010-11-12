@@ -10,3 +10,12 @@
 .statsNode {
     background-image:url('resources/images/statsNode.png') !important; 
 }
+.methodNode {
+    background-image:url('resources/images/methodNode.gif') !important; 
+}
+.mappingNode {
+    background-image:url('resources/images/mappingNode.png') !important; 
+}
+.parameterNode {
+    background-image:url('resources/images/parameterNode.gif') !important; 
+}

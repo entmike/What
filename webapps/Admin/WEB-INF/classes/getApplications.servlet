@@ -1,92 +1,153 @@
 {
-	doGet : function(request, response) {
-	/*
-		Get Web Container Application and Servlet Information to return to ExtJS Admin Page
-	*/
-		// Get apps collection
-		var apps = this.getServletContext().getAdminServices().getApplications();
-		var rootNode = [];						// Create Root Node
-		for(var i=0;i<apps.length;i++) {		// Run through apps
-			var app = apps[i];
-			var servlets = app.getServlets();	// Get current app's servlet metadata collection
-			var servletsNode = [];				// Create Servlets Node
-			for(var j=0;j<servlets.length;j++) {	// Run through servlets collection
-				var statsNode = {
-					iconCls : "statsNode",
-					type : "statsNode",
-					text : "Stats",
-					uiProvider : "col",
+	doGet : {
+		parameters : [ ],
+		method : function(request, response) {
+		/*
+			Get Web Container Application and Servlet Information to return to ExtJS Admin Page
+		*/
+			// Get apps collection
+			var apps = this.getServletContext().getAdminServices().getApplications();
+			var rootNode = [];						// Create Root Node
+			for(var i=0;i<apps.length;i++) {		// Run through apps
+				var app = apps[i];
+				var servlets = app.getServlets();	// Get current app's servlet metadata collection
+				var servletsNode = [];				// Create Servlets Node
+				for(var j=0;j<servlets.length;j++) {	// Run through servlets collection
+					var servlet = servlets[j];
+					var servletName = servlet.servlet.getServletConfig().getServletName();
+					var statsNode = {
+						iconCls : "statsNode",
+						type : "statsNode",
+						text : "Stats",
+						uiProvider : "col",
+						children : [
+							{
+								iconCls : "statsNode",
+								text : "Executions",
+								uiProvider : "col",
+								description : servlet.stats.executions,
+								leaf : true
+							},{
+								iconCls : "statsNode",
+								text : "Errors",
+								uiProvider : "col",
+								description : servlet.stats.errors,
+								leaf : true
+							}
+						]
+					};
+					var methodsNode = {				// Create Methods Node
+						text : "Methods",
+						uiProvider : "col",
+						iconCls : "methodNode",
+						children : []
+					};
+					var mappings = app.getServletMappings(servletName);
+					var urlMappings = [];
+					for(var k=0;k<mappings.length;k++) {
+						urlMappings.push({
+							text : mappings[k],
+							iconCls : "mappingNode",
+							uiProvider : "col",
+							leaf : true
+						});					
+					}
+					var mappingNode = {
+						text : "URL Mappings",
+						uiProvider : "col",
+						iconCls : "mappingNode",
+						children : urlMappings
+					};
+					for(optionName in servlet.options){	// Run through options
+						var option=servlet.options[optionName];
+						var params = [];
+						if(option.parameters) {
+							var parameters = option.parameters;
+							for(var k=0;k<parameters.length;k++) {
+								var parameter=parameters[k];
+								var parameterNode = {
+									iconCls : "parameterNode",
+									leaf : true,
+									uiProvider : "col"
+								};
+								switch(typeof parameter) {
+									case "string":
+										parameterNode.text = parameter;
+										break;
+									case "object":
+										parameterNode.text = parameter.name || parameter;
+										parameterNode.description = parameter.description || "";
+										parameterNode.required = parameter.required || false;
+										break;
+									default:
+										parameterNode.text = parameter;
+								}
+								params.push(parameterNode);
+							};
+						};
+						var methodNode = {
+							type : "servletOption",
+							iconCls : "methodNode",
+							text : optionName,
+							uiProvider : "col"
+						}
+						if(params.length>0) {
+							methodNode.children = [];
+							methodNode.children.push({
+								text : "Parameters",
+								iconCls : "parameterNode",
+								uiProvider : "col",
+								children : params
+							});
+						}else{
+							methodNode.leaf = true;
+						}
+						methodsNode.children.push(methodNode);	// Push Method Node to Methods Collection
+					}
+					servletsNode.push({				// Push Servlets Node
+						id : servletName,
+						text : servletName,
+						mappings : mappings,
+						type : "servlet",
+						iconCls : "servletNode",
+						description : servlet.meta.description,
+						uiProvider: "col",
+						children : [statsNode, methodsNode, mappingNode]
+					});
+				}
+				var initParamNode = [];						// Create Initialization Param. Node
+				var initParamNames = app.getContext().getInitParameterNames();	// Get Init Parameter Collection
+				for(var j=0;j<initParamNames.length;j++) {	// Run through init params
+					initParamNode.push({					// Push Init Param Leaf
+						text : initParamNames[j],
+						description : app.getContext().getInitParameter(initParamNames[j]),
+						uiProvider: "col",
+						leaf : true
+					});
+				}
+				var appNode = {						// Create App Node entry
+					id : app.getName(),
+					type : "webApp",
+					text : app.getName(),
+					component : app.getName(),
+					description : app.getConfig().description,
+					uiProvider: "col",
+					iconCls : "webAppNode",
 					children : [
-					{
-							iconCls : "statsNode",
-							text : "Executions",
-							uiProvider : "col",
-							description : servlets[j].stats.executions,
-							leaf : true
+						{
+							text : "Init Parameters",
+							iconCls : "attributeNode",
+							children : initParamNode
 						},{
-							iconCls : "statsNode",
-							text : "Errors",
-							uiProvider : "col",
-							description : servlets[j].stats.errors,
-							leaf : true
+							text : "Servlets",
+							iconCls : "servletNode",
+							children : servletsNode
 						}
 					]
 				}
-				var optionsNode = {				// Create Options Node
-					text : "Options",
-					uiProvider : "col",
-					children : []
-				}
-				for(option in servlets[j].options){	// Run through options
-					optionsNode.children.push({			// Push Option Leaf
-						type : "servletOption",
-						text : option,
-						leaf : true,
-						uiProvider : "col"
-					});
-				}
-				servletsNode.push({				// Push Servlets Node
-					id : servlets[j].servlet.getServletConfig().getServletName(),
-					text : servlets[j].servlet.getServletConfig().getServletName(),
-					type : "servlet",
-					iconCls : "servletNode",
-					description : servlets[j].meta.description,
-					uiProvider: "col",
-					children : [statsNode, optionsNode]
-				});
+				rootNode.push(appNode);				// Push App Node to Root Node
 			}
-			var initParamNode = [];						// Create Initialization Param. Node
-			var initParamNames = app.getContext().getInitParameterNames();	// Get Init Parameter Collection
-			for(var j=0;j<initParamNames.length;j++) {	// Run through init params
-				initParamNode.push({					// Push Init Param Leaf
-					text : initParamNames[j],
-					description : app.getContext().getInitParameter(initParamNames[j]),
-					uiProvider: "col",
-					leaf : true
-				});
-			}
-			var appNode = {						// Create App Node entry
-				id : app.getName(),
-				type : "webApp",
-				text : app.getName(),
-				component : app.getName(),
-				description : app.getConfig().description,
-				uiProvider: "col",
-				iconCls : "webAppNode",
-				children : [
-					{
-						text : "Init Parameters",
-						iconCls : "attributeNode",
-						children : initParamNode
-					},{
-						text : "Servlets",
-						iconCls : "servletNode",
-						children : servletsNode
-					}
-				]
-			}
-			rootNode.push(appNode);				// Push App Node to Root Node
+			response.getWriter().write(JSON.stringify(rootNode));	// Write out Treenode JSON
 		}
-		response.getWriter().write(JSON.stringify(rootNode));	// Write out Treenode JSON
 	}
 }

@@ -1,6 +1,9 @@
 {
-	doGet : function(request, response) {
-		var w = response.getWriter();
-		w.write(JSON.stringify({success: true}));
+	doGet : {
+		parameters : [ ],
+		method : function(request, response) {
+			var w = response.getWriter();
+			w.write(JSON.stringify({success: true}));
+		}
 	}
 }

@@ -24,6 +24,39 @@ exports.create = function(options) {
 		containerServices : options.containerServices,
 		adminServices : options.adminServices
 	});
+	var addMapping = function(servletName, url) {
+		servletMappings.push({
+			name : servletName,
+			urlPattern : url
+		});
+	};
+	var getServletMappings = function(servletName) {
+			var mappings = [];
+			for(var i=0;i<servletMappings.length;i++){
+				if(servletName == servletMappings[i].name) {
+					mappings.push(servletMappings[i].urlPattern);
+				}
+			}
+			return mappings;
+	};
+	var loadNSP = function(options){
+		var MIMEPath = options.MIMEPath;
+		var MIME = options.MIME;
+		console.log("Creating Servlet for: [" + MIMEPath + "] from NSP...");
+		var servletOptions = HttpServlet.parseNSP(MIME.content.toString());
+		var opts = {
+			servletOptions : servletOptions,
+			meta : {
+				name : MIMEPath,
+				description : "NSP File",
+				servletClass : MIMEPath,
+				servletType : "NSP"
+			}
+		};
+		addMapping(MIMEPath, MIMEPath);
+		servlet = loadServlet(opts);
+		return servlet;
+	}
     var loadServlet = function(options) {
 		// Create Servlet Metadata Wrapper
 		var meta = options.meta;
@@ -58,6 +91,8 @@ exports.create = function(options) {
 			}catch(e2){
 				console.log(e2.stack.red);
 			}
+			var meta = webConfig.servlets[i];
+			meta.servletType = "Standard";
 			var options = {
 				servletOptions : servletOptions,
 				meta : webConfig.servlets[i]
@@ -123,19 +158,7 @@ exports.create = function(options) {
 								case 200:
 									if(MIME.ext == "nsp") {		// NSP page
 										var servlet = this.getServlet(MIMEPath);
-										if(!servlet) {			// Initial NSP request, create servlet.
-											console.log("Creating Servlet for: [" + MIMEPath + "] from NSP...");
-											var servletOptions = HttpServlet.parseNSP(MIME.content.toString());
-											var options = {
-												servletOptions : servletOptions,
-												meta : {
-													name : MIMEPath,
-													description : "NSP File",
-													servletClass : ".NSP"
-												}
-											};
-											servlet = this.loadServlet(options);
-										}
+										if(!servlet) servlet = loadNSP({ MIME : MIME, MIMEPath : MIMEPath});
 										// Call Servlet Service
 										servlet.service(request, response);
 									}else{// General MIME type
@@ -181,7 +204,8 @@ exports.create = function(options) {
 		getContext : function() {
 			return context;
 		},
-        getMapping : function(urlPattern) {
+        getServletMappings : getServletMappings,
+		getMapping : function(urlPattern) {
 			// To-do: pattern matching
 			for(var i=0;i<servletMappings.length;i++) {
 				if(urlPattern == servletMappings[i].urlPattern) {

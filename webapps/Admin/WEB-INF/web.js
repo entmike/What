@@ -1,12 +1,16 @@
 {
-	displayName : "Adminstration",
+	displayName : "Administration",
 	description : "Web Container Administration",
 	contextParams : {
 		author : "Mike Howles",
-        version : "1.0"
+        version : "1.1"
 	},
 	servlets : [
 		{
+			name : "getSessions",
+			description : "Get Web Container Sessions",
+			servletClass : "getSessions.servlet"
+		},{
 			name : "setTrace",
 			description : "Set Trace Status",
 			servletClass : "setTrace.servlet"
@@ -28,11 +32,11 @@
 			servletClass : "getEnvironment.servlet"
 		},{
 			name : "getServletOption",
-			description : "Get Servlet Option",
+			description : "Get a Servlet Option",
 			servletClass : "getServletOption.servlet"
 		},{
 			name : "restartApp",
-			description : "Restart a WebApp - Requires: (webApp)",
+			description : "Restart a Web Application",
 			servletClass : "restartApp.servlet"
 		},{
 			name : "restartApps",
@@ -40,7 +44,7 @@
 			servletClass : "restartApps.servlet"
 		},{
 			name : "restartServlet",
-			description : "Restart a Servlet - Requires: (webApp, servlet)",
+			description : "Restart a Servlet",
 			servletClass : "restartServlet.servlet"
 		},{
 			name : "stopServer",
@@ -48,12 +52,15 @@
 			servletClass : "stopServer.servlet"
 		},{
 			name : "editServlet",
-			description : "Edit a Servlet - Requires: (webApp, servlet)",
+			description : "Edit a Servlet",
 			servletClass : "editServlet.servlet"
 		},
 	],
 	servletMappings : [
 		{
+			name : "getSessions",
+			urlPattern : "/getSessions"
+		},{
 			name : "setTrace",
 			urlPattern : "/setTrace"
 		},{

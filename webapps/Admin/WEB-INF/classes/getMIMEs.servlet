@@ -1,91 +1,94 @@
 {
-	doGet : function(request, response) {
-		var getContents = function(path){
-			var wa = fs.readdirSync(path);
-			var arr = [];
-			for(var i=0;i<wa.length;i++) {
-				var stats = fs.statSync(path + "/" + wa[i]);
-				var readablePerms = "";
-				var permissions = stats.mode.toString(8);
-				var rwx = permissions.substring(permissions.length-3, permissions.length);
-				var permArr = [];
-				permArr.push(rwx[0]);permArr.push(rwx[1]);permArr.push(rwx[2]);
-				for(var j=0;j<permArr.length;j++) {
-					switch(permArr[j]){
-						case '0' : permArr[j] = "---"; break; 
-						case '1' : permArr[j] = "--x"; break;
-						case '2' : permArr[j] = "-w-"; break;
-						case '3' : permArr[j] = "-wx"; break;
-						case '4' : permArr[j] = "r--"; break;
-						case '5' : permArr[j] = "r-x"; break;
-						case '6' : permArr[j] = "rw-"; break;
-						case '7' : permArr[j] = "rwx"; break;
-						default: break;
+	doGet : {
+		parameters : [ ],
+		method: function(request, response) {
+			var getContents = function(path){
+				var wa = fs.readdirSync(path);
+				var arr = [];
+				for(var i=0;i<wa.length;i++) {
+					var stats = fs.statSync(path + "/" + wa[i]);
+					var readablePerms = "";
+					var permissions = stats.mode.toString(8);
+					var rwx = permissions.substring(permissions.length-3, permissions.length);
+					var permArr = [];
+					permArr.push(rwx[0]);permArr.push(rwx[1]);permArr.push(rwx[2]);
+					for(var j=0;j<permArr.length;j++) {
+						switch(permArr[j]){
+							case '0' : permArr[j] = "---"; break; 
+							case '1' : permArr[j] = "--x"; break;
+							case '2' : permArr[j] = "-w-"; break;
+							case '3' : permArr[j] = "-wx"; break;
+							case '4' : permArr[j] = "r--"; break;
+							case '5' : permArr[j] = "r-x"; break;
+							case '6' : permArr[j] = "rw-"; break;
+							case '7' : permArr[j] = "rwx"; break;
+							default: break;
+						}
 					}
-				}
-				var readablePerms = permArr.join("");
-				if(permissions.substring(0,1)=='4') {
-					readablePerms = "d" + readablePerms;
-				}else{
-					readablePerms = "-" + readablePerms;
-				}
-				if(stats.isDirectory()) {
-					arr.push({
-						text : wa[i],
-						filename : wa[i],
-						filesize : "",
-						permissions : readablePerms,
-						uiProvider: "col",
-						children : getContents(path + "/" + wa[i]),
-					});
-				}else{
-					arr.push({
-						text : wa[i],
-						leaf : true,
-						filename : wa[i],
-						filesize : stats.size,
-						permissions : readablePerms,
-						uiProvider: "col"
-					});				
-				}
+					var readablePerms = permArr.join("");
+					if(permissions.substring(0,1)=='4') {
+						readablePerms = "d" + readablePerms;
+					}else{
+						readablePerms = "-" + readablePerms;
+					}
+					if(stats.isDirectory()) {
+						arr.push({
+							text : wa[i],
+							filename : wa[i],
+							filesize : "",
+							permissions : readablePerms,
+							uiProvider: "col",
+							children : getContents(path + "/" + wa[i]),
+						});
+					}else{
+						arr.push({
+							text : wa[i],
+							leaf : true,
+							filename : wa[i],
+							filesize : stats.size,
+							permissions : readablePerms,
+							uiProvider: "col"
+						});				
+					}
 
+				}
+				return arr;
 			}
-			return arr;
-		}
-		// Get writer
-		var w = response.getWriter();
-		// Get apps
-		var apps = this.getServletContext().getAdminServices().getApplications();
-		// Create Collection
-		var arr = [];
-		// Get WebRoot MIMEs
-		var MIME = getContents("webroot/");
-		var obj = {
-			id : "WEBROOT",
-			text : "WEBROOT",
-			filename : "WEBROOT",
-			filesize : "0",
-			permissions : "",
-			uiProvider: "col",
-			children : MIME
-		}
-		arr.push(obj);
-		// Run through apps
-		for(var i=0;i<apps.length;i++) {
-			var app = apps[i];
-			var MIME = getContents("webapps/" + app.getName());
+			// Get writer
+			var w = response.getWriter();
+			// Get apps
+			var apps = this.getServletContext().getAdminServices().getApplications();
+			// Create Collection
+			var arr = [];
+			// Get WebRoot MIMEs
+			var MIME = getContents("webroot/");
 			var obj = {
-				id : app.getName(),
-				text : app.getName(),
-				iconCls : "webAppNode",
-				filename : app.getName(),
-				filesize : "",
+				id : "WEBROOT",
+				text : "WEBROOT",
+				filename : "WEBROOT",
+				filesize : "0",
 				permissions : "",
 				uiProvider: "col",
 				children : MIME
 			}
 			arr.push(obj);
+			// Run through apps
+			for(var i=0;i<apps.length;i++) {
+				var app = apps[i];
+				var MIME = getContents("webapps/" + app.getName());
+				var obj = {
+					id : app.getName(),
+					text : app.getName(),
+					iconCls : "webAppNode",
+					filename : app.getName(),
+					filesize : "",
+					permissions : "",
+					uiProvider: "col",
+					children : MIME
+				}
+				arr.push(obj);
+			}
+			w.write(JSON.stringify(arr));
 		}
-		w.write(JSON.stringify(arr));
 	}
 }

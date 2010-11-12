@@ -1,7 +1,10 @@
 {
-	doGet : function(request, response) {
-		var w = response.getWriter();
-		var session = request.getSession(true);
-		w.write(JSON.stringify(session));
+	doGet : {
+		parameters : [ ],
+		method: function(request, response) {
+			var w = response.getWriter();
+			var session = request.getSession(true);
+			w.write(JSON.stringify(session));
+		}
 	}
 }

@@ -1,0 +1,21 @@
+{
+	doGet : {
+		parameters : [ ],
+		method : function(request, response) {
+			/*
+				Get Web Container Sessions
+			*/
+			var sessions = this.getServletContext().getAdminServices().getSessions();
+			var sr = [];
+			
+			for(var i=0;i<sessions.length;i++){
+				sr.push({
+					id: sessions[i].getId(),
+					createdOn: sessions[i].getCreationTime(),
+					lastAccessed : sessions[i].getLastAccessedTime()
+				});
+			}
+			response.getWriter().write(JSON.stringify(sr));
+		}
+	}
+}

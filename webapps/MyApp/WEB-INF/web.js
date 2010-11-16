@@ -12,22 +12,15 @@
 			initParams : {
 				key1 : "value"
 			}
-		},{
-			name : "servlet2",
-			description : "Servlet 2",
-			servletClass : "getStatusx.servlet",
-			initParams : {
-				key1 : "anotherValue"
-			}
 		}
 	],
 	servletMappings : [
 		{
 			name : "servlet1",
 			urlPattern : "/getEnv"
-		},{
-			name : "servlet2",
-			urlPattern : "/getStatus"
 		}
+	],
+	translations : [
+		{ target : "/index.nsp", source : ["", "/", "index.htm", "index.html", "default.htm", "default.html"] }
 	]
 }

@@ -1,3 +1,6 @@
+/*
+	Nodes
+*/
 .servletNode {
     background-image:url('resources/images/servletNode.png') !important; 
 }
@@ -18,4 +21,25 @@
 }
 .parameterNode {
     background-image:url('resources/images/parameterNode.gif') !important; 
+}
+/*
+	Buttons
+*/
+.refreshButton {
+	background-image:url('resources/images/refresh-icon.png') !important; 
+}
+.restartButton {
+	background-image:url('resources/images/restart-icon.png') !important; 
+}
+.optionsButton {
+	background-image:url('resources/images/options-icon.png') !important; 
+}
+.testButton {
+	background-image:url('resources/images/test-icon.png') !important; 
+}
+.codeeditButton {
+	background-image:url('resources/images/codeedit-icon.png') !important; 
+}
+.logButton {
+	background-image:url('resources/images/log-icon.png') !important; 
 }

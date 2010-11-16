@@ -45,7 +45,19 @@ var getForm = function(options) {
 			defaultType : "textfield",
 			bodyStyle : "padding:5px;",
 			bbar : {
-				items : "Go"
+				items : [
+					{
+						text : "Execute",
+						handler : function(a,b) {
+							alert(a.toString());
+							formPanel.getForm().submit({
+								url:'xml-errors.xml',
+								waitMsg:'Saving Data...',
+								submitEmptyText: false
+							});
+						}
+					}
+				]
 			}
 		};
 		if(formItems) formPanel.items = formItems;
@@ -161,6 +173,7 @@ var adminDashboard = {
 						items : [
 							{
 								text : "Refresh",
+								iconCls : "refreshButton",
 								handler: function(){
 									adminDashboard.dsServerStatus.load();
 									adminDashboard.dsEnv.load();
@@ -171,6 +184,7 @@ var adminDashboard = {
 					items : [
 						{
 							xtype : "tabpanel",
+							border: false,
 							activeTab : 0,
 							items : [
 								{
@@ -208,15 +222,74 @@ var adminDashboard = {
 									// Wrapper Panel
 									xtype:"panel",
 									title:"Applications",
-									layout: "fit",
+									layout: "border",
+									border : false,
 									items:[
+										{
+											xtype : "panel",
+											border : false,
+											autoScroll : true,
+											id : "appDetails",
+											split : true,
+											title : "Details",
+											height : 200,
+											region : "south",
+											tpl : new Ext.Template("<div>Hello {0}.</div>")
+										},
 										new Ext.ux.tree.ColumnTree({
-											rootVisible:false,
 											id : "applicationTree",
+											region : "center",
+											rootVisible : false,
+                                            autoheight : true,
+											border : false,
+											defaults : {border: true},
+											autoScroll:true,
+											tbar : {
+												items : [
+													{
+														text : "Refresh",
+														iconCls : "refreshButton",
+														handler: function(){
+															adminDashboard.appTreeLoader.load(Ext.getCmp("applicationTree").getRootNode());
+														}
+													},
+													"-",
+													{
+														text : "Restart All Apps",
+														iconCls : "restartButton",
+														handler : function() {
+															Ext.Ajax.request({
+																url: 'restartApps',
+																method : "GET",
+																success : function(response, opts) {
+																	Ext.Msg.alert('Status', Ext.decode(response.responseText).msg);
+																},
+																failure : function(response, opts) {
+																	alert('server-side failure with status code ' + response.status);
+																}
+															});
+														}
+													}
+												]
+											},
+											autoExpandColumn : "filename",
+											columns:[{
+												header:'Component',
+												width:300,
+												dataIndex:'component'
+											},{
+												header:'Description',
+												width:200,
+												dataIndex:'description'
+                                            }],
+											loader: adminDashboard.appTreeLoader,
+											root: new Ext.tree.AsyncTreeNode({
+												text: 'Apps'
+											}),
 											listeners : {
                                                 click : function(node, event){
 												if(node.attributes.type == "webApp") {
-													var details = Ext.getCmp("details");
+													var details = Ext.getCmp("appDetails");
 													details.removeAll(true);
 													details.add({
 														xtype : "panel",
@@ -225,6 +298,7 @@ var adminDashboard = {
 															items : [
 																{
 																	text : "Restart",
+																	iconCls : "restartButton",
 																	handler : function() {
 																		Ext.Ajax.request({
 																			url: 'restartApp',
@@ -248,10 +322,10 @@ var adminDashboard = {
 														'<strong>{text}</strong> - {description}',
 														'</div>'
 													).overwrite(details.body, node.attributes);
-													Ext.getCmp("details").doLayout();
+													Ext.getCmp("appDetails").doLayout();
 												}
 												if(node.attributes.type == "servlet") {
-														var details = Ext.getCmp("details");
+														var details = Ext.getCmp("appDetails");
 														details.removeAll(true);
 														details.add({
 															xtype : "panel",
@@ -260,6 +334,7 @@ var adminDashboard = {
 																items : [
 																	{
 																		text : "Restart",
+																		iconCls : "restartButton",
 																		handler : function() {
 																			Ext.Ajax.request({
 																				url: 'restartServlet',
@@ -278,6 +353,7 @@ var adminDashboard = {
 																		}
 																	},"-",{
 																		text : "Options",
+																		iconCls : "optionsButton",
 																		handler : function() {
 																			Ext.Ajax.request({
 																				method : "OPTIONS",
@@ -292,6 +368,7 @@ var adminDashboard = {
 																		}
 																	},"-",{
 																		text : "Test",
+																		iconCls : "testButton",
 																		handler : function() {
 																			Ext.Ajax.request({
 																				method : "OPTIONS",
@@ -318,6 +395,7 @@ var adminDashboard = {
 																		}
 																	},"-",{
 																		text : "Edit",
+																		iconCls : "codeeditButton",
 																		handler : function() {
 																			Ext.Ajax.request({
 																				url: 'editServlet',
@@ -391,7 +469,7 @@ var adminDashboard = {
 															'<strong>{text}</strong> - {description}',
 															'</div>'
 														).overwrite(details.body, node.attributes);
-														Ext.getCmp("details").doLayout();
+														Ext.getCmp("appDetails").doLayout();
 													}
 													if(node.attributes.type == "servletOption"){
 														var params = {
@@ -408,7 +486,7 @@ var adminDashboard = {
 																obj.source = Ext.util.Format.htmlEncode(obj.source);
 																new Ext.Template(
 																	'<pre class="brush: js;" style="font-size:8pt;margin:0px;">{source}</pre>'
-																).overwrite(Ext.getCmp("details").body, obj);
+																).overwrite(Ext.getCmp("appDetails").body, obj);
 																SyntaxHighlighter.highlight();
 															},
 															failure: function(response, opts) {
@@ -417,52 +495,7 @@ var adminDashboard = {
 														});
 													}
                                                 }
-                                            },
-                                            autoheight: true,
-											// title: "Applications",
-											border : false,
-											tbar : {
-												items : [
-													{
-														text : "Refresh",
-														handler: function(){
-															adminDashboard.appTreeLoader.load(Ext.getCmp("applicationTree").getRootNode());
-														}
-													},
-													"-",
-													{
-														text : "Restart All Apps",
-														handler : function() {
-															Ext.Ajax.request({
-																url: 'restartApps',
-																method : "GET",
-																success : function(response, opts) {
-																	Ext.Msg.alert('Status', Ext.decode(response.responseText).msg);
-																},
-																failure : function(response, opts) {
-																	alert('server-side failure with status code ' + response.status);
-																}
-															});
-														}
-													}
-												]
-											},
-											//layout: "fit",
-											autoScroll:true,
-											autoExpandColumn : "filename",
-											columns:[{
-												header:'Component',
-												width:300,
-												dataIndex:'component'
-											},{
-												header:'Description',
-												width:200,
-												dataIndex:'description'
-                                            }],
-											loader: adminDashboard.appTreeLoader,
-											root: new Ext.tree.AsyncTreeNode({
-												text: 'Apps'
-											})
+                                            }
 										})
 									]
 								},{	// Wrapper Panel
@@ -550,6 +583,7 @@ var adminDashboard = {
 										items : [
 											{
 												text : "Toggle Trace",
+												iconCls : "logButton",
 												allowDepress : true,
 												enableToggle : true,
 												toggleHandler : function(button, state) {
@@ -571,7 +605,8 @@ var adminDashboard = {
 													});
 												}
 											},"-",{
-												text : "Refresh" ,
+												text : "Refresh",
+												iconCls : "refreshButton",
 												handler : function() {
 													adminDashboard.dsTraces.load();
 												}
@@ -585,6 +620,7 @@ var adminDashboard = {
 										items : [
 											{
 												text : "Refresh",
+												iconCls : "refreshButton",
 												handler : function() {
 													adminDashboard.dsSessions.load();
 												}
@@ -604,15 +640,6 @@ var adminDashboard = {
 									],
 								}
 							]
-						},{
-							xtype : "panel",
-							autoScroll : true,
-                            id : "details",
-							split : true,
-							title : "Details",
-							height : 200,
-							region : "south",
-							tpl : new Ext.Template("<div>Hello {0}.</div>")
 						}
 					]
 				}

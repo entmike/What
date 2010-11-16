@@ -7,6 +7,10 @@ var Utils = require('./Utils');
 exports.create = function(options) {
 	// Private
 	options = options || {};
+	// Base Directory
+	var appBase = options.appBase || null;
+	// Allow Directory Listing
+	var allowDirectoryListing = options.allowDirectoryListing || false;
 	// WebApp Name
 	var name = options.appName;
 	// WebApp Config Object
@@ -83,7 +87,7 @@ exports.create = function(options) {
 	};
 	// Load Servlets
 	for(var i=0;i<webConfig.servlets.length;i++) {
-		var servletFile = "webapps/" + name + "/WEB-INF/classes/" + webConfig.servlets[i].servletClass;
+		var servletFile = appBase + "/webapps/" + name + "/WEB-INF/classes/" + webConfig.servlets[i].servletClass;
 		try{
 			var servletData = fs.readFileSync(servletFile);
 			try{
@@ -134,9 +138,9 @@ exports.create = function(options) {
 					writer.write(template);
 				}
 				callback(request, response);
-			}else{	// No mapping, try a MIME from webapps/[app]/...
-				var MIMEPath = "webapps/" + this.getName() + URL;
-				var forbidPath = "webapps/" + this.getName() + "/WEB-INF";
+			}else{	// No mapping, try a MIME from [appbase]/webapps/[app]/...
+				var MIMEPath = appBase + "/webapps/" + this.getName() + URL;
+				var forbidPath = appBase + "/webapps/" + this.getName() + "/WEB-INF";
 				if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
 					response.setStatus(403);
 					response.setHeader("Content-Type", "text/html");
@@ -148,6 +152,7 @@ exports.create = function(options) {
 				}else{	// Non-forbidden, check MIMEs
 					Utils.getMIME({
 						modSince : request.getHeader("If-Modified-Since"),
+						allowDirectoryListing : allowDirectoryListing,
 						cacheControl : request.getHeader("Cache-Control"),
 						path : MIMEPath,
 						relPath : "/" + this.getName() + URL,
@@ -238,7 +243,7 @@ exports.create = function(options) {
 		restartServlet : function(name) {
 			var servlet = this.removeServlet(name);
 			console.log(servlet.meta.servletClass);
-			var servletFile = "webapps/" + this.getName() + "/WEB-INF/classes/" + servlet.meta.servletClass;
+			var servletFile = appBase + "/webapps/" + this.getName() + "/WEB-INF/classes/" + servlet.meta.servletClass;
 			try{
 				var servletData = fs.readFileSync(servletFile);
 				try{

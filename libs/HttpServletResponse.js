@@ -109,9 +109,8 @@ exports.create = function(options) {
 			}
 		},
 		sendRedirect : function(location) {
-			this.setStatus(302);
-			this.getWriter().write(location);
-			this.flushBuffer();
+			this.setStatus(301);
+			this.setHeader("Location", location);
 		},
 		sendError : function(status, msg) {
 			var template=Utils.getTemplate("500.tmpl");

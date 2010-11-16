@@ -359,6 +359,7 @@ exports.getMIME = function(options) {
 	var callback = options.callback;
 	var modSince = options.modSince;
 	var scope = options.scope || this;
+	var allowDirectoryListing = options.allowDirectoryListing || false;
 	// Load MIME Resource and return as object w/some feedback
 	var ext;
 	// Get file extension
@@ -367,6 +368,7 @@ exports.getMIME = function(options) {
 	// MIME Object
 	var MIME = {};
 	fs.stat(path, function(err, stats){
+		console.log(path);
 		if(err){ // Not a valid file or directory
 			MIME.found = false;
 			MIME.status = 404;
@@ -386,7 +388,7 @@ exports.getMIME = function(options) {
 			MIME.found = true;
 			MIME.path = path;
 			MIME.folder = true;
-			if (true) { // To-do: Directory Listing
+			if (allowDirectoryListing) { // To-do: Directory Listing
 				MIME.status = 200;
 				MIME.mimeType = exports.MIMEinfo("html");
 				var template = exports.getTemplate("directoryListing.tmpl");
@@ -409,10 +411,11 @@ exports.getMIME = function(options) {
 				MIME.content = MIME.content.replace("<@listing>", listing);
 			}
 			else {
-				MIME.status = 501;
-				MIME.mimeType = this.MIMEinfo("html");
-				var template = this.getTemplate("directoryListing.tmpl");
+				MIME.status = 403;
+				MIME.mimeType = exports.MIMEinfo("html");
+				var template = exports.getTemplate("403.tmpl");
 				MIME.content = template;
+				MIME.content = MIME.content.replace("<@title>", "Directory Listing not allowed.");
 				MIME.content = MIME.content.replace("<@message>", "Directory Listing not allowed.");
 			}
 			callback.call(scope, MIME);

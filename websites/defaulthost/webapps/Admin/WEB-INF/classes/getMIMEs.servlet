@@ -61,7 +61,7 @@
 			// Create Collection
 			var arr = [];
 			// Get WebRoot MIMEs
-			var MIME = getContents("webroot/");
+			var MIME = getContents(appBase + "/webroot/");
 			var obj = {
 				id : "WEBROOT",
 				text : "WEBROOT",
@@ -75,7 +75,7 @@
 			// Run through apps
 			for(var i=0;i<apps.length;i++) {
 				var app = apps[i];
-				var MIME = getContents("webapps/" + app.getName());
+				var MIME = getContents(appBase + "/webapps/" + app.getName());
 				var obj = {
 					id : app.getName(),
 					text : app.getName(),

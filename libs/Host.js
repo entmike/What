@@ -3,10 +3,7 @@ var url = require('url');
 var gzip = require('./gzip').gzip;
 
 var Utils = require('./Utils');
-var Cookie = require('./Cookie');
 var WebApplication = require('./WebApplication');
-var HttpServletRequest = require('./HttpServletRequest');
-var HttpServletResponse = require('./HttpServletResponse');
 
 exports.create = function(options){
 	// Private
@@ -19,8 +16,7 @@ exports.create = function(options){
 	var sessionManager = require('./SessionManager').create({
 		timeoutDefault : (3600 * 24 * 365)	// 1 Year
 	});
-	var dateMask = "mm/dd/yy HH:MM:ss";
-	var dateOffset = 1000 * 3600 * 6;
+	
 	var options = options || {};
 	var name = options.name;
 	var allowDirectoryListing = options.allowDirectoryListing || false;
@@ -91,7 +87,8 @@ exports.create = function(options){
 	var hostServices = { // Services Available to all Contexts
 		getContexts : getContexts, 
 		addContext : addContext,
-		getContext : getContext
+		getContext : getContext,
+		appBase : appBase
 	};
 	/**
 	* Exposes Administrative Functions to return object
@@ -126,19 +123,15 @@ exports.create = function(options){
 		}catch(e){
 			throw new Error("Problem evaluating web.js");
 		};
-		var initObj = {
+		var webApp = WebApplication.create({	// Create Web App
 			appName : appName,
 			appBase : appBase,
+			sessionManager : sessionManager,
 			allowDirectoryListing : allowDirectoryListing,
 			webConfig : webConfig,
-			containerServices : hostServices,
+			hostServices : hostServices,
 			adminServices : (adminApp==appName)?adminServices:null
-		};
-		// Is it an administration servlet, if so, allow access to WebContainer.
-		if(adminApp == appName) {
-			console.log(("Admin Servlet [" + appName + "] Found.  Assigning Admin Services").green.bold);
-		};
-		var webApp = WebApplication.create(initObj); // Create Web App
+		});
 		webapps.push(webApp); // Push WebApp into collection
 	};
 	/**
@@ -157,7 +150,10 @@ exports.create = function(options){
 				loadWebApp(wa[i]); 
 				console.log(("Web App [" + wa[i] + "] loaded!").green.bold);
 			}
-			catch(e){ console.log(e.message.red.bold); }
+			catch(e){ 
+				console.log(e.message.red.bold);
+				console.log(e.stack.red);
+			}
 		}
 	};
 	/**
@@ -195,7 +191,6 @@ exports.create = function(options){
 		for(var i=0;i<translations.length;i++) {
 			var translation = translations[i];
 			for(var j=0;j<translation.source.length;j++) if(translation.source[j] == source) {
-				// console.log("Translating [" + source + "] to [" + translation.target + "].");
 				return translation.target;
 			}
 		}
@@ -204,57 +199,26 @@ exports.create = function(options){
 	var listenerCallback = function(options) {
 		// Node.JS listener handler
 		// Get Node.JS Request and Response objects
-		var req = options.req;
-		var res = options.res;
-		var formData = options.formData || {};
-		req.formData = formData; // Temp
-		// Get Start Time of request
-		var startMS = new Date().getTime();
-		// Create Cookies Collection from Node.JS Header for Servlet Request Constructor
-		var cookieHeader = req.headers["cookie"];
-		var cookies = [];
-		if(cookieHeader){
-			var arrCookies = cookieHeader.split(";");
-			for(var i=0;i<arrCookies.length;i++) {
-				var kv = arrCookies[i].split("=");
-				if(kv.length>1) {
-					var key = kv[0].replace(/^\s*|\s*$/g,'');	// Trim Whitespace
-					var val = kv[1];
-					cookies.push(Cookie.create(key, val));
-				};
-			}
-		}
-		var JSESSIONID;
-		for(var i=0;i<cookies.length;i++) if(cookies[i].getName() == "JSESSIONID") JSESSIONID = cookies[i].getValue();
-
-		// Create HttpServletRequest and HttpServletResponse objects from NodeJS ones.
-		var request = new HttpServletRequest.create({
-			id : status.counter,		// Tag Request with an ID
-			req : req,					// Node.JS Request Obj
-			JSESSIONID : JSESSIONID,	// Requested SessionID
-			cookies : cookies,			// Cookies Collection
-			sessionManager : sessionManager.services
-		});
-		var response = new HttpServletResponse.create({
-			id : status.counter,
-			res : res
-		});
-		status.counter++; // Internal Counter
-		if(req.formData && req.formData.files) {
-			// Todo: File Handling
-		}
-		// Get Request URL
-		var URL = url.parse(req.url, true);
+		status.counter++; 							// Internal Counter
+		var startMS = new Date().getTime();			// Start Time of Host Processing
+		var req = options.req;						// Node.JS Request Object
+		var res = options.res;						// Node.JS Response Object
+		var URL = url.parse(req.url, true);			// Get Request URL
 		var pathName = URL.pathname;
 		var redirect = getTranslation(pathName);
 		if(redirect) {
-			response.sendRedirect(redirect);
-			completeResponse(request, response);
+			res.writeHead(301, {"Location" : redirect});
+			res.end();
 			return;
 		}
-		// pathName = (getTranslation(pathName))?getTranslation(pathName):pathName;
+		var formData = options.formData || {};
+		req.formData = formData; 					// Temp Rider
+		if(req.formData && req.formData.files) {	// Todo: File Handling
+			
+		}
+
 		// Get HTTP Method
-		var method = request.getMethod();
+		var method = req.method;
 		switch (method){
 			case "GET" : method = method.green.bold; break;
 			case "POST" : method = method.blue.bold; break;
@@ -263,76 +227,56 @@ exports.create = function(options){
 			case "TRACE" : method = method.yellow.bold; break;
 			default : method = method.grey;
 		}
-		var now = new Date(new Date() - dateOffset);
-		console.log("[" + request.getId() + "]\t[" + now.format(dateMask) + "] [" + method + "] [" + request.getRequestURI() + "]");
 		// See if there's a WebApp
 		var webApp = getWebApp(pathName.substring(1));	// Trim off leading "/"
+		console.log("[" + status.counter + "]\t[" + method + "] [" + pathName + "]");
 		if(webApp) { // Web App
+			console.log("[" + status.counter + "]\tWebApp:[" + webApp.getName()+"]");
 			var webAppURL = pathName.substring(webApp.getName().length + 1);  // Slice off webapp portion of URL
 			webAppURL = (webApp.getTranslation(webAppURL))?(webApp.getTranslation(webAppURL)):webAppURL;
 			webApp.handle({
+				id : status.counter,
 				URL : webAppURL,
-				request : request,
-				response : response,
-				callback : completeResponse
+				req : req,
+				res : res
 			});
 		}else{ // Not a webapp, try a MIME from webroot -- Need to make a MIME Handler, this is ugly here.
+			console.log("[" + status.counter + "]\t[ MIME ]");
 			Utils.getMIME({
 				path: appBase + "/webroot" + pathName,
 				allowDirectoryListing : allowDirectoryListing,
 				relPath : pathName,
-				modSince : request.getHeader("If-Modified-Since"),
-				cacheControl : request.getHeader("Cache-Control"),
+				modSince : req.headers["If-Modified-Since"],
+				cacheControl : req.headers["Cache-Control"],
 				callback: function(MIME) {
-					response.setStatus(MIME.status);
+					var status = MIME.status;
+					var headers = {};
 					switch(MIME.status) {
 						case 304:	// Cache (Not Changed)
-							response.setHeader("Content-Type", "");
+							headers["Content-Type"] = "";
 						break;
 						default:
-							response.setHeader("Content-Type", MIME.mimeType.mimeType);
-							response.setHeader("Last-Modified", MIME.modTime);
-							response.setOutputStream(MIME.content);
+							headers["Content-Type"] =  MIME.mimeType.mimeType;
+							headers["Last-Modified"] = MIME.modTime;
+							if(req.headers["accept-encoding"].toLowerCase().indexOf("gzip") > -1) {
+								// Compressed
+								headers["Content-Encoding"] = "gzip";
+								gzip({
+									data : MIME.content,
+									scope : this,
+									callback : function(err, data){
+										res.writeHead(status, headers);
+										res.end(data);
+									}
+								});
+							}else{
+								// Uncompressed
+								res.writeHead(status, headers);
+								res.end(MIME.content);
+							}
+						break;
 					}
-					completeResponse(request, response);
 				}
-			});
-		}
-	};
-	var completeResponse = function(request, response){
-		if(request.getHeader("accept-encoding").toLowerCase().indexOf("gzip") > -1) {  // Accepts GZIP
-			if(!response.isCommited()) {
-				response.setHeader("Content-Encoding", "gzip");
-				gzip({
-					data : response.getOutputStream(),
-					scope : response,
-					callback : function(err, data) {
-						this.setOutputStream(data);
-						this.close();
-					}
-				});
-			}else{ // Response is commited, cannot GZIP.
-				response.close();
-			}
-		}else{ // Browser does not accept GZIP.
-			response.close();
-		}
-		var rStatus = response.getStatus().toString();
-		switch (rStatus){
-			case "200" : rStatus = rStatus.green; break;
-			case "304" : rStatus = rStatus.cyan; break;
-			case "404" : rStatus = rStatus.red.bold; break;
-			case "302" : rStatus = rStatus.yellow; break;
-			case "500" : rStatus = rStatus.red.bold; break;
-			default : rStatus = rStatus.grey;
-		}
-		var now = new Date(new Date() - dateOffset);
-		console.log("[" + response.getId() + "]\t[" + now.format(dateMask) + "] [" + rStatus + "] [" + request.getRequestURI() + "]");
-		var endMS = new Date().getTime();
-		if(status.trace){
-			addTrace({
-				request : request,
-				response : response
 			});
 		}
 	};

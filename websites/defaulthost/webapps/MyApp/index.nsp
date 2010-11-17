@@ -60,7 +60,7 @@
 	<div class="code"><%
 	// Example Script snippet, let's read our own source since we want to show it.
 	fs = require("fs");
-	var data = fs.readFileSync("webapps/MyApp/index.nsp");
+	var data = fs.readFileSync("websites/defaulthost/webapps/MyApp/index.nsp");
 	var source = data.toString();
 	// Regurgitate it as source not HTML
 	source = source.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>");

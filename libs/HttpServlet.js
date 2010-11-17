@@ -160,46 +160,59 @@ exports.create = function(options, meta) {
 			*/
 			response.setHeaders(request.getHeaders());
 		},
-		service : function(request, response) {
+		service : function(request, response, callback, scope) {
 			/* Receives standard HTTP requests from the public service method and dispatches them to the doXXX methods defined
 			in this class.  There's no need to override this method.
 			*/
-			try{		// Execute Servlet Code
-				switch (request.getMethod()) {
-					case "GET" :
-						options.doGet.method.call(this, request, response);
-						break;
-					case "POST" :
-						options.doPost.method.call(this, request, response);
-						break;
-					case "DELETE" :
-						options.doDelete.method.call(this, request, response);
-						break;
-					case "PUT" :
-						options.doPut.method.call(this, request, response);
-						break;
-					case "OPTIONS" :
-						this.doOptions(request, response);
-						break;
-					case "TRACE" :
-						this.doTrace(request, response);
-						break;
-					default:
-				}
-				// See if session exists.  If not, don't make a new one.
-				var session = request.getSession(false);
-				// Add JSESSIONID cookie if session exists
-				if(session) {
-					var sessionCookie = Cookie.create("JSESSIONID", session.getId());
-					sessionCookie.setMaxAge(session.getMaxInactiveInterval());
-					response.addCookie(sessionCookie);
-				}
-				response.setStatus(200);
-				stats.executions++;
-			}catch(e){	// Exception Handler
-				response.sendError(500, e);
-				stats.errors++;
+			var opts;
+			switch (request.getMethod()) {
+				case "GET" :
+					opts = options.doGet; break;
+				case "POST" :
+					opts = options.doPost; break;
+				case "DELETE" :
+					opts = options.doDelete; break;
+				case "PUT" :
+					opts = options.doPut; break;
+				case "OPTIONS" :
+					this.doOptions(request, response); this.serviceComplete(request, response);	break;
+				case "TRACE" :
+					this.doTrace(request, response); this.serviceComplete(request, response); break;
+				default:
 			}
+			if(opts) {
+				if(!opts.async) {
+					try{ // Execute Servlet Code
+						opts.method.call(this, request, response);
+						this.serviceComplete(request, response);
+					}catch(e){
+						response.sendError(500, e);
+						stats.errors++;
+					}
+				}else{	// Asynchronous Call
+					try{
+						opts.method.call(this, request, response, callback, scope);
+					}catch(e){
+						response.sendError(500, e);
+						stats.errors++;
+					}
+				}					
+			}
+			return (opts)?opts.async:false;
+		},
+		serviceComplete : function(request, response, callback, scope) {
+			// See if session exists.  If not, don't make a new one.
+			var session = request.getSession(false);
+			// Add JSESSIONID cookie if session exists
+			if(session) {
+				var sessionCookie = Cookie.create("JSESSIONID", session.getId());
+				sessionCookie.setMaxAge(session.getMaxInactiveInterval());
+				response.addCookie(sessionCookie);
+			}
+			if(!response.getStatus()) response.setStatus(200);
+			stats.executions++;
+			// Async Callback
+			if(callback) callback.call(scope, request, response);
 		}
 	};
 };

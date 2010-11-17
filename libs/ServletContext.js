@@ -1,14 +1,14 @@
 exports.ServletContext = function(options) {
 	options = options || {};
 	if(!options.path) options.path = "/";
-	return options.containerServices.getContext(options.path) || createServletContext(options);
+	return options.hostServices.getContext(options.path) || createServletContext(options);
 };
 createServletContext = function(options) {
 	//Private
 	theLog = [];
 	var attributes = [];
 	var adminServices = options.adminServices;
-	var containerServices = options.containerServices;	
+	var hostServices = options.hostServices;	
 	var initParameters = options.initParameters || {};
 	//Public
 	var context = {
@@ -17,8 +17,8 @@ createServletContext = function(options) {
 			return adminServices;
 		},
 		// WARNING: Specific to What WebContainer, not a standard interface method
-		getContainerServices : function() {
-			return containerServices;
+		getHostServices : function() {
+			return hostServices;
 		},
 		getAttribute : function(name) {
 			// Returns the servlet container attribute with the given name, or null if there is no attribute by that name.
@@ -80,7 +80,7 @@ createServletContext = function(options) {
 			attributes[name] = obj;
 		}
 	};
-	options.containerServices.addContext({path: options.path, context: context});
+	options.hostServices.addContext({path: options.path, context: context});
 	console.log("Context [" + options.path + "] created.");
 	return context;
 };

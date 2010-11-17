@@ -5,6 +5,9 @@ exports.create = function(options) {
 	var parameters = request.formData;
 	var cookies = options.cookies;
 	var JSESSIONID = options.JSESSIONID;
+	var servletPath = options.servletPath;
+	var contextPath = options.contextPath;
+	var pathInfo = options.pathInfo;
 	var session;
 	var sessionManager = options.sessionManager;
 	// Public
@@ -30,7 +33,9 @@ exports.create = function(options) {
 		getMethod : function() {
 			return request.method;
 		},
-		getPathInfo : function() { /* Stub */ },
+		getPathInfo : function() { 
+			return pathInfo;
+		},
 		getParameter : function(name) {
 			return parameters[name];
 		},
@@ -40,7 +45,9 @@ exports.create = function(options) {
 			return arr;
 		},
 		getPathTranslated : function() { /* Stub */ },
-		getContextPath : function() { /* Stub */ },
+		getContextPath : function() { 
+			return contextPath;
+		},
 		getFormData : function() {
 			return request.formData;
 		},
@@ -57,7 +64,7 @@ exports.create = function(options) {
 			return require('url').parse(request.url).pathname;
 		},
 		getServletPath : function() {
-			return require('url').parse(request.url).pathname;
+			return servletPath;
 		},
 		getSession : function(create) { 
 			if(session) return session

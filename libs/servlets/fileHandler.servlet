@@ -1,0 +1,73 @@
+{
+	doGet : {
+		async : true,
+		method : function(request, response, callback, scope) {
+			var writer = response.getWriter();
+			var appBase = this.getServletContext().getHostServices().appBase;
+			var servletPath = request.getServletPath();
+			var contextPath = request.getContextPath();
+			var pathInfo = request.getPathInfo();
+			var MIMEPath = appBase + "/webapps/" + contextPath + servletPath + pathInfo;
+			console.log("[Appbase] " + appBase);
+			console.log("[ContextPath]" + contextPath);
+			console.log("[ServletPath]" + servletPath);
+			console.log("[PathInfo]" + pathInfo);
+			console.log(MIMEPath);
+
+			var forbidPath = appBase + "/webapps/" + servletPath + "/WEB-INF";
+			if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
+				response.setStatus(403);
+				response.setHeader("Content-Type", "text/html");
+				var template = Utils.getTemplate("403.tmpl");
+				template = template.replace("<@message>", "WEB-INF listing is forbidden.");
+				template = template.replace("<@title>", "WEB-INF listing is forbidden.");
+				writer.write(template);
+				this.handleComplete.call(scope, request, response);
+			}else{	// Non-forbidden, check MIMEs
+				Utils.getMIME({
+					modSince : request.getHeader("If-Modified-Since"),
+					allowDirectoryListing : allowDirectoryListing,
+					cacheControl : request.getHeader("Cache-Control"),
+					path : MIMEPath,
+					relPath : pathInfo.split("/")[pathInfo.split("/").length-1],
+					scope : this,
+					callback: function(MIME) {
+						switch(MIME.status) {
+							// OK
+							case 200:
+								/*if(MIME.ext == "nsp") {		// NSP page
+									var servlet = this.getServlet(MIMEPath);
+									if(!servlet) servlet = loadNSP({ MIME : MIME, MIMEPath : MIMEPath});
+									// Call Servlet Service
+									servlet.service(request, response);
+								}else{// General MIME type
+								*/
+								response.setStatus(MIME.status);
+								response.setHeader("Content-Type", MIME.mimeType.mimeType);
+								response.setHeader("Last-Modified", MIME.modTime);
+								response.setOutputStream(MIME.content);
+							break;
+							// Cache
+							case 304:
+								response.setStatus(MIME.status);
+								response.setHeader("Content-Type", "");
+							break;
+							// Not found
+							case 404:
+								response.setStatus(MIME.status);
+								response.setHeader("Content-Type", MIME.mimeType.mimeType);
+								response.setOutputStream(MIME.content);
+							break;
+							// All others
+							default:
+								response.setStatus(MIME.status);
+								response.setHeader("Content-Type", MIME.mimeType.mimeType);
+								response.setOutputStream(MIME.content);
+						}
+						this.serviceComplete(request, response, callback, scope);
+					}
+				});
+			}
+		}
+	}
+}

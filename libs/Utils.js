@@ -368,7 +368,6 @@ exports.getMIME = function(options) {
 	// MIME Object
 	var MIME = {};
 	fs.stat(path, function(err, stats){
-		console.log(path);
 		if(err){ // Not a valid file or directory
 			MIME.found = false;
 			MIME.status = 404;

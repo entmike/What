@@ -2,13 +2,21 @@ var fs = require('fs');
 var ServletContext = require('./ServletContext');
 var ServletConfig = require('./ServletConfig');
 var HttpServlet = require('./HttpServlet');
+var HttpServletRequest = require('./HttpServletRequest');
+var HttpServletResponse = require('./HttpServletResponse');
 var Utils = require('./Utils');
+var Cookie = require('./Cookie');
+var gzip = require('./gzip').gzip;
 
 exports.create = function(options) {
 	// Private
+	var dateMask = "mm/dd/yy HH:MM:ss";
+	var dateOffset = 1000 * 3600 * 6;
 	options = options || {};
 	// Base Directory
 	var appBase = options.appBase || null;
+	// Session Manager
+	var sessionManager = options.sessionManager;
 	// Allow Directory Listing
 	var allowDirectoryListing = options.allowDirectoryListing || false;
 	// WebApp Name
@@ -19,19 +27,26 @@ exports.create = function(options) {
 	var servlets = [];
 	// Servlet Mappings
 	var servletMappings = webConfig.servletMappings;
+	// Sort Mappings by URL Pattern
+	servletMappings.sort(function(a,b){
+		return (b.urlPattern.length - a.urlPattern.length);
+	});
 	// Path Translations
     var translations = webConfig.translations;
 	// Application Context
     var context = ServletContext.ServletContext({
 		path : name,
 		initParameters : webConfig.contextParams,
-		containerServices : options.containerServices,
+		hostServices : options.hostServices,
 		adminServices : options.adminServices
 	});
 	var addMapping = function(servletName, url) {
 		servletMappings.push({
 			name : servletName,
 			urlPattern : url
+		});
+		servletMappings.sort(function(a,b){
+			return (b.urlPattern.length - a.urlPattern.length);
 		});
 	};
 	var getServletMappings = function(servletName) {
@@ -87,7 +102,15 @@ exports.create = function(options) {
 	};
 	// Load Servlets
 	for(var i=0;i<webConfig.servlets.length;i++) {
-		var servletFile = appBase + "/webapps/" + name + "/WEB-INF/classes/" + webConfig.servlets[i].servletClass;
+		var servletClass = webConfig.servlets[i].servletClass;
+		var servletFile;
+		if(servletClass.indexOf("/")==0 || servletClass.indexOf("./")==0) {	
+			// Absolute Path
+			servletFile = servletClass;
+		}else{
+			// Relative Path
+			servletFile = appBase + "/webapps/" + name + "/WEB-INF/classes/" + servletClass;
+		};
 		try{
 			var servletData = fs.readFileSync(servletFile);
 			try{
@@ -109,24 +132,93 @@ exports.create = function(options) {
 	}
 	// Public
 	return {
+		handleComplete : function(request, response){
+			if(request.getHeader("accept-encoding").toLowerCase().indexOf("gzip") > -1) {  // Accepts GZIP
+				if(!response.isCommited()) {
+					response.setHeader("Content-Encoding", "gzip");
+					gzip({
+						data : response.getOutputStream(),
+						scope : response,
+						callback : function(err, data) {
+							this.setOutputStream(data);
+							this.close();
+						}
+					});
+				}else{ // Response is commited, cannot GZIP.
+					response.close();
+				}
+			}else{ // Browser does not accept GZIP.
+				response.close();
+			}
+			var rStatus = response.getStatus().toString();
+			switch (rStatus){
+				case "200" : rStatus = rStatus.green.bold; break;
+				case "304" : rStatus = rStatus.cyan.bold; break;
+				case "404" : rStatus = rStatus.red.bold; break;
+				case "302" : rStatus = rStatus.yellow.bold; break;
+				case "500" : rStatus = rStatus.red.bold; break;
+				default : rStatus = rStatus.grey;
+			}
+			var now = new Date(new Date() - dateOffset);
+			console.log("[" + response.getId() + "]\t[" + rStatus + "] [" + request.getRequestURI() + "]");
+			var endMS = new Date().getTime();
+			/*if(status.trace){
+				addTrace({
+					request : request,
+					response : response
+				});
+			}*/
+		},
 		/**
 		 * Request Handler
 		 * @param {Object} options
 		 */
 		handle : function(options){
-			// See if there's a servlet
-			var mapping = this.getMapping(options.URL);
 			var URL = options.URL;
-			var request = options.request;
-			var response = options.response;
-			var callback = options.callback;
+			URL = this.getTranslation(URL) || URL;
+			var req = options.req;
+			var res = options.res;
+			var id = options.id;
+			// Create Cookies Collection from Node.JS Header for Servlet Request Constructor
+			var cookieHeader = req.headers["cookie"];
+			var cookies = [];
+			if(cookieHeader){
+				var arrCookies = cookieHeader.split(";");
+				for(var i=0;i<arrCookies.length;i++) {
+					var kv = arrCookies[i].split("=");
+					if(kv.length>1) {
+						var key = kv[0].replace(/^\s*|\s*$/g,'');	// Trim Whitespace
+						var val = kv[1];
+						cookies.push(Cookie.create(key, val));
+					};
+				}
+			}
+			var JSESSIONID;
+			for(var i=0;i<cookies.length;i++) if(cookies[i].getName() == "JSESSIONID") JSESSIONID = cookies[i].getValue();
 			var scope = options.scope || this;
 			var that = this;	// I suck at scope, ok?
-			var writer = response.getWriter();
+			var mapping = this.getMapping(URL);
 			if(mapping) {
+				var pathInfo = URL.substring(mapping.urlPattern.length);
+				// Create HttpServletRequest and HttpServletResponse objects from NodeJS ones.
+				var request = new HttpServletRequest.create({
+					id : id,					// Tag Request with an ID
+					req : req,					// Node.JS Request Obj
+					JSESSIONID : JSESSIONID,	// Requested SessionID
+					cookies : cookies,			// Cookies Collection
+					contextPath : name,			// Name of WebApp (probably should do this a better way)
+					servletPath : mapping.urlPattern,	// Servlet Path
+					pathInfo : pathInfo,		// Path Info to the right of the servlet mapping
+					sessionManager : sessionManager.services	// Session Manager Public Services
+				});
+				var response = new HttpServletResponse.create({
+					id : id,
+					res : res
+				});
+				var writer = response.getWriter();	// Shortcut Handle to the PrintWriter for the response
 				var servlet = this.getServlet(mapping.name);
 				if(servlet) {	// Servlet Exists
-					servlet.service(request, response);
+					var async = servlet.service(request, response, this.handleComplete, this);
 				}else{
 					// Should be a servlet but there's not one.  To-do: Error message
 					response.setStatus(500);
@@ -137,63 +229,8 @@ exports.create = function(options) {
 					template = template.replace("<@error>", "Servlet is not loaded but contains a mapping.  Check your class files.");
 					writer.write(template);
 				}
-				callback(request, response);
-			}else{	// No mapping, try a MIME from [appbase]/webapps/[app]/...
-				var MIMEPath = appBase + "/webapps/" + this.getName() + URL;
-				var forbidPath = appBase + "/webapps/" + this.getName() + "/WEB-INF";
-				if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
-					response.setStatus(403);
-					response.setHeader("Content-Type", "text/html");
-					var template = Utils.getTemplate("403.tmpl");
-					template = template.replace("<@message>", "WEB-INF listing is forbidden.");
-					template = template.replace("<@title>", "WEB-INF listing is forbidden.");
-					writer.write(template);
-					callback.call(scope, request, response);
-				}else{	// Non-forbidden, check MIMEs
-					Utils.getMIME({
-						modSince : request.getHeader("If-Modified-Since"),
-						allowDirectoryListing : allowDirectoryListing,
-						cacheControl : request.getHeader("Cache-Control"),
-						path : MIMEPath,
-						relPath : "/" + this.getName() + URL,
-						scope : this,
-						callback: function(MIME) {
-							switch(MIME.status) {
-								// OK
-								case 200:
-									if(MIME.ext == "nsp") {		// NSP page
-										var servlet = this.getServlet(MIMEPath);
-										if(!servlet) servlet = loadNSP({ MIME : MIME, MIMEPath : MIMEPath});
-										// Call Servlet Service
-										servlet.service(request, response);
-									}else{// General MIME type
-										response.setStatus(MIME.status);
-										response.setHeader("Content-Type", MIME.mimeType.mimeType);
-										response.setHeader("Last-Modified", MIME.modTime);
-										response.setOutputStream(MIME.content);
-									}
-								break;
-								// Cache
-								case 304:
-									response.setStatus(MIME.status);
-									response.setHeader("Content-Type", "");
-								break;
-								// Not found
-								case 404:
-									response.setStatus(MIME.status);
-									response.setHeader("Content-Type", MIME.mimeType.mimeType);
-									response.setOutputStream(MIME.content);
-								break;
-								// All others
-								default:
-									response.setStatus(MIME.status);
-									response.setHeader("Content-Type", MIME.mimeType.mimeType);
-									response.setOutputStream(MIME.content);
-							}
-							callback.call(scope, request, response);
-						}
-					});
-				}
+				console.log("[" + request.getId() + "]\tServlet:[" + mapping.name + "]");
+				if(!async) this.handleComplete(request, response);
 			}
 		},
 		getConfig : function() {
@@ -210,12 +247,9 @@ exports.create = function(options) {
 			return context;
 		},
         getServletMappings : getServletMappings,
-		getMapping : function(urlPattern) {
-			// To-do: pattern matching
+		getMapping : function(url) {
 			for(var i=0;i<servletMappings.length;i++) {
-				if(urlPattern == servletMappings[i].urlPattern) {
-					return servletMappings[i];
-				}
+				if(url.indexOf(servletMappings[i].urlPattern)==0) return servletMappings[i];
 			}
 			return null;
 		},
@@ -242,7 +276,6 @@ exports.create = function(options) {
 		},
 		restartServlet : function(name) {
 			var servlet = this.removeServlet(name);
-			console.log(servlet.meta.servletClass);
 			var servletFile = appBase + "/webapps/" + this.getName() + "/WEB-INF/classes/" + servlet.meta.servletClass;
 			try{
 				var servletData = fs.readFileSync(servletFile);

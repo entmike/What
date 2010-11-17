@@ -54,7 +54,11 @@
 			name : "editServlet",
 			description : "Edit a Servlet",
 			servletClass : "editServlet.servlet"
-		},
+		},{
+			name : "default",
+			description : "Default MIME Handler Servlet",
+			servletClass : "./libs/servlets/fileHandler.servlet"
+		}
 	],
 	servletMappings : [
 		{
@@ -93,6 +97,9 @@
 		},{
 			name : "editServlet",
 			urlPattern : "/editServlet"
+		},{
+			name : "default",
+			urlPattern : "/"
 		}
 	],
 	translations : [

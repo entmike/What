@@ -1,14 +1,14 @@
 {
 	displayName : "Administration",
 	description : "Web Container Administration",
-	contextParams : {
+	initParameters : {
 		author : "Mike Howles",
         version : "1.1"
 	},
 	servlets : [
 		{
 			name : "getSessions",
-			description : "Get Web Container Sessions",
+			description : "Get Host Sessions",
 			servletClass : "getSessions.servlet"
 		},{
 			name : "setTrace",
@@ -20,7 +20,7 @@
 			servletClass : "getTraces.servlet"
 		},{
 			name : "getApplications",
-			description : "Get Application List",
+			description : "Get Context List",
 			servletClass : "getApplications.servlet"
 		},{
 			name : "getMIMEs",
@@ -40,7 +40,7 @@
 			servletClass : "restartApp.servlet"
 		},{
 			name : "restartApps",
-			description : "Restart all WebApps",
+			description : "Restart all Contexts",
 			servletClass : "restartApps.servlet"
 		},{
 			name : "restartServlet",
@@ -57,7 +57,10 @@
 		},{
 			name : "default",
 			description : "Default MIME Handler Servlet",
-			servletClass : "./libs/servlets/fileHandler.servlet"
+			servletClass : "./libs/servlets/fileHandler.servlet",
+			initParams : {
+					listings : false
+			}
 		}
 	],
 	servletMappings : [

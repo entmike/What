@@ -3,15 +3,15 @@
 		parameters : [ ],
 		method : function(request, response) {
 		/*
-			Get Web Container Application and Servlet Information to return to ExtJS Admin Page
+			Get Web Container Context and Servlet Information to return to ExtJS Admin Page
 		*/
-			// Get apps collection
-			var apps = this.getServletContext().getAdminServices().getApplications();
-			var rootNode = [];						// Create Root Node
-			for(var i=0;i<apps.length;i++) {		// Run through apps
-				var app = apps[i];
-				var servlets = app.getServlets();	// Get current app's servlet metadata collection
-				var servletsNode = [];				// Create Servlets Node
+			// Get Contexts collection
+			var contexts = this.getServletContext().getAdminServices().getContexts();
+			var rootNode = [];							// Create Root Node
+			for(var i=0;i<contexts.length;i++) {		// Run through contexts
+				var context = contexts[i];
+				var servlets = context.getServlets();	// Get current context's servlet metadata collection
+				var servletsNode = [];					// Create Servlets Node
 				for(var j=0;j<servlets.length;j++) {	// Run through servlets collection
 					var servlet = servlets[j];
 					var servletName = servlet.servlet.getServletConfig().getServletName();
@@ -42,11 +42,11 @@
 						iconCls : "methodNode",
 						children : []
 					};
-					var mappings = app.getServletMappings(servletName);
+					var Mappings = context.getServletMappings(servletName);
 					var urlMappings = [];
-					for(var k=0;k<mappings.length;k++) {
+					for(var k=0;k<Mappings.length;k++) {
 						urlMappings.push({
-							text : mappings[k],
+							text : Mappings[k],
 							iconCls : "mappingNode",
 							uiProvider : "col",
 							leaf : true
@@ -89,6 +89,7 @@
 							type : "servletOption",
 							iconCls : "methodNode",
 							text : optionName,
+							description : "Asynchronous: " + (option.async || false),
 							uiProvider : "col"
 						}
 						if(params.length>0) {
@@ -105,9 +106,9 @@
 						methodsNode.children.push(methodNode);	// Push Method Node to Methods Collection
 					}
 					servletsNode.push({				// Push Servlets Node
-						id : servletName,
+						// id : servletName,
 						text : servletName,
-						mappings : mappings,
+						Mappings : Mappings,
 						type : "servlet",
 						iconCls : "servletNode",
 						description : servlet.meta.description,
@@ -116,23 +117,24 @@
 					});
 				}
 				var initParamNode = [];						// Create Initialization Param. Node
-				var initParamNames = app.getContext().getInitParameterNames();	// Get Init Parameter Collection
+				var initParamNames = context.getInitParameterNames();	// Get Init Parameter Collection
 				for(var j=0;j<initParamNames.length;j++) {	// Run through init params
 					initParamNode.push({					// Push Init Param Leaf
 						text : initParamNames[j],
-						description : app.getContext().getInitParameter(initParamNames[j]),
+						description : context.getInitParameter(initParamNames[j]),
 						uiProvider: "col",
 						leaf : true
 					});
 				}
-				var appNode = {						// Create App Node entry
-					id : app.getName(),
-					type : "webApp",
-					text : app.getName(),
-					component : app.getName(),
-					description : app.getConfig().description,
+				var contextNode = {						// Create context Node entry
+					id : context.getName(),
+					type : "webcontext",
+					text : context.getName() + " (/" + context.getPath() + ")",
+					path : context.getPath(),
+					component : context.getName(),
+					description : context.getConfig().description,
 					uiProvider: "col",
-					iconCls : "webAppNode",
+					iconCls : (context.getAdminServices())?"adminNode":"webappNode",
 					children : [
 						{
 							text : "Init Parameters",
@@ -145,8 +147,11 @@
 						}
 					]
 				}
-				rootNode.push(appNode);				// Push App Node to Root Node
+				rootNode.push(contextNode);				// Push context Node to Root Node
 			}
+			rootNode.sort(function(a,b) {
+				return a.path.length - b.path.length;
+			});
 			response.getWriter().write(JSON.stringify(rootNode));	// Write out Treenode JSON
 		}
 	}

@@ -1,10 +1,11 @@
 var fs = require('fs');
 var url = require('url');
-var gzip = require('./gzip').gzip;
 
 var Utils = require('./Utils');
-var WebApplication = require('./WebApplication');
+var ServletContext = require('./ServletContext');
 
+var gzip = require('./gzip').gzip;
+var formidable = require('./formidable');
 exports.create = function(options){
 	// Private
 	var status = {					// Web Host Status
@@ -23,9 +24,8 @@ exports.create = function(options){
 	var defaultHost = options.defaultHost || false;
 	var aliases = options.aliases || null;	// Host Name Aliases
 	var translations = options.translations || null;	// Path Translations
-	var appBase = options.appBase;	// Web Applications Base Directory
-	var webapps = [];				// Web Applications Collection
-	var contexts = [];				// Application Contexts Collection
+	var appBase = options.appBase;	// Contexts Base Directory
+	var contexts = [];				// Contexts Collection
 	var traces = [];				// Trace Collection
 	var adminApp = options.adminApp || null;	// Admin Appname
 	function addTrace(options){
@@ -35,28 +35,16 @@ exports.create = function(options){
 		status.trace = flag;
 	};
 	/**
-	* Removes and Reloads and Starts App
-	* @param appName Name of Application to restart.
+	* Removes and Reloads and Starts Context
+	* @param contextName Name of Context to restart.
 	*/
-	var restartApp = function(appName) {
-		var webapp = removeApp(appName);
+	var restartContext = function(contextName) {
+		var context = removeContext(contextName);
 		try {
-			loadWebApp(appName);
+			loadContext(contextName);
 		}catch(e){
 			console.log(e.message.red.bold);
 		}
-	};
-	/**
-	* Get WebApp by Name
-	* @param name Name of WebApp to retrieve
-	* @return WebApp
-	*/
-	var getWebApp = function(name) {
-		// Get WebApp by name
-		for(var i=0;i<webapps.length;i++) {
-			if(name.indexOf(webapps[i].getName())==0) return webapps[i];
-		}
-		return null;
 	};
 	/**
 	* Get Contexts Collection
@@ -68,11 +56,22 @@ exports.create = function(options){
 	};
 	/**
 	* Get Context from Contexts Collection
-	* @param name of Context to get
+	* @param path of Context to get
 	* @return context
 	*/
-	var getContext = function(name){
-		for(var i=0;i<contexts.length;i++) if(contexts[i].path==name) return contexts[i];
+	var getContextByPath = function(path){
+		for(var i=0;i<contexts.length;i++){
+			if(path.indexOf(contexts[i].getPath())==0){
+				return contexts[i];
+			}
+		}
+	};
+	var getContextByName = function(contextName){
+		for(var i=0;i<contexts.length;i++){
+			if(contexts[i].getName()==contextName){
+				return contexts[i];
+			}
+		}
 	};
 	/**
 	* Add Context to Contexts Collection
@@ -80,22 +79,28 @@ exports.create = function(options){
 	*/
 	var addContext = function(context) {
 		contexts.push(context);
+		contexts.sort(function(a,b){
+			return (b.getPath().length - a.getPath().length);
+		});
 	};
 	/**
 	* Exposes Safe Private Functions to return object
 	*/
 	var hostServices = { // Services Available to all Contexts
-		getContexts : getContexts, 
+		/*getContexts : getContexts, 
 		addContext : addContext,
-		getContext : getContext,
+		getContextByName : getContextByName,
+		getContextByPath : getContextByPath,
+		*/
 		appBase : appBase
 	};
 	/**
 	* Exposes Administrative Functions to return object
 	*/
 	var adminServices = { // Services Available to Admin Contexts
-		getApplications : function() { return webapps; },
-		getWebApp : getWebApp,
+		getContexts : function() { return contexts; },
+		getContextByName : getContextByName,
+		getContextByPath : getContextByPath,
 		setTrace : setTrace,
 		getTraces : function() {
 			return traces;
@@ -104,41 +109,62 @@ exports.create = function(options){
 			return sessionManager.adminServices.getSessions();
 		},
 		getEnvironment : function() { return process.env; },
-		restartApp : restartApp,		
+		restartContext : restartContext,
 		stopServer : function() { /*Stub*/ }
 	};
 	/**
-	 * Loads Web App from sub-directory in 'webapps'.
-	 * @param appName Name of Application to load.
+	 * Loads Context from sub-directory in 'webapps'.
+	 * @param path Path of Context to load.
 	 */
-	var loadWebApp = function(appName) {
-		var webJS = appBase + "/webapps/" + appName + "/WEB-INF/web.js";
-		try{ // Load Web Config for App
-			var data = fs.readFileSync(webJS);
+	var loadContext = function(path) {
+		var webINF = appBase + "/webapps/" + path + "/WEB-INF/web.js";
+		var metaINF = appBase + "/webapps/" + path + "/META-INF/context.js";
+		var webConfig;
+		var contextConfig;
+		try{ // Load Web Config for Context
+			var data = fs.readFileSync(webINF);
 		}catch(e){
-			throw new Error("Could not find web.js file in [" + webJS + "].");
+			throw new Error("Could not find web.js file in [" + webINF + "].");
 		};
 		try { // Try to eval the data into a config
-			var webConfig = eval("(" + data.toString() + ")");
+			webConfig = eval("(" + data.toString() + ")");
 		}catch(e){
 			throw new Error("Problem evaluating web.js");
 		};
-		var webApp = WebApplication.create({	// Create Web App
-			appName : appName,
-			appBase : appBase,
-			sessionManager : sessionManager,
-			allowDirectoryListing : allowDirectoryListing,
-			webConfig : webConfig,
-			hostServices : hostServices,
-			adminServices : (adminApp==appName)?adminServices:null
+		try{ // Look for context.js
+			var contextData = fs.readFileSync(metaINF);
+			try { // Try to eval the contextData into a contextConfig
+				contextConfig = eval("(" + contextData.toString() + ")");
+			}catch(e){
+				throw new Error("Problem evaluating context.js.  Using Defaults");
+			};	
+		}catch(e){
+			// Use defaults
+		};
+		contextConfig = contextConfig || {	// Defaults
+			name : path,
+			path : path
+		};
+		console.log(contextConfig);
+		contextConfig.name = contextConfig.name || path;
+		contextConfig.sessionManager = sessionManager;
+		contextConfig.appBase = appBase;
+		contextConfig.allowDirectoryListing = allowDirectoryListing;
+		contextConfig.webConfig = webConfig;
+		contextConfig.hostServices = hostServices;
+		if(contextConfig.privileged) contextConfig.adminServices = adminServices;
+		var context = ServletContext.create(contextConfig);
+		context.init();
+		contexts.push(context);
+		contexts.sort(function(a,b){
+			return (b.getPath().length - a.getPath().length);
 		});
-		webapps.push(webApp); // Push WebApp into collection
 	};
 	/**
-	 * Scan Web Container's webapps folder for Applications and Load them
+	 * Scan Web Container's webapps folder for Applications/Contexts and Load them
 	 */
-	var loadWebApps = function() {
-		console.log ("Scanning for webapps...".blue.bold);
+	var loadContexts = function() {
+		console.log ("Scanning for webapps directory...".blue.bold);
 		try{
 			var wa = fs.readdirSync(appBase + "/webapps");
 		}catch(e){
@@ -147,8 +173,8 @@ exports.create = function(options){
 		}
 		for(var i=0;i<wa.length;i++) {
 			try { 
-				loadWebApp(wa[i]); 
-				console.log(("Web App [" + wa[i] + "] loaded!").green.bold);
+				loadContext(wa[i]); 
+				console.log(("Context [" + wa[i] + "] loaded!").green.bold);
 			}
 			catch(e){ 
 				console.log(e.message.red.bold);
@@ -157,27 +183,11 @@ exports.create = function(options){
 		}
 	};
 	/**
-	* Removes App From App Collection
-	* @param appName Name of Application to restart.
-	* @return WebApp
-	*/
-	var removeApp = function(appName) {
-		for(var i=0;i<webapps.length;i++) {
-			if(appName.indexOf(webapps[i].getName())==0) {
-				var webapp = webapps[i];
-				removeContext(appName);
-				webapps.splice(i,1);
-				return webapp;
-			}
-		}
-	return null;
-	};
-	/**
 	 * Remove Context from contexts Collection
 	 * @param context Context to remove
 	 */
-	var removeContext = function(context) {
-		for(var i=0;i<contexts.length;i++) if(contexts[i].path == context) {
+	var removeContext = function(contextName) {
+		for(var i=0;i<contexts.length;i++) if(contexts[i].getName() == contextName) {
 			contexts.splice(i,1);
 		}
 	};
@@ -227,57 +237,22 @@ exports.create = function(options){
 			case "TRACE" : method = method.yellow.bold; break;
 			default : method = method.grey;
 		}
-		// See if there's a WebApp
-		var webApp = getWebApp(pathName.substring(1));	// Trim off leading "/"
+		// See if there's a Context
+		var context = getContextByPath(pathName.substring(1));	// Trim off leading "/"
 		console.log("[" + status.counter + "]\t[" + method + "] [" + pathName + "]");
-		if(webApp) { // Web App
-			console.log("[" + status.counter + "]\tWebApp:[" + webApp.getName()+"]");
-			var webAppURL = pathName.substring(webApp.getName().length + 1);  // Slice off webapp portion of URL
-			webAppURL = (webApp.getTranslation(webAppURL))?(webApp.getTranslation(webAppURL)):webAppURL;
-			webApp.handle({
+		if(context) { // Web App
+			console.log("[" + status.counter + "]\tcontext:[" + context.getName()+"]");
+			var contextURL = pathName.substring(context.getPath().length + 1);  // Slice off context portion of URL
+			contextURL = (context.getTranslation(contextURL))?(context.getTranslation(contextURL)):contextURL;
+			context.handle({
 				id : status.counter,
-				URL : webAppURL,
+				URL : contextURL,
 				req : req,
 				res : res
 			});
-		}else{ // Not a webapp, try a MIME from webroot -- Need to make a MIME Handler, this is ugly here.
-			console.log("[" + status.counter + "]\t[ MIME ]");
-			Utils.getMIME({
-				path: appBase + "/webroot" + pathName,
-				allowDirectoryListing : allowDirectoryListing,
-				relPath : pathName,
-				modSince : req.headers["If-Modified-Since"],
-				cacheControl : req.headers["Cache-Control"],
-				callback: function(MIME) {
-					var status = MIME.status;
-					var headers = {};
-					switch(MIME.status) {
-						case 304:	// Cache (Not Changed)
-							headers["Content-Type"] = "";
-						break;
-						default:
-							headers["Content-Type"] =  MIME.mimeType.mimeType;
-							headers["Last-Modified"] = MIME.modTime;
-							if(req.headers["accept-encoding"].toLowerCase().indexOf("gzip") > -1) {
-								// Compressed
-								headers["Content-Encoding"] = "gzip";
-								gzip({
-									data : MIME.content,
-									scope : this,
-									callback : function(err, data){
-										res.writeHead(status, headers);
-										res.end(data);
-									}
-								});
-							}else{
-								// Uncompressed
-								res.writeHead(status, headers);
-								res.end(MIME.content);
-							}
-						break;
-					}
-				}
-			});
+		} else {
+			res.writeHead(500, {"Content-Type" : "text/plain"});
+			res.end("500 - No Context Found.");
 		}
 	};
 	// Public
@@ -291,7 +266,7 @@ exports.create = function(options){
 		getAliases : function() {
 			return aliases;
 		},
-		loadWebApps : loadWebApps,
+		loadContexts : loadContexts,
 		handle : function(req, res) {
 			// Preprocessing of Node.JS request
 			if(req.method=="POST") { // Handle form fields with async formidable addon

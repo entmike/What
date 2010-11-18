@@ -7,6 +7,9 @@
 .webAppNode {
     background-image:url('resources/images/webAppNode.png') !important; 
 }
+.adminNode {
+    background-image:url('resources/images/adminNode.png') !important; 
+}
 .attributeNode {
     background-image:url('resources/images/attributeNode.png') !important; 
 }

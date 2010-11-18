@@ -3,7 +3,7 @@
 		parameters : [
 			{
 				name : "webApp",
-				description : "Web Application of the Servlet",
+				description : "Context of the Servlet",
 				required : true
 			}, {
 				name : "servlet",
@@ -17,20 +17,22 @@
 		*/
 			var adminServices = this.getServletContext().getAdminServices();
 			var params = require('querystring').parse(request.getQueryString());
-			var servletFile = "webapps/" + params.webApp + "/WEB-INF/classes/" + adminServices.getWebApp(params.webApp).getServletMeta(params.servlet).meta.servletClass;
+			var hostPath = this.getServletContext().getHostServices().appBase;
+			var servletFile = hostPath + "/webapps/" + params.webApp + "/WEB-INF/classes/" + adminServices.getContextByName(params.webApp).getServletMeta(params.servlet).meta.servletClass;
 			var fs=require("fs");
 			try{
 				var servletData = fs.readFileSync(servletFile);
 				var servletOptions = servletData.toString();
+				response.getWriter().write(JSON.stringify({
+					success : true,
+					servletOptions : servletOptions
+				}));
 			}catch(e){
-				console.log("Error reading servlet [" + webConfig.servlets[i].name + "]\n\File: [" + servletFile + "].");
-				console.log(e.stack.green);
+				response.getWriter().write(JSON.stringify({
+					success : false,
+					msg : "Error reading servlet [" + params.servlet + "]\n\File: [" + servletFile + "]."})
+				);
 			}
-			response.getWriter().write(JSON.stringify({
-				success : true,
-				servletOptions : servletOptions
-			}));
-			
 		}
 	},doPost : {
 		parameters : [
@@ -53,17 +55,20 @@
 			var adminServices = this.getServletContext().getAdminServices();
 			var params = request.getFormData().fields;
 			var servletData = params.source;
-			var servletFile = "webapps/" + params.webApp + "/WEB-INF/classes/" + adminServices.getWebApp(params.webApp).getServletMeta(params.servlet).meta.servletClass;
+			var hostPath = this.getServletContext().getHostServices().appBase;
+			var servletFile = hostPath + "/webapps/" + params.webApp + "/WEB-INF/classes/" + adminServices.getContextByName(params.webApp).getServletMeta(params.servlet).meta.servletClass;
 			try{
 				fs.writeFileSync(servletFile, servletData);
+				response.getWriter().write(JSON.stringify({
+					success : true,
+					msg : "File Saved."
+				}));
 			}catch(e){
-				console.log("Error writing to file [" + servletFile + "].");
-				console.log(e.stack.red);
+				response.getWriter().write(JSON.stringify({
+					success : false,
+					msg : "Error writing to file: [" + servletFile + "]"
+				}));
 			}
-			response.getWriter().write(JSON.stringify({
-				success : true,
-				msg : "File Saved."
-			}));		
 		}
 	}
 }

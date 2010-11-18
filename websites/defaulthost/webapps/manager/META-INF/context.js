@@ -1,0 +1,4 @@
+{
+	path : "Manager",
+	privileged : true
+}

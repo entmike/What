@@ -4,17 +4,20 @@
 		method : function(request, response, callback, scope) {
 			var writer = response.getWriter();
 			var appBase = this.getServletContext().getHostServices().appBase;
-			var servletPath = request.getServletPath();
+			var servletPath = request.getServletPath() || "/";
 			var contextPath = request.getContextPath();
 			var pathInfo = request.getPathInfo();
 			var MIMEPath = appBase + "/webapps/" + contextPath + servletPath + pathInfo;
+			var allowListings = this.getServletConfig().getInitParameter("listings");
+			/*
 			console.log("[Appbase] " + appBase);
 			console.log("[ContextPath]" + contextPath);
 			console.log("[ServletPath]" + servletPath);
 			console.log("[PathInfo]" + pathInfo);
 			console.log(MIMEPath);
-
-			var forbidPath = appBase + "/webapps/" + servletPath + "/WEB-INF";
+			*/
+			var forbidPath = appBase + "/webapps/" + contextPath + servletPath + "WEB-INF";
+			console.log(forbidPath);
 			if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
 				response.setStatus(403);
 				response.setHeader("Content-Type", "text/html");
@@ -22,11 +25,11 @@
 				template = template.replace("<@message>", "WEB-INF listing is forbidden.");
 				template = template.replace("<@title>", "WEB-INF listing is forbidden.");
 				writer.write(template);
-				this.handleComplete.call(scope, request, response);
+				this.serviceComplete(request, response, callback, scope);
 			}else{	// Non-forbidden, check MIMEs
 				Utils.getMIME({
 					modSince : request.getHeader("If-Modified-Since"),
-					allowDirectoryListing : allowDirectoryListing,
+					allowDirectoryListing : allowListings,
 					cacheControl : request.getHeader("Cache-Control"),
 					path : MIMEPath,
 					relPath : pathInfo.split("/")[pathInfo.split("/").length-1],

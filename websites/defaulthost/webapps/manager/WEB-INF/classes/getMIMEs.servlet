@@ -56,8 +56,8 @@
 			}
 			// Get writer
 			var w = response.getWriter();
-			// Get apps
-			var apps = this.getServletContext().getAdminServices().getApplications();
+			// Get contexts
+			var contexts = this.getServletContext().getAdminServices().getContexts();
 			// Create Collection
 			var arr = [];
 			// Get WebRoot MIMEs
@@ -72,15 +72,15 @@
 				children : MIME
 			}
 			arr.push(obj);
-			// Run through apps
-			for(var i=0;i<apps.length;i++) {
-				var app = apps[i];
-				var MIME = getContents(appBase + "/webapps/" + app.getName());
+			// Run through contexts
+			for(var i=0;i<contexts.length;i++) {
+				var context = contexts[i];
+				var MIME = getContents(appBase + "/webapps/" + context.getName());
 				var obj = {
-					id : app.getName(),
-					text : app.getName(),
+					id : context.getName(),
+					text : context.getName(),
 					iconCls : "webAppNode",
-					filename : app.getName(),
+					filename : context.getName(),
 					filesize : "",
 					permissions : "",
 					uiProvider: "col",

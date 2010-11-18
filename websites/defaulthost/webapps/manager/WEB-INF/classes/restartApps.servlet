@@ -1,0 +1,20 @@
+{
+	doGet : {
+		parameters : [ ],
+		method: function(request, response) {
+			/**
+			Restart All Host's Contexts
+			*/
+			var adminServices = this.getServletContext().getAdminServices();
+			var contexts = adminServices.getContexts();
+			for(i=contexts.length-1;i>=0;i--) {
+				adminServices.restartContext(contexts[i].getName());
+			}
+			response.getWriter().write(JSON.stringify({
+				success : true,
+				msg : "All Contexts restarted successfully."
+			}));
+			
+		}
+	}
+}

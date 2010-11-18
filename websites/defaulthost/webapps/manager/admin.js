@@ -136,7 +136,7 @@ var adminDashboard = {
 		})
 	}),
 	appTreeLoader : new Ext.tree.TreeLoader({
-		dataUrl:'/Admin/getApplications',
+		dataUrl:'getApplications',
 		requestMethod : "GET",
 		uiProviders: {
 			col : Ext.ux.tree.ColumnNodeUI
@@ -355,10 +355,11 @@ var adminDashboard = {
 																		text : "Options",
 																		iconCls : "optionsButton",
 																		handler : function() {
+																			var reqURL = node.parentNode.parentNode.attributes.path +
+																			node.attributes.Mappings[0];
 																			Ext.Ajax.request({
 																				method : "OPTIONS",
-																				url : ("/" + node.parentNode.parentNode.attributes.text +
-																				node.attributes.mappings[0]),
+																				url : "/" + reqURL,
 																				callback : function(options, success, response) {
 																					alert(response.getResponseHeader("Allow"));
 																					var servletOptions = response.getResponseHeader("Servlet-Parameters");
@@ -370,10 +371,11 @@ var adminDashboard = {
 																		text : "Test",
 																		iconCls : "testButton",
 																		handler : function() {
+																			var reqURL = node.parentNode.parentNode.attributes.path +
+																			node.attributes.Mappings[0];
 																			Ext.Ajax.request({
 																				method : "OPTIONS",
-																				url : ("/" + node.parentNode.parentNode.attributes.text +
-																				node.attributes.mappings[0]),
+																				url : reqURL,
 																				callback : function(options, success, response) {
 																					var allow = response.getResponseHeader("Allow");
 																					var servletOptions = response.getResponseHeader("Servlet-Parameters");
@@ -553,7 +555,7 @@ var adminDashboard = {
 											}],
 											loader: new Ext.tree.TreeLoader(
 												{
-													dataUrl:'/Admin/getMIMEs',
+													dataUrl:'getMIMEs',
 													requestMethod : "GET",
 													uiProviders: {
 														col : Ext.ux.tree.ColumnNodeUI

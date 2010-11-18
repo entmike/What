@@ -86,9 +86,9 @@ exports.parseNSP = function(contents) {
 	return servletOptions;	
 };
 
-exports.create = function(options, meta) {
+exports.create = function(meta) {
 	// Constructor/Private
-	var options = options || {};
+	var options = meta.options || {};
 	var stats = meta.stats || {};
 	stats.executions = 0;
 	stats.errors = 0;
@@ -183,6 +183,7 @@ exports.create = function(options, meta) {
 			if(opts) {
 				if(!opts.async) {
 					try{ // Execute Servlet Code
+						// console.log(opts.method.toString());
 						opts.method.call(this, request, response);
 						this.serviceComplete(request, response);
 					}catch(e){

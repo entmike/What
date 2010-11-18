@@ -3,13 +3,9 @@ var http = require('http');
 var url = require('url');
 var querystring = require('querystring');
 var fs = require('fs');
-var HttpServlet = require('./HttpServlet');
-var ServletContext = require('./ServletContext');
-var ServletConfig = require('./ServletConfig');
-var WebApplication = require('./WebApplication');
 var Host = require('./Host');
+
 // 3rd Party add-ons
-var formidable = require('./formidable');
 require('./colors');
 var DateFormat = require('./DateFormat');
 // Private
@@ -19,17 +15,17 @@ var requestLog = []; 			// HTTP Request Logs Collection
 
 var config = {};				// Web Container Configuration
 try{ 		// Load Config
-	var data = fs.readFileSync("serverConfig.js");
+	var data = fs.readFileSync("conf/hosts.js");
 	config = eval("(" + data.toString() + ")");
 }catch(e){	// Error
-	console.log("Bad or missing serverConfig.js file.  Ending now.".red.bold);
+	console.log("Bad or missing conf/hosts.js file.  Ending now.".red.bold);
 	console.log(e);
 	return null;
 };
 function loadHosts() {
 	for(var i=0;i<config.hosts.length;i++) {
 		var host = Host.create(config.hosts[i]);
-		host.loadWebApps();
+		host.loadContexts();
 		hosts.push(host);
 		console.log(("[" + host.getName() + "] loaded.").green);
 	}
@@ -69,14 +65,19 @@ exports.create=function(){
 			return "Web Container";
 		},
 		start : function() {
-			console.log([
-				" WW         WW HH      HH     AAA     TTTTTTTT",
-				"  WW   W   WW  HH      HH    AA AA       TT   ",
-				"   WW WWW WW   HHHHHHHHHH   AAAAAAA      TT   ",
-				"    WWW WWW    HH      HH  AA     AA     TT   ",
-				"     W   W     HH      HH AA       AA    TT   ",
+			console.log([                                                 
 				"",
-				"A Node.JS Web Container."
+				"o          `O  o                 oO ".blue.bold,
+				"O           o O                  OO ".blue.bold,
+				"o           O o              O   oO ".blue.bold,
+				"O           O O             oOo  Oo ".blue.bold,
+				"o     o     o OoOo. .oOoO'   o   oO ".blue.bold,
+				"O     O     O o   o O   o    O      ".blue.bold,
+				"`o   O o   O' o   O o   O    o   Oo ".blue.bold,
+				" `OoO' `OoO'  O   o `OoO'o   `oO oO".blue.bold,
+				"",
+				"A Node.JS Web Container.".green.bold,
+				""
 				].join("\n"));
 				loadHosts();
 				httpServer = http.createServer(listener);

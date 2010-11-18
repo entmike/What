@@ -60,18 +60,6 @@
 			var contexts = this.getServletContext().getAdminServices().getContexts();
 			// Create Collection
 			var arr = [];
-			// Get WebRoot MIMEs
-			var MIME = getContents(appBase + "/webroot/");
-			var obj = {
-				id : "WEBROOT",
-				text : "WEBROOT",
-				filename : "WEBROOT",
-				filesize : "0",
-				permissions : "",
-				uiProvider: "col",
-				children : MIME
-			}
-			arr.push(obj);
 			// Run through contexts
 			for(var i=0;i<contexts.length;i++) {
 				var context = contexts[i];

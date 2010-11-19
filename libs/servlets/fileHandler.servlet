@@ -11,7 +11,6 @@
 			var allowListings = this.getServletConfig().getInitParameter("listings");
 			var createSessions = this.getServletConfig().getInitParameter("createSessions");
 			if(createSessions) {
-				console.log("s");
 				var session = request.getSession(true);
 			}
 			/*
@@ -22,7 +21,6 @@
 			console.log(MIMEPath);
 			*/
 			var forbidPath = appBase + "/webapps/" + contextPath + servletPath + "WEB-INF";
-			console.log(forbidPath);
 			if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
 				response.setStatus(403);
 				response.setHeader("Content-Type", "text/html");

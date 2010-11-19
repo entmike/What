@@ -475,10 +475,11 @@ var adminDashboard = {
 													}
 													if(node.attributes.type == "servletOption"){
 														var params = {
-															webApp : node.parentNode.parentNode.parentNode.parentNode.attributes.text,
+															webApp : node.parentNode.parentNode.parentNode.parentNode.attributes.contextName,
 															servlet : node.parentNode.parentNode.attributes.text,
 															option : node.attributes.text
 														};
+														console.log(params.webApp);
 														Ext.Ajax.request({
 															url: 'getServletOption',
 															params : params,

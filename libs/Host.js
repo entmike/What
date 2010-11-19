@@ -84,14 +84,9 @@ exports.create = function(options){
 		});
 	};
 	/**
-	* Exposes Safe Private Functions to return object
+	* Exposes Safe Private Functions/Properties to return object
 	*/
-	var hostServices = { // Services Available to all Contexts
-		/*getContexts : getContexts, 
-		addContext : addContext,
-		getContextByName : getContextByName,
-		getContextByPath : getContextByPath,
-		*/
+	var hostServices = { 
 		appBase : appBase
 	};
 	/**
@@ -145,7 +140,6 @@ exports.create = function(options){
 			name : path,
 			path : path
 		};
-		console.log(contextConfig);
 		contextConfig.name = contextConfig.name || path;
 		contextConfig.sessionManager = sessionManager;
 		contextConfig.appBase = appBase;
@@ -164,11 +158,10 @@ exports.create = function(options){
 	 * Scan Web Container's webapps folder for Applications/Contexts and Load them
 	 */
 	var loadContexts = function() {
-		console.log ("Scanning for webapps directory...".blue.bold);
 		try{
 			var wa = fs.readdirSync(appBase + "/webapps");
 		}catch(e){
-			console.log("No 'webapps' directory.  Not loading any webapps.");
+			console.log("No 'webapps' directory.  Not loading any contexts.".yellow.bold);
 			return;
 		}
 		for(var i=0;i<wa.length;i++) {

@@ -97,25 +97,8 @@ exports.create = function(options) {
 				}
 			}
 		},
-		loadNSP : function(options){
-			var MIMEPath = options.MIMEPath;
-			var MIME = options.MIME;
-			console.log("Creating Servlet for: [" + MIMEPath + "] from NSP...");
-			var servletOptions = HttpServlet.parseNSP(MIME.content.toString());
-			var opts = {
-				servletOptions : servletOptions,
-				meta : {
-					name : MIMEPath,
-					description : "NSP File",
-					servletClass : MIMEPath,
-					servletType : "NSP"
-				}
-			};
-			addMapping(MIMEPath, MIMEPath);
-			servlet = this.loadServlet(opts);
-			return servlet;
-		},
 		loadServlet : function(options) {
+			// console.log(options);
 			// Create servlet Metadata Object
 			var servletMeta = {
 				options : options.servletOptions,		// doGet, doPost, etc
@@ -133,7 +116,7 @@ exports.create = function(options) {
 			// Attach Initialization Options to Metadata
 			newServlet.init(servletConfig);
 			servlets.push(servletMeta);
-			console.log(" Servlet [" + newServlet.getServletConfig().getServletName() + "] created and inititialized.");
+			console.log("HttpServlet [" + newServlet.getServletConfig().getServletName() + "] created and inititialized.");
 			return newServlet;
 		},
 		// NON-STANDARD
@@ -256,6 +239,30 @@ exports.create = function(options) {
 				res.end();
 				return;
 			}
+			var dots = URL.split(".");
+			var ext = dots[dots.length-1].toLowerCase();
+			// See if URL has a .nsp extension and isn't yet parsed and mapped.
+			if(ext=="nsp" && this.getMapping(URL).urlPattern != URL) {
+				var nspPath = appBase + "/webapps/" + this.getName() + "/" + URL;
+				var nspContents;
+				try{
+					nspContents = fs.readFileSync(nspPath).toString();
+					var opts = HttpServlet.parseNSP(nspContents);
+					var NSPOptions = {
+						servletOptions : opts,
+						meta : {
+							servletType : "NSP",
+							name : URL,
+							description : URL
+						}
+					};
+					this.loadServlet(NSPOptions);	
+					this.addMapping(URL, URL);
+				}catch(e){
+					// No .NSP file in filesystem, let it 404 naturally.
+					console.log(e.stack);
+				}
+			}
 			var req = options.req;					// Node.JS Request
 			var res = options.res;					// Node.JS Response
 			var id = options.id;					// ID to tag Request and Response with.
@@ -330,12 +337,14 @@ exports.create = function(options) {
 			return name;
 		},
         getServletMappings : getServletMappings,
+		addMapping : addMapping,
 		getMapping : function(url) {
 			for(var i=0;i<servletMappings.length;i++) {
 				if(url.indexOf(servletMappings[i].urlPattern)==0 || url==servletMappings[i].urlPattern) {
 					return servletMappings[i];
 				}
 			}
+			console.log("No mapping found");
 			return null;
 		},
 		getTranslation : function (source) {

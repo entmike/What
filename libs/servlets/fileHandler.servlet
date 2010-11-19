@@ -1,6 +1,6 @@
 {
 	doGet : {
-		async : true,
+		async : true,	// Node.JS File i/o is asynchronous, so we should flag this method as such
 		method : function(request, response, callback, scope) {
 			var writer = response.getWriter();
 			var appBase = this.getServletContext().getHostServices().appBase;
@@ -13,23 +13,21 @@
 			if(createSessions) {
 				var session = request.getSession(true);
 			}
-			/*
-			console.log("[Appbase] " + appBase);
-			console.log("[ContextPath]" + contextPath);
-			console.log("[ServletPath]" + servletPath);
-			console.log("[PathInfo]" + pathInfo);
-			console.log(MIMEPath);
-			*/
-			var forbidPath = appBase + "/webapps/" + contextPath + servletPath + "WEB-INF";
-			if(MIMEPath.indexOf(forbidPath) == 0){ // Forbid /WEB-INF/ listing
+			var forbidPaths = [
+				appBase + "/webapps/" + contextPath + servletPath + "WEB-INF",
+				appBase + "/webapps/" + contextPath + servletPath + "META-INF"
+			]
+			var forbidden = false;
+			for(var i=0;i<forbidPaths.length;i++) if(MIMEPath.indexOf(forbidPaths[i]) == 0) forbidden = true;
+			if(forbidden){ // Forbid WEB-INF and META-INF listings
 				response.setStatus(403);
 				response.setHeader("Content-Type", "text/html");
 				var template = Utils.getTemplate("403.tmpl");
-				template = template.replace("<@message>", "WEB-INF listing is forbidden.");
-				template = template.replace("<@title>", "WEB-INF listing is forbidden.");
+				template = template.replace("<@message>", "WEB-INF and META-INF listings are forbidden.");
+				template = template.replace("<@title>", "WEB-INF and META-INF listings are is forbidden.");
 				writer.write(template);
 				this.serviceComplete(request, response, callback, scope);
-			}else{	// Non-forbidden, check MIMEs
+			}else{	// Check MIMEs
 				Utils.getMIME({
 					modSince : request.getHeader("If-Modified-Since"),
 					allowDirectoryListing : allowListings,
@@ -41,13 +39,6 @@
 						switch(MIME.status) {
 							// OK
 							case 200:
-								/*if(MIME.ext == "nsp") {		// NSP page
-									var servlet = this.getServlet(MIMEPath);
-									if(!servlet) servlet = loadNSP({ MIME : MIME, MIMEPath : MIMEPath});
-									// Call Servlet Service
-									servlet.service(request, response);
-								}else{// General MIME type
-								*/
 								response.setStatus(MIME.status);
 								response.setHeader("Content-Type", MIME.mimeType.mimeType);
 								response.setHeader("Last-Modified", MIME.modTime);

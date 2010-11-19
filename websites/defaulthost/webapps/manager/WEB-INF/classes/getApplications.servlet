@@ -130,6 +130,7 @@
 					id : context.getName(),
 					type : "webcontext",
 					text : context.getName() + " (/" + context.getPath() + ")",
+					contextName : context.getName(),
 					path : context.getPath(),
 					component : context.getName(),
 					description : context.getConfig().description,

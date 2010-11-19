@@ -211,7 +211,7 @@ exports.create = function(options) {
 		},
 		// NON-STANDARD
 		handleComplete : function(request, response){
-			var acceptEncoding = getHeader("accept-encoding");
+			var acceptEncoding = request.getHeader("accept-encoding");
 			if(acceptEncoding && acceptEncoding.toLowerCase().indexOf("gzip") > -1) {  // Accepts GZIP
 				if(!response.isCommited()) {
 					response.setHeader("Content-Encoding", "gzip");

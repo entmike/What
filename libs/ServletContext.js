@@ -224,12 +224,10 @@ exports.create = function(options) {
 			var now = new Date(new Date() - dateOffset);
 			console.log("[" + response.getId() + "]\t[" + rStatus + "] [" + request.getRequestURI() + "]");
 			var endMS = new Date().getTime();
-			/*if(status.trace){
-				addTrace({
-					request : request,
-					response : response
-				});
-			}*/
+			options.hostServices.addTrace({
+				request : request,
+				response : response
+			});
 		},
 		handle : function(options){
 			var URL = options.URL;						// Requested URL

@@ -1,0 +1,15 @@
+{
+	doGet : {
+		parameters : [ ],
+		method : function(request, response) {
+			/**
+				Get Web Container Trace Log
+			*/
+			var traces = this.getServletContext().getAdminServices().purgeTraces();
+			response.getWriter().write(JSON.stringify({
+				success : true,
+				msg : "Trace Logs purged."
+			}));
+		}
+	}
+}

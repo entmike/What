@@ -1,0 +1,34 @@
+{
+	doGet : {
+		parameters : [
+			{
+				name : "id",
+				description : "Trace ID",
+				required : true
+			}
+		],
+		method : function(request, response) {
+			/**
+				Get Single Trace
+			*/
+			var params = require('querystring').parse(request.getQueryString());
+			var traces = this.getServletContext().getAdminServices().getTraces();
+			var traceID = params.id;
+			var trace = traces[traceID];
+			var req = trace.request;
+			var res = trace.response;
+			var obj = {
+				success : true,
+				request : {
+					id : traceID,
+					URL : req.getRequestURI(),
+					queryString : req.getQueryString(),
+					method : req.getMethod(),
+					headers : req.getHeaders(),
+					remoteAddress : req.getIPAddress()
+				}
+			}
+			response.getWriter().write(JSON.stringify(obj));
+		}
+	}
+}

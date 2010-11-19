@@ -46,3 +46,6 @@
 .logButton {
 	background-image:url('resources/images/log-icon.png') !important; 
 }
+.purgeButton {
+	background-image:url('resources/images/trash-icon.png') !important; 
+}

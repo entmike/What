@@ -122,7 +122,7 @@ var adminDashboard = {
 		autoLoad : true,
 		reader : new Ext.data.JsonReader({
 			fields : [
-				"id", "request", "response"
+				"id", "remoteAddress", "request", "response"
 			]
 		})
 	}),
@@ -569,53 +569,120 @@ var adminDashboard = {
 										})
 									]
 								},{
-									xtype : "grid",
-									store : this.dsTraces,
-									autoExpandColumn : 1,
-									columns : [
-										{
-										id : "id", header : "ID", dataIndex : "id", width : 30, sortable : true
-										},{
-										header : "Request", dataIndex : "request", sortable : true
-										},{
-										header : "Response", dataIndex : "response", width : 75, sortable : true
-										}
-									],
+									xtype : "panel",
 									title : "Trace Logs",
-									tbar : {
-										items : [
-											{
-												text : "Toggle Trace",
-												iconCls : "logButton",
-												allowDepress : true,
-												enableToggle : true,
-												toggleHandler : function(button, state) {
-													button.disable();
+									layout : "border",
+									items :[
+										{
+												xtype : "panel",
+												border : false,
+												autoScroll : true,
+												id : "traceDetails",
+												split : true,
+												title : "Details",
+												height : 200,
+												region : "south",
+												bodyStyle : "padding: 5px;font-size:8pt;font-family: Arial, Tahoma, Verdana;",
+												tpl : new Ext.Template("<div>Hello {0}.</div>")
+										},{
+											xtype : "grid",
+											region : "center",
+											store : this.dsTraces,
+											listeners : {
+												rowclick : function(grid, rowIndex, event) {
+													var traceID = grid.getSelectionModel().getSelected().get("id");
 													Ext.Ajax.request({
-														url: 'setTrace',
-														params : {
-															traceStatus : state
-														},
-														method : "GET",
-														success : function(response, opts) {
-															// Ext.Msg.alert('Status', Ext.decode(response.responseText).msg);
-															button.enable();
-														},
-														failure : function(response, opts) {
-															alert('server-side failure with status code ' + response.status);
-															button.enable();
+															url: 'getTrace',
+															params : {id : traceID},
+															method : "GET",
+															success: function(response, opts) {
+																var obj = Ext.decode(response.responseText);
+																var request = obj.request;
+																new Ext.Template(
+																	'<b>Request ID:{id}</b><br/>',
+																	'<b>Remote Address:</b> {remoteAddress}<br/>',
+																	'<b>URL:</b> {URL}<br/>',
+																	'<b>Method:</b> {method}<br/>',
+																	'<b>Querystring:</b> {queryString}<br/>',
+																	'<b>Request Headers:</b><br/>'
+																).overwrite(Ext.getCmp("traceDetails").body, request);
+																for(name in request.headers){
+																	var o = {name: name, value : request.headers[name]};
+																	new Ext.Template(
+																	'<b>{name}:</b> {value}<br/>'
+																	).append(Ext.getCmp("traceDetails").body, o);
+																}
+															},
+															failure: function(response, opts) {
+																alert('server-side failure with status code ' + response.status);
+															}
+														});
+													
+												}
+											},
+											autoExpandColumn : 2,
+											columns : [
+												{
+												id : "id", header : "ID", dataIndex : "id", width : 30, sortable : true
+												},{
+												header : "Remote Address", dataIndex : "remoteAddress", width: 100, sortable : true
+												},{
+												header : "Request", dataIndex : "request", sortable : true
+												},{
+												header : "Response", dataIndex : "response", width : 75, sortable : true
+												}
+											],
+											tbar : {
+												items : [
+													{
+														text : "Toggle Trace",
+														iconCls : "logButton",
+														allowDepress : true,
+														enableToggle : true,
+														toggleHandler : function(button, state) {
+															button.disable();
+															Ext.Ajax.request({
+																url: 'setTrace',
+																params : {
+																	traceStatus : state
+																},
+																method : "GET",
+																success : function(response, opts) {
+																	// Ext.Msg.alert('Status', Ext.decode(response.responseText).msg);
+																	button.enable();
+																},
+																failure : function(response, opts) {
+																	alert('server-side failure with status code ' + response.status);
+																	button.enable();
+																}
+															});
 														}
-													});
-												}
-											},"-",{
-												text : "Refresh",
-												iconCls : "refreshButton",
-												handler : function() {
-													adminDashboard.dsTraces.load();
-												}
+													},"-",{
+														text : "Refresh",
+														iconCls : "refreshButton",
+														handler : function() {
+															adminDashboard.dsTraces.load();
+														}
+													},"-",{
+														text : "Purge Trace Log",
+														iconCls : "purgeButton",
+														handler : function() {
+															Ext.Ajax.request({
+																url: 'purgeTraces',
+																method : "GET",
+																success : function(response, opts) {
+																	adminDashboard.dsTraces.load();
+																},
+																failure : function(response, opts) {
+																	alert('server-side failure with status code ' + response.status);
+																}
+															});
+														}
+													}
+												]
 											}
-										]
-									}
+										}
+									]
 								},{
 									title : "Sessions",
 									xtype : "grid",

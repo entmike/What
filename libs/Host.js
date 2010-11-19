@@ -31,6 +31,9 @@ exports.create = function(options){
 	function addTrace(options){
 		traces.push(options);
 	};
+	function purgeTraces() {
+		traces = [];
+	};
 	function setTrace(flag) {
 		status.trace = flag;
 	};
@@ -83,11 +86,19 @@ exports.create = function(options){
 			return (b.getPath().length - a.getPath().length);
 		});
 	};
+	var addTrace = function(options) {
+		if(!status.trace) return;
+		traces.push({
+			request : options.request,
+			response : options.response
+		});
+	};
 	/**
 	* Exposes Safe Private Functions/Properties to return object
 	*/
 	var hostServices = { 
-		appBase : appBase
+		appBase : appBase,
+		addTrace : addTrace
 	};
 	/**
 	* Exposes Administrative Functions to return object
@@ -97,6 +108,7 @@ exports.create = function(options){
 		getContextByName : getContextByName,
 		getContextByPath : getContextByPath,
 		setTrace : setTrace,
+		purgeTraces : purgeTraces,
 		getTraces : function() {
 			return traces;
 		},

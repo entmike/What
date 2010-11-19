@@ -10,9 +10,13 @@ exports.create = function(options) {
 	var pathInfo = options.pathInfo;
 	var session;
 	var sessionManager = options.sessionManager;
+	var IP = request.connection.remoteAddress;
 	// Public
 	return {
 		toString : function() { return "HttpServletRequest"; },
+		getIPAddress : function() {
+			return IP;
+		},
 		getId : function() {
 			return id;
 		},

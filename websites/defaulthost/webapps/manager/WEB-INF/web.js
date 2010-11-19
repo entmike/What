@@ -16,8 +16,16 @@
 			servletClass : "setTrace.servlet"
 		},{
 			name : "getTraces",
-			description : "Get Trace Log",
+			description : "Get Trace Logs",
 			servletClass : "getTraces.servlet"
+		},{
+			name : "purgeTraces",
+			description : "Purge Trace Logs",
+			servletClass : "purgeTraces.servlet"
+		},{
+			name : "getTrace",
+			description : "Get Trace Log",
+			servletClass : "getTrace.servlet"
 		},{
 			name : "getApplications",
 			description : "Get Context List",
@@ -59,7 +67,7 @@
 			description : "Default MIME Handler Servlet",
 			servletClass : "./libs/servlets/fileHandler.servlet",
 			initParams : {
-					listings : false
+				listings : false
 			}
 		}
 	],
@@ -73,6 +81,12 @@
 		},{
 			name : "getTraces",
 			urlPattern : "/getTraces"
+		},{
+			name : "purgeTraces",
+			urlPattern : "/purgeTraces"
+		},{
+			name : "getTrace",
+			urlPattern : "/getTrace"
 		},{
 			name : "getApplications",
 			urlPattern : "/getApplications"

@@ -10,6 +10,7 @@
 			for(var i=0;i<traces.length;i++){
 				tr.push({
 					id: i,
+					remoteAddress : traces[i].request.getIPAddress(),
 					request: traces[i].request.getRequestURI(),
 					response : traces[i].response.getStatus()
 				});

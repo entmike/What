@@ -19,7 +19,7 @@
 				hosts : [
 					{
 						name : "entmike.com",
-						aliases : ["www.entmike.com"]
+						aliases : ["www.entmike.com"],
 						appBase : "/var/www",
 						className : "./Host.js",
 						createDirs : false,

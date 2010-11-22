@@ -50,7 +50,7 @@ var shutdownServer = http.createServer(function(req, res) {
 		}
 	}
 });
-shutdownServer.listen(server.port);
+//shutdownServer.listen(server.port);
 
 for(var i=0;i<services.length;i++) {
 	service = services[i];

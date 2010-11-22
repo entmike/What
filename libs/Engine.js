@@ -55,6 +55,12 @@ exports.create=function(options){
 				console.log("Web Engine [" + config.name + "] started.");
 				loadHosts();
 				httpServer = http.createServer(listener);
+				/*var nodes = require("./multi-node").listen({
+					masterListen : false,
+					port: port,
+					nodes: 4
+				}, httpServer);
+				*/
 				httpServer.listen(port);
 				console.log("[" + config.name + "] running on:" + port);
 		}

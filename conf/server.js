@@ -16,6 +16,7 @@
 				defaultHost : "localhost",
 				name : "My Engine",
 				jvmRoute : "TBD",
+				workers : 3,
 				hosts : [
 					{
 						name : "entmike.com",

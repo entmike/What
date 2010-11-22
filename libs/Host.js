@@ -17,7 +17,6 @@ exports.create = function(options){
 	var sessionManager = require('./SessionManager').create({
 		timeoutDefault : (3600 * 24 * 365)	// 1 Year
 	});
-	
 	var options = options || {};
 	var name = options.name;
 	var allowDirectoryListing = options.allowDirectoryListing || false;
@@ -25,6 +24,12 @@ exports.create = function(options){
 	var aliases = options.aliases || null;	// Host Name Aliases
 	var translations = options.translations || null;	// Path Translations
 	var appBase = options.appBase;	// Contexts Base Directory
+	var dbPath = appBase + "/data/db";
+	// Instantiate MongoDB
+	var mongod = require('child_process').spawn('mongod', ['--dbpath', dbPath]);
+	mongod.stdout.on('data', function(data) {
+		console.log(data.toString());
+	});
 	var contexts = [];				// Contexts Collection
 	var traces = [];				// Trace Collection
 	var adminApp = options.adminApp || null;	// Admin Appname
@@ -226,7 +231,7 @@ exports.create = function(options){
 			res.end();
 			return;
 		}
-		var formData = options.formData || {};
+		var formData = options.formData || {fields : {}};
 		req.formData = formData; 					// Temp Rider
 		if(req.formData && req.formData.files) {	// Todo: File Handling
 			

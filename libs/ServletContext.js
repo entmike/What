@@ -43,7 +43,6 @@ exports.create = function(options) {
 	});
 	// Path Translations
     var translations = webConfig.translations;
-
 	var addMapping = function(servletName, url) {
 		servletMappings.push({
 			name : servletName,
@@ -260,7 +259,7 @@ exports.create = function(options) {
 					// No .NSP file in filesystem, let it 404 naturally.
 					console.log(e.stack);
 				}
-			}
+			};
 			var req = options.req;					// Node.JS Request
 			var res = options.res;					// Node.JS Response
 			var id = options.id;					// ID to tag Request and Response with.
@@ -301,6 +300,7 @@ exports.create = function(options) {
 				});
 				var servlet = this.getServlet(mapping.name);
 				if(servlet) {	// Servlet Exists
+					// (HttpServletRequest, HttpServletResponse, [callback], [callback scope])
 					var async = servlet.service(request, response, this.handleComplete, this);
 				}else{
 					// Should be a servlet but there's not one.  Issue HTTP 500 error response.

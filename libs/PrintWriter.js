@@ -23,10 +23,14 @@ exports.create = function(options) {
 			if(typeof input == "string" || typeof input == "integer") {
 				stringBuffer += input
 			}else{
-				if(input.toString) {
-					stringBuffer += input.toString();
+				if(typeof input == "undefined") {
+					stringBuffer += "undefined";
 				}else{
-					stringBuffer += "[Object]";
+					if(input.toString) {
+						stringBuffer += input.toString();
+					}else{
+						stringBuffer += "[Object]";
+					}
 				}
 			}
 		}

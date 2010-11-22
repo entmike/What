@@ -16,7 +16,6 @@
 				defaultHost : "localhost",
 				name : "My Engine",
 				jvmRoute : "TBD",
-				workers : 3,
 				hosts : [
 					{
 						name : "entmike.com",
@@ -27,7 +26,10 @@
 						autoDeploy : false
 					},{
 						name : "localhost",
-						appBase : "websites/defaulthost"
+						appBase : "websites/defaulthost",
+						mongoPort : 480,
+						mongoUser : "entmike",
+						mongoPass : "Green123"
 					}
 				]
 			}

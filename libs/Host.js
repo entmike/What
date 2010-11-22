@@ -25,11 +25,19 @@ exports.create = function(options){
 	var translations = options.translations || null;	// Path Translations
 	var appBase = options.appBase;	// Contexts Base Directory
 	var dbPath = appBase + "/data/db";
-	// Instantiate MongoDB
-	var mongod = require('child_process').spawn('mongod', ['--dbpath', dbPath]);
-	mongod.stdout.on('data', function(data) {
-		console.log(data.toString());
-	});
+	var mongoPort = options.mongoPort || 0;
+	var mongoUser = options.mongoUser || "user";
+	var mongoPass = options.mongoPass || "pass";
+	try{
+		var dbTest = fs.readdirSync(dbPath);
+		// Instantiate MongoDB
+		var mongod = require('child_process').spawn('mongod', ['--dbpath', dbPath, '--port', mongoPort]);
+		mongod.stdout.on('data', function(data) {
+			console.log(data.toString().cyan);
+		});
+	}catch(e){
+		console.log("No 'data/db' directory.  Not loading MongoDB.".yellow.bold);
+	}
 	var contexts = [];				// Contexts Collection
 	var traces = [];				// Trace Collection
 	var adminApp = options.adminApp || null;	// Admin Appname
@@ -103,6 +111,11 @@ exports.create = function(options){
 	*/
 	var hostServices = { 
 		appBase : appBase,
+		getMongoInfo : function(){return {
+			port: mongoPort,
+			user : mongoUser,
+			pass : mongoPass
+		}},
 		addTrace : addTrace
 	};
 	/**

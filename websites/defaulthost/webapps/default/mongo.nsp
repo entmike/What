@@ -30,8 +30,12 @@ var mongoCmd = request.getFormData().fields.mongoCmd || "";
 	<textarea name="mongoCmd" style="width:100%;height:300px;"><%=mongoCmd || "printjson(db.things.find({name:'entmike'}).toArray());"%></textarea><br/>
 	<%
 	if(mongoCmd) {
+		var mongoInfo = pageContext.getHostServices().getMongoInfo();
 		require("./Mongo").command({
 			command : mongoCmd,
+			port : mongoInfo.port,
+			user : mongoInfo.user,
+			pass : mongoInfo.pass,
 			scope : this,
 			success : function(results, code) {
 				writer.write("<pre>" + results + "</pre>");

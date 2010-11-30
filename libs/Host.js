@@ -26,12 +26,11 @@ exports.create = function(options){
 	var appBase = options.appBase;	// Contexts Base Directory
 	var dbPath = appBase + "/data/db";
 	var mongoPort = options.mongoPort || 0;
-	var mongoUser = options.mongoUser || "user";
-	var mongoPass = options.mongoPass || "pass";
+	var mongoRest = (options.mongoRest)?"--rest":"";
 	try{
 		var dbTest = fs.readdirSync(dbPath);
 		// Instantiate MongoDB
-		var mongod = require('child_process').spawn('mongod', ['--dbpath', dbPath, '--port', mongoPort]);
+		var mongod = require('child_process').spawn('mongod', ['--dbpath', dbPath, '--port', mongoPort, mongoRest]);
 		mongod.stdout.on('data', function(data) {
 			console.log(data.toString().cyan);
 		});
@@ -111,11 +110,6 @@ exports.create = function(options){
 	*/
 	var hostServices = { 
 		appBase : appBase,
-		getMongoInfo : function(){return {
-			port: mongoPort,
-			user : mongoUser,
-			pass : mongoPass
-		}},
 		addTrace : addTrace
 	};
 	/**

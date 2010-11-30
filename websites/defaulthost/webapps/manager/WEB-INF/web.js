@@ -3,10 +3,19 @@
 	description : "Web Container Administration",
 	initParameters : {
 		author : "Mike Howles",
-        version : "1.1"
+        version : "1.1",
+		mongoAdmin : {
+			user : "admin",
+			pass : "admin",
+			port : 480
+		}
 	},
 	servlets : [
 		{
+			name : "getDatabases",
+			description : "Get MongoDB Database List",
+			servletClass : "getDatabases.servlet"
+		},{
 			name : "getSessions",
 			description : "Get Host Sessions",
 			servletClass : "getSessions.servlet"
@@ -73,6 +82,9 @@
 	],
 	servletMappings : [
 		{
+			name : "getDatabases",
+			urlPattern : "/getDatabases"
+		},{
 			name : "getSessions",
 			urlPattern : "/getSessions"
 		},{

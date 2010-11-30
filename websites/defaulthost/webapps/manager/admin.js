@@ -91,6 +91,17 @@ var getForm = function(options) {
 	return [tabPanel, resultsPanel]
 };
 var adminDashboard = {
+	fileSizeRenderer : function (value, metaData, record, rowIndex, colIndex, store) {
+		amount = value.toString();
+		amount = amount.replace(/^0+/, ''); 
+		amount += '';
+		x = amount.split('.');
+		x1 = x[0];
+		x2 = x.length > 1 ? '.' + x[1] : '';
+		var rgx = /(\d+)(\d{3})/;
+		while (rgx.test(x1)) x1 = x1.replace(rgx, '$1' + ',' + '$2');
+		return x1 + x2;
+	},
 	dsServerStatus : new Ext.data.Store({
 		url : "getServerStatus",
 		autoLoad : true,
@@ -132,6 +143,16 @@ var adminDashboard = {
 		reader : new Ext.data.JsonReader({
 			fields : [
 				"id", "createdOn", "lastAccessed"
+			]
+		})
+	}),
+	dsDatabases : new Ext.data.Store({
+		url : "getDatabases",
+		autoLoad : true,
+		reader : new Ext.data.JsonReader({
+			root : "result.databases",
+			fields : [
+				"name", "sizeOnDisk", "empty"
 			]
 		})
 	}),
@@ -525,27 +546,7 @@ var adminDashboard = {
 												header:'File Size',
 												width:100,
 												dataIndex:'filesize',
-												renderer : function (value, metaData, record, rowIndex, colIndex, store) {
-													// provide the logic depending on business rules
-													// name of your own choosing to manipulate the cell depending upon
-													// the data in the underlying Record object.
-													// if (value == 'whatever') {
-														//metaData.css : String : A CSS class name to add to the TD element of the cell.
-														//metaData.attr : String : An html attribute definition string to apply to
-														//                         the data container element within the table
-														//                         cell (e.g. 'style="color:red;"').
-														// metaData.css = 'name-of-css-class-you-will-define';
-													// }
-													amount = value.toString();
-													amount = amount.replace(/^0+/, ''); 
-													amount += '';
-													x = amount.split('.');
-													x1 = x[0];
-													x2 = x.length > 1 ? '.' + x[1] : '';
-													var rgx = /(\d+)(\d{3})/;
-													while (rgx.test(x1)) x1 = x1.replace(rgx, '$1' + ',' + '$2');
-													return x1 + x2;
-											   }
+												renderer : adminDashboard.fileSizeRenderer
 											},{
 												header:'Permissions',
 												width:100,
@@ -706,6 +707,32 @@ var adminDashboard = {
 										header : "Created On", dataIndex : "createdOn", sortable : true, width: 150
 										},{
 										header : "Last Accessed", dataIndex : "lastAccessed", width : 150, sortable : true
+										}
+									],
+								},{
+									title : "Databases",
+									xtype : "grid",
+									tbar : {
+										items : [
+											{
+												text : "Refresh",
+												iconCls : "refreshButton",
+												handler : function() {
+													adminDashboard.dsDatabases.load();
+												}
+											}
+										]
+									},
+									store : this.dsDatabases,
+									// autoExpandColumn : 1,
+									columns : [
+										{
+											header : "Database", dataIndex : "name", sortable : true, width: 150
+										},{
+											header : "Size", dataIndex : "sizeOnDisk", width : 150, sortable : true,
+											renderer : adminDashboard.fileSizeRenderer
+										},{
+											header : "Empty?", dataIndex : "empty", sortable : true, width : 50
 										}
 									],
 								}

@@ -28,8 +28,7 @@
 						name : "localhost",
 						appBase : "websites/defaulthost",
 						mongoPort : 480,
-						mongoUser : "entmike",
-						mongoPass : "Green123"
+						mongoRest : true
 					}
 				]
 			}

@@ -1,26 +1,24 @@
-exports.command = function(options) {
-	var scope = options.scope;
-	var success = options.success;
-	var command = options.command;
+exports.create = function(options) {
+	// Private
 	var port = options.port;
 	var user = options.user;
 	var pass = options.pass;
-	if(!success) return;
-	failure = options.failure || success;
+	var db = options.db;
 	
-	var chunks = [];
-	var mongo = require('child_process').spawn('mongo', 
-	['--eval', '"' + command +'"', '--quiet', '--port', port,
-	'-u'+user, '-p'+pass]);
-	mongo.stdout.on('data', function(data) {
-		chunks.push(data.toString());
-	});
-	mongo.on('exit', function(code) {
-		var results = chunks.join("");
-			if(code==0){
-				success.call(scope, results, code);
-			}else{
-				failure.call(scope, results, code);
-			}
-	});
+	// Public
+	return {
+		toString : function() {
+			return "MongoDB Connector";
+		},
+		command : function(options) {
+			var handler = options.handler;
+			var command = options.command || "";
+			// Stringify command if needed.
+			if(typeof command == 'object') command = JSON.stringify(command);
+			// Mongo Child Process
+			var execCmd = 'mongo --quiet -u' + user + ' -p' + pass + ' -port ' + port + ' ' + db + ' --eval "' + command + '"';
+			// Execute the process
+			require('child_process').exec(execCmd, handler);
+		}
+	}
 }

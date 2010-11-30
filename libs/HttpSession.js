@@ -55,16 +55,6 @@ exports.create = function(options) {
 		setAttribute : function(name, value) {
 			// Binds an object to this session, using the name specified.
 			attributes[name] = value;
-			require("./Mongo").command({
-				command : "db.sessions.save({_id: \"" + this.getId() + "\", session : " + JSON.stringify({
-					attributes : attributes,
-					creationTime : creationTime,
-					lastaccessedTime : lastAccessedTime
-				}) + "});",
-				success : function(results, code) {	
-					console.log(code + results);
-				}
-			});
 		},
 		setMaxInactiveInterval : function(interval) {
 			/* Specifies the time, in seconds, between client requests before the servlet

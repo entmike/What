@@ -199,10 +199,11 @@ exports.create = function(options) {
 					response.setHeader("Content-Encoding", "gzip");
 					gzip({
 						data : response.getOutputStream(),
-						scope : response,
-						callback : function(err, data) {
-							this.setOutputStream(data);
-							this.close();
+						callback : function(err,data){
+							(function(){
+								this.setOutputStream(data);
+								this.close();
+							}).call(response);
 						}
 					});
 				}else{ // Response is commited, cannot GZIP.
@@ -263,7 +264,6 @@ exports.create = function(options) {
 			var req = options.req;					// Node.JS Request
 			var res = options.res;					// Node.JS Response
 			var id = options.id;					// ID to tag Request and Response with.
-			var scope = options.scope || this;		// Callback Scope
 			// Create Cookies Collection from Node.JS Header for Servlet Request Constructor
 			var cookieHeader = req.headers["cookie"];
 			var cookies = [];		// Cookies Collection
@@ -300,8 +300,8 @@ exports.create = function(options) {
 				});
 				var servlet = this.getServlet(mapping.name);
 				if(servlet) {	// Servlet Exists
-					// (HttpServletRequest, HttpServletResponse, [callback], [callback scope])
-					var async = servlet.service(request, response, this.handleComplete, this);
+					// (HttpServletRequest, HttpServletResponse, [callback])
+					var async = servlet.service(request, response, this.handleComplete);
 				}else{
 					// Should be a servlet but there's not one.  Issue HTTP 500 error response.
 					response.setStatus(500);

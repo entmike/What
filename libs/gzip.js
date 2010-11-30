@@ -7,7 +7,6 @@ exports.gzip = function(options) {
 		enc = options.enc || 'utf8',
 		data = options.data || null,
 		isBuffer = buffer.isBuffer(options.data),
-		scope = options.scope || this,
 		callback = options.callback || null;
  
 	if (!callback) return;	// Callback function required
@@ -38,6 +37,6 @@ exports.gzip = function(options) {
 			chunk[i].copy(output, offset, 0, chunk[i].length);	// Chunk it all together
 			offset+=chunk[i].length;
 		}
-		callback.call(scope, code, output);						// Invoke callback function
+		callback(code, output);									// Invoke callback function
 	});
 };

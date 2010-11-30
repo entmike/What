@@ -1,0 +1,46 @@
+{
+	doGet : {
+		async : true,
+		parameters : [ ],
+		method : function(request, response, callback) {
+			var pageContext = this.getServletContext();
+			// Create MongoDB Connection
+			var mongoConnection = require("./Mongo").create({
+				port : pageContext.getInitParameter("mongoAdmin").port,
+				user : pageContext.getInitParameter("mongoAdmin").user,
+				pass : pageContext.getInitParameter("mongoAdmin").pass,
+				db : "admin"
+			});
+			var that = this;
+			// Issue Command
+			mongoConnection.command({
+				command : [
+					"var dbs = db.runCommand({listDatabases:1});",
+					"for(var i=0;i<dbs.databases.length;i++){",
+					" var sis = db.getSisterDB(dbs.databases[i].name);",
+					" dbs.databases[i].collectionNames=sis.getCollectionNames();",
+					" dbs.databases[i].stats=sis.stats();",
+					"}",
+					"printjson(dbs);"
+				].join(""),
+				handler : function(error, stdout, stderr){
+					(function(){
+						if(error){	// Failure to connect/authenticate
+							response.getWriter().write(JSON.stringify({
+								success : false,
+								msg : stderr
+							}));
+						}else{		// Success, output DB List
+							var resultObj = eval("(" + stdout + ")");	// Eval to JS Object
+							response.getWriter().write(JSON.stringify({
+								success : true,
+								result : resultObj
+							}));							
+						}
+						this.serviceComplete(request, response, callback);
+					}).call(that);
+				}
+			});
+		}
+	}
+}

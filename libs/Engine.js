@@ -37,7 +37,12 @@ function getDefaultHost() {
 }
 
 var listener = function(req, res) {
-	var hostName = req.headers.host.split(":")[0];	// Drop Port #
+	if(!req.headers.host) {
+		res.writeHead(400, {"Content-Type" : "text/html"});
+		res.end("<h1>Bad Request (Invalid or Missing Hostname)</h1>");
+		return;
+	}
+	hostName = req.headers.host.split(":")[0];	// Drop Port #
 	var host = getHost(hostName);	// Get Requested Host
 	if(!host) host = getDefaultHost();
 	host.handle(req, res);

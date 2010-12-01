@@ -60,7 +60,8 @@ exports.create=function(options){
 				console.log("Web Engine [" + config.name + "] started.");
 				loadHosts();
 				httpServer = http.createServer(listener);
-				/*var nodes = require("./multi-node").listen({
+				/*
+				var nodes = require("./multi-node").listen({
 					masterListen : false,
 					port: port,
 					nodes: 4

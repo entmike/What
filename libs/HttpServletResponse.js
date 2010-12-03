@@ -93,6 +93,12 @@ exports.create = function(options) {
 			this.contentLength = contentLength;
 		},
 		addCookie : function(cookie) {
+			for(var i=0;i<cookies.length;i++){
+				if(cookies[i].getName()==cookie.getName()) {
+					cookies[i] = cookie;
+					return;
+				}
+			}
 			cookies.push(cookie);
 		},
 		getWriter : function() {

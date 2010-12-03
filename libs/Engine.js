@@ -6,8 +6,10 @@ require('./colors');			// Colors addon for console coloring
 var DateFormat = require('./DateFormat');
 // Private
 var name = "";					// Engine Name
+var port;						// Engine Port
 var httpServer = null;			// NodeJS HTTP Server
 var hosts = [];					// Hosts Collection
+var valves = [];				// Valves in the Pipeline
 var config = {};				// Engine Configuration
 
 // Load Hosts from config
@@ -37,36 +39,47 @@ function getDefaultHost() {
 }
 
 var listener = function(req, res) {
+	for(var i=0;i<valves.length;i++){
+		valves[i].invoke(req,res);
+	}
 	if(!req.headers.host) {
 		res.writeHead(400, {"Content-Type" : "text/html"});
 		res.end("<h1>Bad Request (Invalid or Missing Hostname)</h1>");
 		return;
 	}
 	hostName = req.headers.host.split(":")[0];	// Drop Port #
-	var host = getHost(hostName);	// Get Requested Host
+	var host = getHost(hostName);				// Get Requested Host
 	if(!host) host = getDefaultHost();
 	host.handle(req, res);
 };
 
 // Public
 exports.create=function(options){
+	port = options.port;
 	config = options.config;
-	var port = options.port;
+	name = config.name;
+	var valveConfigs = config.valves || [];
+	for(var i=0;i<valveConfigs.length;i++){
+		var valveConfig = valveConfigs[i];
+		valveConfig.className = valveConfig.className || "./BasicValve.js";
+		valveConfig.prefix = valveConfig.prefix || name.replace(" ", "_");
+		valveConfig.suffix = valveConfig.suffix || ".txt";
+		valveConfig.directory = valveConfig.directory || "logs";
+		var valve = require(valveConfig.className).create(valveConfig);
+		valve.start();
+		valves.push(valve);
+	}
 	return {
 		toString : function() {
-			return "Engine";
+			return "[Engine] " + name;
+		},
+		getName : function() {
+			return name;
 		},
 		start : function() {
 				console.log("Web Engine [" + config.name + "] started.");
 				loadHosts();
 				httpServer = http.createServer(listener);
-				/*
-				var nodes = require("./multi-node").listen({
-					masterListen : false,
-					port: port,
-					nodes: 4
-				}, httpServer);
-				*/
 				httpServer.listen(port);
 				console.log("[" + config.name + "] running on:" + port);
 		}

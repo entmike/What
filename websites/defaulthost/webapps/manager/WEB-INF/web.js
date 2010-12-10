@@ -12,6 +12,10 @@
 	},
 	servlets : [
 		{
+			name : "runCommand",
+			description : "Run an OS Command",
+			servletClass : "./libs/servlets/adminServlets/runCommand.servlet"
+		},{
 			name : "getDatabases",
 			description : "Get MongoDB Database List",
 			servletClass : "./libs/servlets/adminServlets/getDatabases.servlet"
@@ -82,6 +86,9 @@
 	],
 	servletMappings : [
 		{
+			name : "runCommand",
+			urlPattern : "/run"
+		},{
 			name : "getDatabases",
 			urlPattern : "/getDatabases"
 		},{

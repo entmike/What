@@ -8,9 +8,8 @@
 			var command = request.getPathInfo();
 			command = command.substring(1, command.length);
 			params = require('querystring').parse(request.getQueryString());
-			args = params.args || "";
-			args = args.split(" ");
-			exec = command + " " + args;
+			args = params.args || null;
+			if(args) args = args.split(" ");
 			var p = require('child_process').spawn(command, args);
 			p.stdout.on('data', function(data) {
 				response.setStatus(200);

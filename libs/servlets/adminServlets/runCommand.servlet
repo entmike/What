@@ -7,10 +7,30 @@
 			var that = this;	// Arg, scope.
 			var command = request.getPathInfo();
 			command = command.substring(1, command.length);
-			require('child_process').exec(command, function(error, stdout, stderr){
-				response.getWriter().write(stdout);
+			params = require('querystring').parse(request.getQueryString());
+			args = params.args || "";
+			args = args.split(" ");
+			exec = command + " " + args;
+			var p = require('child_process').spawn(command, args);
+			p.stdout.on('data', function(data) {
+				response.setStatus(200);
+				response.getWriter().write(data.toString());
+				response.flushBuffer();
+			});
+			p.on('exit', function(code) {
+				console.log(code);
 				that.serviceComplete(request, response, callback);
 			});
+			/*
+			require('child_process').exec(exec, function(error, stdout, stderr){
+				if(error) {
+					response.getWriter().write(stderr);
+				}else{
+					response.getWriter().write(stdout);
+				}
+				that.serviceComplete(request, response, callback);
+			});
+			*/
 		}
 	}
 }

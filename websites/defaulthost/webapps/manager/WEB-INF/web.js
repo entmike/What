@@ -14,63 +14,63 @@
 		{
 			name : "getDatabases",
 			description : "Get MongoDB Database List",
-			servletClass : "getDatabases.servlet"
+			servletClass : "./libs/servlets/adminServlets/getDatabases.servlet"
 		},{
 			name : "getSessions",
 			description : "Get Host Sessions",
-			servletClass : "getSessions.servlet"
+			servletClass : "./libs/servlets/adminServlets/getSessions.servlet"
 		},{
 			name : "setTrace",
 			description : "Set Trace Status",
-			servletClass : "setTrace.servlet"
+			servletClass : "./libs/servlets/adminServlets/setTrace.servlet"
 		},{
 			name : "getTraces",
 			description : "Get Trace Logs",
-			servletClass : "getTraces.servlet"
+			servletClass : "./libs/servlets/adminServlets/getTraces.servlet"
 		},{
 			name : "purgeTraces",
 			description : "Purge Trace Logs",
-			servletClass : "purgeTraces.servlet"
+			servletClass : "./libs/servlets/adminServlets/purgeTraces.servlet"
 		},{
 			name : "getTrace",
 			description : "Get Trace Log",
-			servletClass : "getTrace.servlet"
+			servletClass : "./libs/servlets/adminServlets/getTrace.servlet"
 		},{
 			name : "getApplications",
 			description : "Get Context List",
-			servletClass : "getApplications.servlet"
+			servletClass : "./libs/servlets/adminServlets/getApplications.servlet"
 		},{
 			name : "getMIMEs",
 			description : "Get MIME List",
-			servletClass : "getMIMEs.servlet"
+			servletClass : "./libs/servlets/adminServlets/getMIMEs.servlet"
 		},{
 			name : "getEnvironment",
 			description : "Get Environment from Server",
-			servletClass : "getEnvironment.servlet"
+			servletClass : "./libs/servlets/adminServlets/getEnvironment.servlet"
 		},{
 			name : "getServletOption",
 			description : "Get a Servlet Option",
-			servletClass : "getServletOption.servlet"
+			servletClass : "./libs/servlets/adminServlets/getServletOption.servlet"
 		},{
 			name : "restartApp",
 			description : "Restart a Web Application",
-			servletClass : "restartApp.servlet"
+			servletClass : "./libs/servlets/adminServlets/restartApp.servlet"
 		},{
 			name : "restartApps",
 			description : "Restart all Contexts",
-			servletClass : "restartApps.servlet"
+			servletClass : "./libs/servlets/adminServlets/restartApps.servlet"
 		},{
 			name : "restartServlet",
 			description : "Restart a Servlet",
-			servletClass : "restartServlet.servlet"
+			servletClass : "./libs/servlets/adminServlets/restartServlet.servlet"
 		},{
 			name : "stopServer",
 			description : "Stop the Web Container",
-			servletClass : "stopServer.servlet"
+			servletClass : "./libs/servlets/adminServlets/stopServer.servlet"
 		},{
 			name : "editServlet",
 			description : "Edit a Servlet",
-			servletClass : "editServlet.servlet"
+			servletClass : "./libs/servlets/adminServlets/editServlet.servlet"
 		},{
 			name : "default",
 			description : "Default MIME Handler Servlet",

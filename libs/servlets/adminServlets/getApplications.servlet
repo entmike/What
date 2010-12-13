@@ -144,7 +144,7 @@
 				}
 				var contextNode = {						// Create context Node entry
 					id : context.getName(),
-					type : "webcontext",
+					type : "context",
 					text : context.getName() + " (" + context.getPath() + ")",
 					contextName : context.getName(),
 					path : context.getPath(),

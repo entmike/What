@@ -15,8 +15,10 @@ exports.create = function(options) {
 	options = options || {};
 	// Context Name
 	var name = options.name;
-	// Context Path
+	// Context Path (Mapping)
 	var path = options.path;
+	// File Path (File System)
+	var filePath = options.filePath;
 	theLog = [];
 	var attributes = [];
 	// Admin Services Handle
@@ -130,6 +132,9 @@ exports.create = function(options) {
 		},
 		getHostServices : function() {
 			return hostServices;
+		},
+		getFilePath : function() {
+			return filePath;
 		},
 		// IMPLEMENTATION OF ServletContext Interface
 		getAttribute : function(name) {

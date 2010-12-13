@@ -57,7 +57,7 @@ exports.create = function(options){
 		var context = getContextByName(contextName);
 		removeContext(contextName);
 		try {
-			loadContext(context.getPath());
+			loadContext(context.getFilePath());
 		}catch(e){
 			console.log(e.message.red.bold);
 		}
@@ -148,9 +148,10 @@ exports.create = function(options){
 		};
 		contextConfig = contextConfig || {	// Defaults
 			name : path,
-			path : path
+			path : path,
 		};
 		contextConfig.name = contextConfig.name || path;
+		contextConfig.filePath = path;
 		contextConfig.sessionManager = sessionManager;
 		contextConfig.appBase = appBase;
 		contextConfig.allowDirectoryListing = allowDirectoryListing;

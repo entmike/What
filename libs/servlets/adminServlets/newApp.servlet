@@ -1,0 +1,63 @@
+{
+	doPost : {
+		parameters : [
+		{
+				name : "appName",
+				description : "Name of New WebApp",
+				required : true
+			}, {
+				name : "appdir",
+				description : "Directory of Web App",
+				required : true
+			}
+		],
+		method : function(request, response, callback) {
+			// Create New Web App
+			var adminServices = this.getServletContext().getAdminServices();
+			var params = request.getFormData().fields;
+			console.log(params);
+			var appName = params.appName;
+			var appdir = params.appdir;
+			if(appdir.indexOf("/")!=0) appdir = "/" + appdir;
+			var newDir = this.getServletContext().getHostServices().appBase + "/webapps" + appdir;
+			var r = {};
+			try {
+				require("fs").mkdirSync(newDir, 777);
+				require("fs").mkdirSync(newDir + "/META-INF", 777);
+				require("fs").mkdirSync(newDir + "/WEB-INF", 777);
+				var newAppConfig = {
+					displayName : appName,
+					description : "Enter Description Here",
+					initParameters : { },
+					servlets : [{
+						name : "default",
+						description : "Default File Handler Servlet",
+						servletClass : "./libs/servlets/fileHandler.servlet",
+						initParams : {
+							listings : false
+						}
+					}],
+					servletMappings : [{
+						name : "default",
+						urlPattern : "/"
+					}],
+					translations : []
+				};
+				require("fs").writeFileSync(newDir + "/WEB-INF/web.js", JSON.stringify(newAppConfig));
+				var configDir = appdir;
+				var metaConfig = {
+					path : configDir,
+					privileged : false
+				}
+				require("fs").writeFileSync(newDir + "/META-INF/context.js", JSON.stringify(metaConfig));
+				r.success = true;
+				r.msg = "New App Created Successfully."
+			}catch(e) {
+				r.success = false;
+				r.msg = e.message
+			};
+			adminServices.loadContext(configDir);
+			response.getWriter().write(JSON.stringify(r));
+		}
+	}
+}

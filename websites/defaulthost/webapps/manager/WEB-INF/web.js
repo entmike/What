@@ -12,6 +12,10 @@
 	},
 	servlets : [
 		{
+			name : "newApp",
+			description : "Create a New App Context",
+			servletClass : "./libs/servlets/adminServlets/newApp.servlet"
+		},{
 			name : "runCommand",
 			description : "Run an OS Command",
 			servletClass : "./libs/servlets/adminServlets/runCommand.servlet"
@@ -86,6 +90,9 @@
 	],
 	servletMappings : [
 		{
+			name : "newApp",
+			urlPattern : "/newApp"
+		},{
 			name : "runCommand",
 			urlPattern : "/run"
 		},{
@@ -139,6 +146,6 @@
 		}
 	],
 	translations : [
-		{ target : "/index.html", source : ["", "/", "index.htm"] }
+		{ target : "/index.html", source : ["/", "index.htm"] }
 	]
 }

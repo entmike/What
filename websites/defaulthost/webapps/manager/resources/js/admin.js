@@ -1,9 +1,11 @@
+// Blank Image URL
 Ext.BLANK_IMAGE_URL = 'ext-3.3.0/resources/images/default/s.gif';
 Ext.onReady(function() {	// Main Entry Method
 	Ext.QuickTips.init();	// Enable Quick Tooltips
-	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
-	adminDashboard.init();
+	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());	// Cookie Provider
+	adminDashboard.init();	// Init Admin Dashboard
 });
+
 var getForm = function(options) {
 	var methods = options.methodOptions.split(", ");
 	var servletOptions = eval("("+options.servletOptions+")");
@@ -90,7 +92,9 @@ var getForm = function(options) {
 	};
 	return [tabPanel, resultsPanel]
 };
+
 var adminDashboard = {
+	// Renderers
 	fileSizeRenderer : function (value, metaData, record, rowIndex, colIndex, store) {
 		amount = value.toString();
 		amount = amount.replace(/^0+/, ''); 
@@ -102,6 +106,7 @@ var adminDashboard = {
 		while (rgx.test(x1)) x1 = x1.replace(rgx, '$1' + ',' + '$2');
 		return x1 + x2;
 	},
+	// Server Status Data Store
 	dsServerStatus : new Ext.data.Store({
 		url : "getServerStatus",
 		autoLoad : true,
@@ -115,6 +120,7 @@ var adminDashboard = {
 			}
 		}
 	}),
+	// Environment Data Store
 	dsEnv : new Ext.data.Store({
 		url : "getEnvironment",
 		autoLoad : true,
@@ -128,6 +134,7 @@ var adminDashboard = {
 			}
 		}
 	}),
+	// Traces Data Store
 	dsTraces : new Ext.data.Store({
 		url : "getTraces",
 		autoLoad : true,
@@ -137,6 +144,7 @@ var adminDashboard = {
 			]
 		})
 	}),
+	// Sessions Data Store
 	dsSessions : new Ext.data.Store({
 		url : "getSessions",
 		autoLoad : true,
@@ -146,6 +154,7 @@ var adminDashboard = {
 			]
 		})
 	}),
+	// Databases Data Store
 	dsDatabases : new Ext.data.Store({
 		url : "getDatabases",
 		autoLoad : true,
@@ -177,9 +186,10 @@ var adminDashboard = {
 		}
 	}), 
 	init : function() {
+		// Initialize SyntaxHighlighter plugin
 		SyntaxHighlighter.all();
+		// Suppress SyntaxHighlighter Toolbar
 		SyntaxHighlighter.defaults.toolbar = false;
-		Ext.QuickTips.init();
 		new Ext.Viewport({
 			layout:'border', 
 			items:[
@@ -268,6 +278,10 @@ var adminDashboard = {
 											tbar : {
 												items : [
 													{
+														text : "New App...",
+														handler : newApp,
+														iconCls : "newWebAppButton",
+													},{
 														text : "Refresh",
 														iconCls : "refreshButton",
 														handler: function(){
@@ -324,7 +338,7 @@ var adminDashboard = {
 																		Ext.Ajax.request({
 																			url: 'restartApp',
 																			params : {
-																				webApp : node.attributes.text																			},
+																				webApp : node.attributes.contextName																			},
 																			method : "GET",
 																			success : function(response, opts) {
 																				Ext.Msg.alert('Status', Ext.decode(response.responseText).msg);
@@ -360,7 +374,7 @@ var adminDashboard = {
 																			Ext.Ajax.request({
 																				url: 'restartServlet',
 																				params : {
-																					webApp : node.parentNode.parentNode.attributes.text,
+																					webApp : node.parentNode.parentNode.attributes.contextName,
 																					servlet : node.attributes.text
 																				},
 																				method : "GET",
@@ -423,7 +437,7 @@ var adminDashboard = {
 																			Ext.Ajax.request({
 																				url: 'editServlet',
 																				params : {
-																					webApp : node.parentNode.parentNode.attributes.text,
+																					webApp : node.parentNode.parentNode.attributes.contextName,
 																					servlet : node.attributes.text
 																				},
 																				method : "GET",

@@ -201,7 +201,7 @@ exports.create = function(options) {
 						data : response.getOutputStream(),
 						callback : function(err,data){
 							(function(){
-								this.setOutputStream(data);
+								this.setOutputStream(data);	// Set Response's output stream to GZIP Results
 								this.close();
 							}).call(response);
 						}
@@ -230,17 +230,25 @@ exports.create = function(options) {
 			});
 		},
 		handle : function(options){
-			var URL = options.URL;						// Requested URL
+			var URL = options.URL;					// Requested URL
+			var req = options.req;					// Node.JS Request
+			var res = options.res;					// Node.JS Response
+			var id = options.id;					// ID to tag Request and Response with.
 			var redirect = this.getTranslation(URL);	// Get translation/alias URL
 			if(redirect) {
 				res.writeHead(301, {"Location" : redirect});
 				res.end();
 				return;
 			}
+			if(URL == "") {
+				res.writeHead(301, {"Location" : path + "/"});
+				res.end();
+				return;
+			}
 			var dots = URL.split(".");
 			var ext = dots[dots.length-1].toLowerCase();
 			// See if URL has a .nsp extension and isn't yet parsed and mapped.
-			if(ext=="nsp" && this.getMapping(URL).urlPattern != URL) {
+			if(ext.toLowerCase()=="nsp" && this.getMapping(URL).urlPattern != URL) {
 				var nspPath = appBase + "/webapps/" + this.getName() + "/" + URL;
 				var nspContents;
 				try{
@@ -261,9 +269,6 @@ exports.create = function(options) {
 					console.log(e.stack);
 				}
 			};
-			var req = options.req;					// Node.JS Request
-			var res = options.res;					// Node.JS Response
-			var id = options.id;					// ID to tag Request and Response with.
 			// Create Cookies Collection from Node.JS Header for Servlet Request Constructor
 			var cookieHeader = req.headers["cookie"];
 			var cookies = [];		// Cookies Collection
@@ -368,7 +373,13 @@ exports.create = function(options) {
 		},
 		restartServlet : function(name) {
 			var servlet = this.removeServlet(name);
-			var servletFile = appBase + "/webapps/" + this.getName() + "/WEB-INF/classes/" + servlet.meta.servletClass;
+			var servletClass = servlet.meta.servletClass;
+			var servletFile;
+			if(servletClass.indexOf(".") == 0){
+				servletFile = servletClass
+			}else{
+				servletFile = appBase + "/webapps/" + this.getName() + "/WEB-INF/classes/" + servletClass;
+			}
 			try{
 				var servletData = fs.readFileSync(servletFile);
 				try{

@@ -133,7 +133,6 @@
 							uiProvider: "col"
 						});
 					}
-					console.log(ip);
 					initParamNode.push({					// Push Init Param Leaf
 						text : initParamNames[j],
 						iconCls : "attributeNode",
@@ -146,7 +145,7 @@
 				var contextNode = {						// Create context Node entry
 					id : context.getName(),
 					type : "webcontext",
-					text : context.getName() + " (/" + context.getPath() + ")",
+					text : context.getName() + " (" + context.getPath() + ")",
 					contextName : context.getName(),
 					path : context.getPath(),
 					component : context.getName(),

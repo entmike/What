@@ -18,7 +18,14 @@
 			var adminServices = this.getServletContext().getAdminServices();
 			var params = require('querystring').parse(request.getQueryString());
 			var hostPath = this.getServletContext().getHostServices().appBase;
-			var servletFile = hostPath + "/webapps/" + params.webApp + "/WEB-INF/classes/" + adminServices.getContextByName(params.webApp).getServletMeta(params.servlet).meta.servletClass;
+			var servletClass = adminServices.getContextByName(params.webApp).getServletMeta(params.servlet).meta.servletClass;
+			var servletFile;
+			if(servletClass.indexOf(".")==0) {
+				servletFile = servletClass
+			}else{
+				servletFile = hostPath + "/webapps/" + params.webApp + "/WEB-INF/classes/" + adminServices.getContextByName(params.webApp).getServletMeta(params.servlet).meta.servletClass;
+			}
+			console.log(servletFile);
 			var fs=require("fs");
 			try{
 				var servletData = fs.readFileSync(servletFile);

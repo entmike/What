@@ -7,7 +7,7 @@
 			*/
 			var adminServices = this.getServletContext().getAdminServices()
 			var params = require('querystring').parse(request.getQueryString());
-			adminServices.restartApp(params.webApp);
+			adminServices.restartContext(params.webApp);
 			response.getWriter().write(JSON.stringify({
 				success : true,
 				msg : "WebApp [" + params.webApp + "] restarted successfully."

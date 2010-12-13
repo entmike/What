@@ -1,4 +1,4 @@
 {
-	path : "Manager",
+	path : "/Manager",
 	privileged : true
 }

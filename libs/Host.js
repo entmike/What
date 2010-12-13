@@ -54,9 +54,10 @@ exports.create = function(options){
 	* @param contextName Name of Context to restart.
 	*/
 	var restartContext = function(contextName) {
-		var context = removeContext(contextName);
+		var context = getContextByName(contextName);
+		removeContext(contextName);
 		try {
-			loadContext(contextName);
+			loadContext(context.getPath());
 		}catch(e){
 			console.log(e.message.red.bold);
 		}
@@ -75,9 +76,13 @@ exports.create = function(options){
 	* @return context
 	*/
 	var getContextByPath = function(path){
+		// NOTE: Longest to Shortest
 		for(var i=0;i<contexts.length;i++){
-			if(path.indexOf(contexts[i].getPath())==0){
-				return contexts[i];
+			cp = contexts[i].getPath();
+			if(path.indexOf(cp)==0){
+				if(cp.length == path.length) return contexts[i];
+				var rp = path.substring(cp.length);
+				if(rp[0] == "/" || cp == "/") return contexts[i];
 			}
 		}
 	};
@@ -111,25 +116,6 @@ exports.create = function(options){
 	var hostServices = { 
 		appBase : appBase,
 		addTrace : addTrace
-	};
-	/**
-	* Exposes Administrative Functions to return object
-	*/
-	var adminServices = { // Services Available to Admin Contexts
-		getContexts : function() { return contexts; },
-		getContextByName : getContextByName,
-		getContextByPath : getContextByPath,
-		setTrace : setTrace,
-		purgeTraces : purgeTraces,
-		getTraces : function() {
-			return traces;
-		},
-		getSessions : function() {
-			return sessionManager.adminServices.getSessions();
-		},
-		getEnvironment : function() { return process.env; },
-		restartContext : restartContext,
-		stopServer : function() { /*Stub*/ }
 	};
 	/**
 	 * Loads Context from sub-directory in 'webapps'.
@@ -255,11 +241,11 @@ exports.create = function(options){
 			default : method = method.grey;
 		}
 		// See if there's a Context
-		var context = getContextByPath(pathName.substring(1));	// Trim off leading "/"
+		var context = getContextByPath(pathName);
 		console.log("[" + status.counter + "]\t[" + method + "] [" + pathName + "]");
 		if(context) { // Web App
 			console.log("[" + status.counter + "]\tcontext:[" + context.getName()+"]");
-			var contextURL = pathName.substring(context.getPath().length + 1);  // Slice off context portion of URL
+			var contextURL = pathName.substring(context.getPath().length);  // Slice off context portion of URL
 			contextURL = (context.getTranslation(contextURL))?(context.getTranslation(contextURL)):contextURL;
 			context.handle({
 				id : status.counter,
@@ -271,6 +257,28 @@ exports.create = function(options){
 			res.writeHead(500, {"Content-Type" : "text/plain"});
 			res.end("500 - No Context Found.");
 		}
+	};
+	/**
+	* Exposes Administrative Functions to return object
+	*/
+	var adminServices = { // Services Available to Admin Contexts
+		getContexts : function() { return contexts; },
+		getContextByName : getContextByName,
+		getContextByPath : getContextByPath,
+		setTrace : setTrace,
+		purgeTraces : purgeTraces,
+		getTraces : function() {
+			return traces;
+		},
+		getSessions : function() {
+			return sessionManager.adminServices.getSessions();
+		},
+		getEnvironment : function() { return process.env; },
+		restartContext : restartContext,
+		removeContext : removeContext,
+		restartContexts : loadContexts,
+		loadContext : loadContext,
+		stopServer : function() { /*Stub*/ }
 	};
 	// Public
 	return {

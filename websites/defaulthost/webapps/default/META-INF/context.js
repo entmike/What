@@ -1,4 +1,4 @@
 {
-	path : "",
+	path : "/",
 	privileged : false
 }

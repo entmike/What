@@ -194,8 +194,11 @@ exports.create = function(meta) {
 						stats.errors++;
 					}
 				}					
+				return (async)?async:(opts)?opts.async:false;
+			}else{
+				response.sendError(500, new Error("Method " + request.getMethod() + " not supported for this servlet."));
 			}
-			return (async)?async:(opts)?opts.async:false;
+			
 		},
 		serviceComplete : function(request, response, callback) {
 			// See if session exists.  If not, don't make a new one.

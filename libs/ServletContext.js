@@ -235,21 +235,24 @@ exports.create = function(options) {
 			});
 		},
 		handle : function(options){
-			var URL = options.URL;					// Requested URL
-			var req = options.req;					// Node.JS Request
-			var res = options.res;					// Node.JS Response
-			var id = options.id;					// ID to tag Request and Response with.
+			var URL = options.URL || "";				// Requested URL
+			var req = options.req;						// Node.JS Request
+			var res = options.res;						// Node.JS Response
+			var id = options.id;						// ID to tag Request and Response with.
 			var redirect = this.getTranslation(URL);	// Get translation/alias URL
 			if(redirect) {
+				console.log("Redirecting to [" + redirect + "]");
 				res.writeHead(301, {"Location" : redirect});
 				res.end();
 				return;
 			}
-			if(URL == "") {
+			if(URL == "" && path == "/") {
+				console.log("Redirecting to [" + path + "/]");
 				res.writeHead(301, {"Location" : path + "/"});
 				res.end();
 				return;
 			}
+			console.log(URL.green);
 			var dots = URL.split(".");
 			var ext = dots[dots.length-1].toLowerCase();
 			// See if URL has a .nsp extension and isn't yet parsed and mapped.
@@ -359,7 +362,12 @@ exports.create = function(options) {
 			if(!translations) return null;
 			for(var i=0;i<translations.length;i++) {
 				var translation = translations[i];
-				for(var j=0;j<translation.source.length;j++) if(translation.source[j] == source) return translation.target;
+				for(var j=0;j<translation.source.length;j++) {
+					if(translation.source[j] == source) {
+						console.log(translation.source[j]);
+						return translation.target;
+					}
+				}
 			}
 			return null;
 		},

@@ -146,6 +146,6 @@
 		}
 	],
 	translations : [
-		{ target : "/index.html", source : ["/", "index.htm"] }
+		{ target : "/index.html", source : ["", "/", "index.htm"] }
 	]
 }

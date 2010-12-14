@@ -19,7 +19,7 @@
 	servletMappings : [
 		{
 			name : "default",
-			urlPattern : ""
+			urlPattern : "/"
 		}
 	],
 	translations : [

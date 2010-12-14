@@ -81,10 +81,43 @@
 			initParams : {
 				listings : false
 			}
+		},{
+			name : "ExtJS Library",
+			description : "ExtJS 3.3.0 Library",
+			servletClass : "./libs/servlets/fileHandler.servlet",
+			initParams : {
+				listings : false,
+				absolutePath : "./libs/fileRepositories/ext-3.3.0"
+			}
+		},{
+			name : "ExtJS Addons",
+			description : "ExtJS Addons",
+			servletClass : "./libs/servlets/fileHandler.servlet",
+			initParams : {
+				listings : false,
+				absolutePath : "./libs/fileRepositories/ext-addons"
+			}
+		},{
+			name : "Syntax Highlighter",
+			description : "Syntax Highlighter 3.0.83 Library",
+			servletClass : "./libs/servlets/fileHandler.servlet",
+			initParams : {
+				listings : false,
+				absolutePath : "./libs/fileRepositories/syntaxHighlighter-3.0.83"
+			}
 		}
 	],
 	servletMappings : [
 		{
+			name : "ExtJS Library",
+			urlPattern : "/ext-3.3.0"
+		},{
+			name : "ExtJS Addons",
+			urlPattern : "/ext-addons"
+		},{
+			name : "Syntax Highlighter",
+			urlPattern : "/syntaxHighlighter-3.0.83"
+		},{
 			name : "newApp",
 			urlPattern : "/newApp"
 		},{

@@ -7,10 +7,16 @@
 			var servletPath = request.getServletPath() || "/";
 			var contextPath = request.getContextPath();
 			var pathInfo = request.getPathInfo();
-			var MIMEPath = appBase + "/webapps/" + contextPath + servletPath + pathInfo;
-			console.log(MIMEPath);
+			// Init Parameters
 			var allowListings = this.getServletConfig().getInitParameter("listings");
+			var absolutePath = this.getServletConfig().getInitParameter("absolutePath");
 			var createSessions = this.getServletConfig().getInitParameter("createSessions");
+			var MIMEPath = "";
+			if(!absolutePath) {
+				MIMEPath = appBase + "/webapps/" + contextPath + servletPath + pathInfo;
+			}else{
+				MIMEPath = absolutePath + pathInfo;
+			}
 			if(createSessions) {
 				var session = request.getSession(true);
 			}

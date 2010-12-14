@@ -1,11 +1,9 @@
 var fs = require('fs');
 var url = require('url');
-
 var Utils = require('./Utils');
-var ServletContext = require('./ServletContext');
-
 var gzip = require('./gzip').gzip;
 var formidable = require('./formidable');
+
 exports.create = function(options){
 	// Private
 	var status = {					// Web Host Status
@@ -23,6 +21,7 @@ exports.create = function(options){
 	var defaultHost = options.defaultHost || false;
 	var aliases = options.aliases || null;	// Host Name Aliases
 	var appBase = options.appBase;	// Contexts Base Directory
+	// MongoDB Temp Code till I figure out a better place/method
 	var dbPath = appBase + "/data/db";
 	var mongoPort = options.mongoPort || 0;
 	var mongoRest = (options.mongoRest)?"--rest":"";
@@ -36,6 +35,7 @@ exports.create = function(options){
 	}catch(e){
 		console.log("No 'data/db' directory.  Not loading MongoDB.".yellow.bold);
 	}
+	// End of temp code
 	var contexts = [];				// Contexts Collection
 	var traces = [];				// Trace Collection
 	var adminApp = options.adminApp || null;	// Admin Appname
@@ -147,8 +147,9 @@ exports.create = function(options){
 		};
 		contextConfig = contextConfig || {	// Defaults
 			name : path,
-			path : path,
+			path : path
 		};
+		contextConfig.className = contextConfig.className || "./ServletContext";
 		contextConfig.name = contextConfig.name || path;
 		contextConfig.filePath = path;
 		contextConfig.sessionManager = sessionManager;
@@ -157,7 +158,7 @@ exports.create = function(options){
 		contextConfig.webConfig = webConfig;
 		contextConfig.hostServices = hostServices;
 		if(contextConfig.privileged) contextConfig.adminServices = adminServices;
-		var context = ServletContext.create(contextConfig);
+		var context = require(contextConfig.className).create(contextConfig);
 		context.init();
 		contexts.push(context);
 		contexts.sort(function(a,b){

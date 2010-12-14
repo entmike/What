@@ -360,9 +360,13 @@ exports.create = function(options) {
         getServletMappings : getServletMappings,
 		addMapping : addMapping,
 		getMapping : function(url) {
+			// NOTE: Longest to Shortest
 			for(var i=0;i<servletMappings.length;i++) {
-				if(url.indexOf(servletMappings[i].urlPattern)==0 || url==servletMappings[i].urlPattern) {
-					return servletMappings[i];
+				var sp = servletMappings[i].urlPattern;
+				if(url.indexOf(sp)==0 || url==sp) {
+					if(sp.length == url.length) return servletMappings[i];
+					var rp = url.substring(sp.length);
+					if(rp[0] == "/" || sp == "/") return servletMappings[i];
 				}
 			}
 			console.log("No Servlet Mapping found");

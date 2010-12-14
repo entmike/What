@@ -17,6 +17,22 @@
 	shutdown : "SHUTUP",
 	// Services Elements
 	services : [
+		{
+			className : "TBD",
+			name : "Administration Service",
+			port : 81,
+			engine : {
+				className : "./Engine.js",
+				defaultHost : "localhost",
+				name : "Admin Engine",
+				hosts : [
+					{
+						name : "localhost",
+						appBase : "websites/hostAdmin"						
+					}
+				]
+			}
+		},
 		{	/*
 			A Service element represents the combination of one or more Connector components that 
 			share a single Engine component for processing incoming requests. 

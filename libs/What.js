@@ -36,7 +36,7 @@ server.services = server.services || [];
 // Start up services' engines
 for(var i=0;i<server.services.length;i++) {
 	service = server.services[i];
-	var engine = require(service.engine.className || "./Engine.js").create({
+	var engine = new require(service.engine.className || "./Engine.js").create({
 		port : service.port,
 		config : service.engine
 	});

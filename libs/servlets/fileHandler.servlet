@@ -8,6 +8,7 @@
 			var contextPath = request.getContextPath();
 			var pathInfo = request.getPathInfo();
 			var MIMEPath = appBase + "/webapps/" + contextPath + servletPath + pathInfo;
+			console.log(MIMEPath);
 			var allowListings = this.getServletConfig().getInitParameter("listings");
 			var createSessions = this.getServletConfig().getInitParameter("createSessions");
 			if(createSessions) {

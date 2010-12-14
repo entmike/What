@@ -1,0 +1,4 @@
+{
+	path : "/",
+	privileged : true
+}

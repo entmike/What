@@ -46,6 +46,7 @@ exports.create = function(options) {
 	// Path Translations
     var translations = webConfig.translations;
 	var addMapping = function(servletName, url) {
+		console.log("New URL Mapping added: [" + url + "]");
 		servletMappings.push({
 			name : servletName,
 			urlPattern : url
@@ -240,6 +241,16 @@ exports.create = function(options) {
 			var res = options.res;						// Node.JS Response
 			var id = options.id;						// ID to tag Request and Response with.
 			console.log("Context Path: [" + path + "] - URL: [" + URL + "]");
+			// URL PROCESSING			
+			// 1) Patch URL if Context Path is just "/" and URL does not start with "/"
+			if(URL.length>0) if(URL[0]!="/" && path == "/") URL = "/" + URL;
+			// 2) Avoid 'http://example.com//' double slash scenarios
+			if(URL == "/" && path == "/") {
+				res.writeHead(301, {"Location" : "/"});
+				res.end();
+				return;
+			};
+			// 3) Look for other redirects
 			var redirect = this.getTranslation(URL);	// Get translation/alias URL
 			if(redirect) {
 				var slash = "";
@@ -250,13 +261,8 @@ exports.create = function(options) {
 				res.writeHead(301, {"Location" : redirectPath});
 				res.end();
 				return;
-			}
-			if(URL == "/" && path == "/") {
-				console.log("Redirecting to [" + path.orange + "/]");
-				res.writeHead(301, {"Location" : "/"});
-				res.end();
-				return;
-			}
+			};
+			// END OF URL PROCESSING
 			var dots = URL.split(".");
 			var ext = dots[dots.length-1].toLowerCase();
 			// See if URL has a .nsp extension and isn't yet parsed and mapped.
@@ -359,7 +365,7 @@ exports.create = function(options) {
 					return servletMappings[i];
 				}
 			}
-			console.log("No mapping found");
+			console.log("No Servlet Mapping found");
 			return null;
 		},
 		getTranslation : function (source) {

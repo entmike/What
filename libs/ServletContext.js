@@ -239,20 +239,24 @@ exports.create = function(options) {
 			var req = options.req;						// Node.JS Request
 			var res = options.res;						// Node.JS Response
 			var id = options.id;						// ID to tag Request and Response with.
+			console.log("Context Path: [" + path + "] - URL: [" + URL + "]");
 			var redirect = this.getTranslation(URL);	// Get translation/alias URL
 			if(redirect) {
-				console.log("Redirecting to [" + redirect + "]");
-				res.writeHead(301, {"Location" : redirect});
+				var slash = "";
+				// Avoid double slashes
+				if(path[path.length-1] != "/" && redirect[0] != "/") slash = "/"
+				var redirectPath = path + slash + redirect
+				console.log("Redirecting to [" + redirectPath.green + "]");
+				res.writeHead(301, {"Location" : redirectPath});
 				res.end();
 				return;
 			}
-			if(URL == "" && path == "/") {
-				console.log("Redirecting to [" + path + "/]");
-				res.writeHead(301, {"Location" : path + "/"});
+			if(URL == "/" && path == "/") {
+				console.log("Redirecting to [" + path.orange + "/]");
+				res.writeHead(301, {"Location" : "/"});
 				res.end();
 				return;
 			}
-			console.log(URL.green);
 			var dots = URL.split(".");
 			var ext = dots[dots.length-1].toLowerCase();
 			// See if URL has a .nsp extension and isn't yet parsed and mapped.

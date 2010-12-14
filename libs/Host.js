@@ -22,7 +22,6 @@ exports.create = function(options){
 	var allowDirectoryListing = options.allowDirectoryListing || false;
 	var defaultHost = options.defaultHost || false;
 	var aliases = options.aliases || null;	// Host Name Aliases
-	var translations = options.translations || null;	// Path Translations
 	var appBase = options.appBase;	// Contexts Base Directory
 	var dbPath = appBase + "/data/db";
 	var mongoPort = options.mongoPort || 0;
@@ -195,21 +194,6 @@ exports.create = function(options){
 			contexts.splice(i,1);
 		}
 	};
-	/**
-	 * Get Path Translation for path
-	 * @param source Requested Pathname
-	 * @return Translated Path, or original if no translations present.
-	 */
-	var getTranslation = function(source) {
-		if(!translations) return null;
-		for(var i=0;i<translations.length;i++) {
-			var translation = translations[i];
-			for(var j=0;j<translation.source.length;j++) if(translation.source[j] == source) {
-				return translation.target;
-			}
-		}
-		return null;
-	};
 	var listenerCallback = function(options) {
 		// Node.JS listener handler
 		// Get Node.JS Request and Response objects
@@ -219,12 +203,6 @@ exports.create = function(options){
 		var res = options.res;						// Node.JS Response Object
 		var URL = url.parse(req.url, true);			// Get Request URL
 		var pathName = URL.pathname;
-		var redirect = getTranslation(pathName);
-		if(redirect) {
-			res.writeHead(301, {"Location" : redirect});
-			res.end();
-			return;
-		}
 		var formData = options.formData || {fields : {}};
 		req.formData = formData; 					// Temp Rider
 		if(req.formData && req.formData.files) {	// Todo: File Handling
@@ -247,7 +225,6 @@ exports.create = function(options){
 		if(context) { // Web App
 			console.log("[" + status.counter + "]\tcontext:[" + context.getName()+"]");
 			var contextURL = pathName.substring(context.getPath().length);  // Slice off context portion of URL
-			contextURL = (context.getTranslation(contextURL))?(context.getTranslation(contextURL)):contextURL;
 			context.handle({
 				id : status.counter,
 				URL : contextURL,

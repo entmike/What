@@ -54,14 +54,14 @@ var applicationsTab = {
 					}
 				]
 			},
-			autoExpandColumn : "filename",
+			autoExpandColumn : "description",
 			columns:[{
 				header:'Component',
 				width:300,
 				dataIndex:'component'
 			},{
 				header:'Description',
-				width:200,
+				width:400,
 				dataIndex:'description'
 			}],
 			loader: adminDashboard.appTreeLoader,

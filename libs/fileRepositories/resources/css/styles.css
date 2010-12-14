@@ -25,6 +25,9 @@
 .parameterNode {
     background-image:url('../images/parameterNode.gif') !important; 
 }
+.classNode {
+    background-image:url('../images/classNode.png') !important; 
+}
 /*
 	Buttons
 */

@@ -105,10 +105,21 @@
 				listings : false,
 				absolutePath : "./libs/fileRepositories/syntaxHighlighter-3.0.83"
 			}
+		},{
+			name : "CSS and JS Resources",
+			description : "CSS and JS Resources",
+			servletClass : "./libs/servlets/fileHandler.servlet",
+			initParams : {
+				listings : false,
+				absolutePath : "./libs/fileRepositories/resources"
+			}
 		}
 	],
 	servletMappings : [
 		{
+			name : "CSS and JS Resources",
+			urlPattern : "/resources"
+		},{
 			name : "ExtJS Library",
 			urlPattern : "/ext-3.3.0"
 		},{

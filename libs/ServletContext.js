@@ -88,19 +88,19 @@ exports.create = function(options) {
 					}
 					var meta = webConfig.servlets[i];
 					meta.servletType = "Standard";
+					meta.servletClass = servletClass;
 					var options = {
 						servletOptions : servletOptions,
-						meta : webConfig.servlets[i]
+						meta : meta
 					};
 					this.loadServlet(options);
 				}catch(e){
-					console.log("Error initializing servlet [" + webConfig.servlets[i].name + "]\n\File: [" + servletFile + "].");
+					console.log("Error initializing servlet [" + meta.name + "]\n\File: [" + servletFile + "].");
 					console.log(e.stack.green);
 				}
 			}
 		},
 		loadServlet : function(options) {
-			// console.log(options);
 			// Create servlet Metadata Object
 			var servletMeta = {
 				options : options.servletOptions,		// doGet, doPost, etc

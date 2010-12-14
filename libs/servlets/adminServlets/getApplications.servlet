@@ -14,8 +14,42 @@
 				var servletsNode = [];					// Create Servlets Node
 				for(var j=0;j<servlets.length;j++) {	// Run through servlets collection
 					var servlet = servlets[j];
-					var servletName = servlet.servlet.getServletConfig().getServletName();
-					var statsNode = {
+					var servletConfig = servlet.servlet.getServletConfig();
+					var servletName = servletConfig.getServletName();
+					var servletParamNames = servlet.servlet.getServletConfig().getInitParameterNames();
+					var servletParams = [];			// Create Servlet Init Param. Children Collection
+					// Run through Servlet Init Params
+					for(var s=0;s<servletParamNames.length;s++) {
+						var sp = servletConfig.getInitParameter(servletParamNames[s]);
+						var leaf = true;
+						var children = null;
+						if(typeof sp == 'object') {
+							leaf = false;
+							children = [];
+							for(c in sp) children.push({
+								text : c,
+								iconCls : "attributeNode",
+								description : sp[c],
+								leaf : true,
+								uiProvider: "col"
+							});
+						}
+						// Push Servlet Init Param Leaf
+						servletParams.push({
+							text : servletParamNames[s],
+							iconCls : "attributeNode",
+							description : sp,
+							uiProvider: "col",
+							leaf : leaf,
+							children : children
+						});
+					}
+					var servletParametersNode = {
+						text : "Servlet Init Parameters",
+						iconCls : "attributeNode",
+						children : servletParams
+					};
+					var statsNode = {					// Servlet Stats
 						iconCls : "statsNode",
 						type : "statsNode",
 						text : "Stats",
@@ -113,7 +147,15 @@
 						iconCls : "servletNode",
 						description : servlet.meta.description,
 						uiProvider: "col",
-						children : [statsNode, methodsNode, mappingNode]
+						children : [ 
+							{
+								text : "Servlet Class",
+								description : servlet.meta.servletClass,
+								iconCls : "classNode",
+								leaf : true,
+								uiProvider : "col"
+							},
+							servletParametersNode, statsNode, methodsNode, mappingNode]
 					});
 				}
 				var initParamNode = [];						// Create Initialization Param. Node

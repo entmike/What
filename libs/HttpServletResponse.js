@@ -115,7 +115,7 @@ exports.create = function(options) {
 			}
 		},
 		sendRedirect : function(location) {
-			this.setStatus(301);
+			this.setStatus(302);
 			this.setHeader("Location", location);
 		},
 		sendError : function(status, msg) {

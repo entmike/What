@@ -17,6 +17,9 @@ exports.create = function(options) {
 	var name = options.name;
 	// Context Path (Mapping)
 	var path = options.path;
+	// NSP Extensions
+	var nspExtensions = options.nspExtensions;
+	if(!nspExtensions) nspExtensions = ["nsp"];
 	// File Path (File System)
 	var filePath = options.filePath;
 	theLog = [];
@@ -258,34 +261,37 @@ exports.create = function(options) {
 				if(path[path.length-1] != "/" && redirect[0] != "/") slash = "/"
 				var redirectPath = path + slash + redirect
 				console.log("Redirecting to [" + redirectPath.green + "]");
-				res.writeHead(301, {"Location" : redirectPath});
+				res.writeHead(302, {"Location" : redirectPath});
 				res.end();
 				return;
 			};
 			// END OF URL PROCESSING
 			var dots = URL.split(".");
 			var ext = dots[dots.length-1].toLowerCase();
-			// See if URL has a .nsp extension and isn't yet parsed and mapped.
-			if(ext.toLowerCase()=="nsp" && this.getMapping(URL).urlPattern != URL) {
-				var nspPath = appBase + "/webapps/" + this.getName() + "/" + URL;
-				var nspContents;
-				try{
-					nspContents = fs.readFileSync(nspPath).toString();
-					var opts = HttpServlet.parseNSP(nspContents);
-					var NSPOptions = {
-						servletOptions : opts,
-						meta : {
-							servletType : "NSP",
-							name : URL,
-							description : URL
-						}
-					};
-					this.loadServlet(NSPOptions);	
-					this.addMapping(URL, URL);
-				}catch(e){
-					// No .NSP file in filesystem, let it 404 naturally.
-					console.log(e.stack);
-				}
+			// See if URL has an NSP extension and isn't yet parsed and mapped.
+			for(var i=0;i<nspExtensions.length;i++){
+				nspExtension = nspExtensions[i];
+				if(ext.toLowerCase()==nspExtension && this.getMapping(URL).urlPattern != URL) {
+					var nspPath = appBase + "/webapps/" + this.getName() + "/" + URL;
+					var nspContents;
+					try{
+						nspContents = fs.readFileSync(nspPath).toString();
+						var opts = HttpServlet.parseNSP(nspContents);
+						var NSPOptions = {
+							servletOptions : opts,
+							meta : {
+								servletType : "NSP",
+								name : URL,
+								description : URL
+							}
+						};
+						this.loadServlet(NSPOptions);	
+						this.addMapping(URL, URL);
+					}catch(e){
+						// No .NSP file in filesystem, let it 404 naturally.
+						console.log(e.stack);
+					}
+				};
 			};
 			// Create Cookies Collection from Node.JS Header for Servlet Request Constructor
 			var cookieHeader = req.headers["cookie"];

@@ -190,6 +190,6 @@
 		}
 	],
 	translations : [
-		{ target : "index.html", source : ["", "/", "/index.htm"] }
+		{ target : "index.nsp", source : ["", "/", "/index.htm"] }
 	]
 }

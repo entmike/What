@@ -37,7 +37,7 @@ var getForm = function(options) {
 				}
 				formItems.push({
 					xtype : "textfield",
-					fieldLabel : fieldLabel,
+					fieldLabel : fieldLabel
 				});
 			}
 		}
@@ -436,7 +436,7 @@ var adminDashboard = {
 										},{
 										header : "Last Accessed", dataIndex : "lastAccessed", width : 150, sortable : true
 										}
-									],
+									]
 								},{
 									title : "Databases",
 									xtype : "grid",
@@ -462,7 +462,7 @@ var adminDashboard = {
 										},{
 											header : "Empty?", dataIndex : "empty", sortable : true, width : 50
 										}
-									],
+									]
 								}
 							]
 						}

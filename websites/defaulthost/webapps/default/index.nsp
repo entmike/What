@@ -1,75 +1,34 @@
-<%var session = request.getSession(true);%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 	<head>
+	<title>Welcome</title>
 	<style type="text/css">
 		body {
-			background-color : #efefef;
-			font-family : Arial, Tahoma, Verdana;
-			font-size : 8pt;
+			font-family: Arial, Tahoma, Verdana;
+			font-size: 8pt;
+			background-color: #EFEFEF;
 		}
 		h1 {
-			font-size : 12pt;
-			color : #006699;
+			font-size: 14pt;
+			color: #006699;
 		}
-		.code {
-			background-color : #ffffff;
-			width: 100%;
-			font-family : "Courier New";
-			border: 1px #c0c0c0 solid;
-			padding: 2px;
-			font-size : 10pt;
+		a, a:visited {
+			color : #009966;
+			text-decoration : none;
+		}
+		a:hover {
+			text-decoration : underline;
 		}
 	</style>
 	</head>
 	<body>
-	<h1>NSP Example</h1>
-	This page is an example of how you can host script pages similar to PHP, ASP, JSP, BSP, etc.<br/><br/>
-	It also demos key functionalities such as session tracking and cookie handling.<br/><br/>
-	<span style="color:009966;font-weight:bold;">
-	<%
-	if(session.isNew()){
-	writer.write("Welcome, this is a new session for you I see.  Enjoy your stay!");
-	}else{
-	writer.write("Welcome Back!  We haven't seen you since " + session.getAttribute("lastVisit"));
-	}
-	%>
-	</span>
-	<ul>
-		<li>The current system date is: <b><%=new Date()%></b></li>
-		<li>Web Application Author: <b><%=pageContext.getInitParameter("author")%></b></li>
-		<li>Your Session ID: <b><%=session.getId()%></b><br/>
-			Session New: <%=session.isNew()%><br/>
-			Session Created On: <%=session.getCreationTime()%><br/>
-			Session Attributes:<ul>
-			<%
-			attrNames = session.getAttributeNames();
-			for(var i=0;i<attrNames.length;i++){
-			%><li><%=attrNames[i]%> - <%=session.getAttribute(attrNames[i])%></li><%}%>
-			</ul>
-		</li>
-		<li>Your browser passed the following cookies:
-			<ul><%
-			var cookies = request.getCookies();
-			for(var i=0;i<cookies.length;i++){
-				%><li><%=cookies[i].getName()%> - <%=cookies[i].getValue()%></li>
-			<%}%>
-			</ul>
-		</li>
-	</ul>
-	The code is found below:
-	<div class="code"><%
-	// Example Script snippet, let's read our own source since we want to show it.
-	fs = require("fs");
-	var appBase = pageContext.getHostServices().appBase;
-	var contextName = pageContext.getName();
-	var servletName = request.getServletPath();
-	var filePath = appBase + "/webapps/" + contextName + "/" + servletName
-	var data = fs.readFileSync(filePath);
-	var source = data.toString();
-	// Regurgitate it as source not HTML
-	source = source.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>");
-	writer.write(source);
-	%></div>
+		<h1>Welcome</h1>
+		<p>If you are reading this message, your webcontainer on Node.JS is working properly.</p>
+		<h1>Example URIs:</h1>
+		<ul>
+			<li><a href="/">Home (HINT: You are here)</a></li>
+			<li><a href="/Manager/">Web Container Manager</a></li>
+			<li><a href="/nspExample.nsp">Demo Page illustrating Session Information and server-side scripting in HTML.</a></li>
+		</ul>
 	</body>
 </html>
-<%session.setAttribute("lastVisit", new Date());%>

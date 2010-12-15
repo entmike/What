@@ -29,7 +29,7 @@ var applicationsTab = {
 					{
 						text : "New App...",
 						handler : newApp,
-						iconCls : "newWebAppButton",
+						iconCls : "newWebAppButton"
 					},"-",{
 						text : "Refresh",
 						iconCls : "refreshButton",

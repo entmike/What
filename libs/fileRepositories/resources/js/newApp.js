@@ -19,8 +19,7 @@ var newApp = function() {
 				name : "appdir",
 				allowBlank : false
 			}
-		],
-		
+		]
 	}
 	var w = new Ext.Window({
 		title : "New App",

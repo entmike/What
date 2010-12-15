@@ -14,15 +14,26 @@
 					listings : true,
 					createSessions : true
 			}
+		},{
+			name : "syntax",
+			description : "Syntax Highlighter 3.0.83 Library",
+			servletClass : "./libs/servlets/fileHandler.servlet",
+			initParams : {
+				listings : true,
+				absolutePath : "./libs/fileRepositories/syntaxHighlighter-3.0.83"
+			}
 		}
 	],
 	servletMappings : [
 		{
 			name : "default",
 			urlPattern : "/"
+		},{
+			name : "syntax",
+			urlPattern : "/syntax"
 		}
 	],
 	translations : [
-		{ target : "index.html", source : ["", "/", "/index.htm"] }
+		{ target : "index.nsp", source : ["", "/", "/index.htm", "/index.html"] }
 	]
 }

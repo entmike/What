@@ -1,4 +1,5 @@
 {
 	path : "/",
-	privileged : false
+	privileged : false,
+	nspExtensions : ["nsp", "jsp"]
 }

@@ -94,7 +94,8 @@ exports.create = function(options) {
 		},
 		addCookie : function(cookie) {
 			for(var i=0;i<cookies.length;i++){
-				if(cookies[i].getName()==cookie.getName()) {
+				if(cookies[i].getName()==cookie.getName() && cookies[i].getPath()==cookie.getPath()) {
+					console.log("WARNING: Overwriting Cookie!")
 					cookies[i] = cookie;
 					return;
 				}

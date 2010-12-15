@@ -5,15 +5,19 @@
 			/*
 				Get Web Container Sessions
 			*/
-			var sessions = this.getServletContext().getAdminServices().getSessions();
 			var sr = [];
-			
-			for(var i=0;i<sessions.length;i++){
-				sr.push({
-					id: sessions[i].getId(),
-					createdOn: sessions[i].getCreationTime(),
-					lastAccessed : sessions[i].getLastAccessedTime()
-				});
+			var contexts = this.getServletContext().getAdminServices().getContexts();
+			for(var j=0;j<contexts.length;j++){
+				var c = contexts[j];
+				var sessions = c.getSessionManager().adminServices.getSessions();
+				for(var i=0;i<sessions.length;i++){
+					sr.push({
+						id: sessions[i].getId(),
+						context : c.getName(),
+						createdOn: sessions[i].getCreationTime(),
+						lastAccessed : sessions[i].getLastAccessedTime()
+					});
+				}
 			}
 			response.getWriter().write(JSON.stringify(sr));
 		}

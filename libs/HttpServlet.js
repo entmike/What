@@ -206,6 +206,8 @@ exports.create = function(meta) {
 			// Add JSESSIONID cookie if session exists
 			if(session) {
 				var sessionCookie = Cookie.create("JSESSIONID", session.getId());
+				sessionCookie.setPath(this.getServletContext().getPath());
+				sessionCookie.setDomain(this.getServletContext().getHostServices().name);
 				sessionCookie.setMaxAge(session.getMaxInactiveInterval());
 				response.addCookie(sessionCookie);
 			}

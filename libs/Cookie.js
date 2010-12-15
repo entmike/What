@@ -24,7 +24,12 @@ exports.create = function(name, value) {
 		// Non-Interface Method, returns cookie in terms of header string
 		toString : function() {
 			var s=this.getName() + "=" + this.getValue() + ";";
-			s+="path=" + this.getPath() + ";";
+			// Add Path
+			s+="path=" + (this.getPath() || "/") + ";";
+			// Add Domain
+			var domain = this.getDomain();
+			// Avoid setting domain on local hostnames per RFC Specs
+			if(domain !="localhost" && domain !="127.0.0.1") s+="domain=" + (this.getDomain() || "") + ";";
 			// Add expiry date - maxAge in s * 1000 (Convert to MS for Date obj)
 			if(this.getMaxAge() > -1) s+="expires=" + new Date(new Date().getTime() + (this.getMaxAge() * 1000)) + ";";
 			// To-do: Domain

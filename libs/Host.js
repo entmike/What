@@ -12,9 +12,6 @@ exports.create = function(options){
 		counter: 0,					// Hit Counter
 		trace: false				// Trace Mode
 	};
-	var sessionManager = require('./SessionManager').create({
-		timeoutDefault : (3600 * 24 * 365)	// 1 Year
-	});
 	var options = options || {};
 	var name = options.name;
 	var allowDirectoryListing = options.allowDirectoryListing || false;
@@ -114,7 +111,8 @@ exports.create = function(options){
 	*/
 	var hostServices = { 
 		appBase : appBase,
-		addTrace : addTrace
+		addTrace : addTrace,
+		name : name
 	};
 	/**
 	 * Loads Context from sub-directory in 'webapps'.
@@ -152,7 +150,6 @@ exports.create = function(options){
 		contextConfig.className = contextConfig.className || "./ServletContext";
 		contextConfig.name = contextConfig.name || path;
 		contextConfig.filePath = path;
-		contextConfig.sessionManager = sessionManager;
 		contextConfig.appBase = appBase;
 		contextConfig.allowDirectoryListing = allowDirectoryListing;
 		contextConfig.webConfig = webConfig;
@@ -248,9 +245,6 @@ exports.create = function(options){
 		purgeTraces : purgeTraces,
 		getTraces : function() {
 			return traces;
-		},
-		getSessions : function() {
-			return sessionManager.adminServices.getSessions();
 		},
 		getEnvironment : function() { return process.env; },
 		restartContext : restartContext,

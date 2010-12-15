@@ -3,6 +3,7 @@ exports.create = function(options) {
 	// Private
 	var options = options || {};
 	var timeoutDefault = options.timeoutDefault;
+	var domain = options.domain || "";
 	var sessions = [];
 	var getSessions = function() {
 		options.getSessions.call(this);

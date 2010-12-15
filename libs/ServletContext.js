@@ -27,11 +27,14 @@ exports.create = function(options) {
 	// Admin Services Handle
 	var adminServices = options.adminServices;
 	// Host Services Handle
-	var hostServices = options.hostServices;	
+	var hostServices = options.hostServices;
+	// Session Manager (this is per-context)
+	var sessionManager = require('./SessionManager').create({
+		timeoutDefault : (3600 * 24 * 365),	// 1 Year
+		domain : hostServices.name
+	});
 	// Base Directory
 	var appBase = options.appBase || null;
-	// Session Manager
-	var sessionManager = options.sessionManager;
 	// Allow Directory Listing
 	var allowDirectoryListing = options.allowDirectoryListing || false;
 	// WebConfig Object
@@ -296,6 +299,7 @@ exports.create = function(options) {
 			// Create Cookies Collection from Node.JS Header for Servlet Request Constructor
 			var cookieHeader = req.headers["cookie"];
 			var cookies = [];		// Cookies Collection
+			var JSESSIONID;			// Session ID for HttpRequest
 			if(cookieHeader){
 				var arrCookies = cookieHeader.split(";");
 				for(var i=0;i<arrCookies.length;i++) {
@@ -303,12 +307,21 @@ exports.create = function(options) {
 					if(kv.length>1) {
 						var key = kv[0].replace(/^\s*|\s*$/g,'');	// Trim Whitespace
 						var val = kv[1];
-						cookies.push(Cookie.create(key, val));
+						if(key=="JSESSIONID") {	// Avoid grabbing the wrong JSESSIONID in a shorter context path
+							var s = sessionManager.services.getSession(val);
+							if(s) {
+								// Found the valid JSESSIONID
+								cookies.push(Cookie.create(key, val));
+								JSESSIONID = val;
+							}else{
+								// JSESSIONID of another context.  Do not use.
+							}
+						}else{
+							cookies.push(Cookie.create(key, val));
+						}
 					};
 				}
 			}
-			var JSESSIONID;		// Session ID for HttpRequest
-			for(var i=0;i<cookies.length;i++) if(cookies[i].getName() == "JSESSIONID") JSESSIONID = cookies[i].getValue();
 			var mapping = this.getMapping(URL);
 			if(mapping) {
 				var pathInfo = URL.substring(mapping.urlPattern.length);
@@ -437,7 +450,10 @@ exports.create = function(options) {
         getServletMeta : function(name) {
 			for(var i=0;i<servlets.length;i++) if(servlets[i].servlet.getServletConfig().getServletName()==name) return servlets[i];
 			return null;
-        }
+        },
+		getSessionManager : function(){
+			return sessionManager;
+		}
 	};
 	return context;
 };

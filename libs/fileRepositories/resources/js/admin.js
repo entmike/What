@@ -150,7 +150,7 @@ var adminDashboard = {
 		autoLoad : true,
 		reader : new Ext.data.JsonReader({
 			fields : [
-				"id", "createdOn", "lastAccessed"
+				"id", "context", "createdOn", "lastAccessed"
 			]
 		})
 	}),
@@ -431,6 +431,8 @@ var adminDashboard = {
 									columns : [
 										{
 										id : "id", header : "JESSIONID", dataIndex : "id", width : 250, sortable : true
+										},{
+										header : "Context", dataIndex : "context", sortable : true, width: 150
 										},{
 										header : "Created On", dataIndex : "createdOn", sortable : true, width: 150
 										},{

@@ -11,7 +11,7 @@ exports.create = function(options) {
 	//Private
 	var dateMask = "mm/dd/yy HH:MM:ss";
 	var dateOffset = 1000 * 3600 * 6;
-	// Parse Options
+	// Parse Options (Set by Host and META-INF/context.js)
 	options = options || {};
 	// Context Name
 	var name = options.name;
@@ -49,6 +49,8 @@ exports.create = function(options) {
 	servletMappings.sort(function(a,b){
 		return (b.urlPattern.length - a.urlPattern.length);
 	});
+	// Login Config
+	var loginConfig = webConfig.loginConfig || {};
 	// Path Translations
     var translations = webConfig.translations;
 	var addMapping = function(servletName, url) {
@@ -252,7 +254,7 @@ exports.create = function(options) {
 			if(URL.length>0) if(URL[0]!="/" && path == "/") URL = "/" + URL;
 			// 2) Avoid 'http://example.com//' double slash scenarios
 			if(URL == "/" && path == "/") {
-				res.writeHead(301, {"Location" : "/"});
+				res.writeHead(302, {"Location" : "/"});
 				res.end();
 				return;
 			};
@@ -325,6 +327,7 @@ exports.create = function(options) {
 			var mapping = this.getMapping(URL);
 			if(mapping) {
 				var pathInfo = URL.substring(mapping.urlPattern.length);
+				var servlet = this.getServlet(mapping.name);
 				// Create HttpServletRequest and HttpServletResponse objects from NodeJS ones.
 				var request = new HttpServletRequest.create({
 					id : id,					// Tag Request with an ID
@@ -340,10 +343,18 @@ exports.create = function(options) {
 					id : id,
 					res : res
 				});
-				var servlet = this.getServlet(mapping.name);
 				if(servlet) {	// Servlet Exists
-					// (HttpServletRequest, HttpServletResponse, [callback])
-					var async = servlet.service(request, response, this.handleComplete);
+					var session = request.getSession(false);
+					if(loginConfig.requireAuthentication 					// If context requires auth...
+					&& (!session || !session.getAttribute("authenticated"))	// and Session is not authenticated...
+					&& URL!=loginConfig.loginMapping) {						// and URL is not the login URL...
+						// Redirect to Login Page
+						response.setStatus(302);
+						response.setHeader("Location", path + loginConfig.loginMapping);
+						this.handleComplete(request, response);
+					}else{
+						var async = servlet.service(request, response, this.handleComplete);	// Allow async to be dynamic
+					}
 				}else{
 					// Should be a servlet but there's not one.  Issue HTTP 500 error response.
 					response.setStatus(500);

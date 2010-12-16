@@ -10,6 +10,10 @@
 			port : 480
 		}
 	},
+	loginConfig : {
+		requireAuthentication : false,
+		loginMapping : "/login.nsp"
+	},
 	servlets : [
 		{
 			name : "newApp",

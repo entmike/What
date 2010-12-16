@@ -12,12 +12,13 @@
 	var postFields = request.getFormData().fields;
 	if(postFields.user && postFields.password) {
 		if(postFields.user=="admin" && postFields.password=="nimda") {
-			session.setAttribute("admin", true);
+			session.setAttribute("authenticated", true);
+			session.setAttribute("user", "admin");
 		}else{
 			msg += "<br/><span style='color:red'>User ID and/or Password incorrect.</span>";
 		}
 	}
-	if(session.getAttribute("admin")) {
+	if(session.getAttribute("authenticated")) {
 		response.sendRedirect("index.nsp");
 	}else{
 %>

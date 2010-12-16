@@ -308,13 +308,12 @@ exports.create = function(options) {
 						var key = kv[0].replace(/^\s*|\s*$/g,'');	// Trim Whitespace
 						var val = kv[1];
 						if(key=="JSESSIONID") {	// Avoid grabbing the wrong JSESSIONID in a shorter context path
-							var s = sessionManager.services.getSession(val);
-							if(s) {
-								// Found the valid JSESSIONID
+							var s = sessionManager.services.isValid(val);
+							if(s) { // JSESSIONID is valid
 								cookies.push(Cookie.create(key, val));
 								JSESSIONID = val;
 							}else{
-								// JSESSIONID of another context.  Do not use.
+								// JSESSIONID is expired/invalid/of another context.  Do not set cookie.
 							}
 						}else{
 							cookies.push(Cookie.create(key, val));

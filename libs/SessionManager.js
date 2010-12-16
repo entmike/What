@@ -22,18 +22,38 @@ exports.create = function(options) {
 			}
 		},
 		services : {	// Exposed to HttpServletRequest
-			getSession : function(SID){
-				for(var i=0;i<sessions.length;i++) if(sessions[i].getId()==SID) {
-					sessions[i].setLastAccessedTime(new Date);
-					sessions[i].setOld();
-					return sessions[i];
+			getSession : function(sig){
+				for(var i=0;i<sessions.length;i++) {
+					if(sessions[i].getId()==sig.id) {	// Session requested found
+						// Check request signature vs session signature requested
+						var ses = sessions[i];
+						var sesSig = ses.getFingerPrint();
+						var resolution = 0;		// Signature Resolution
+						var matches = 0;		// Match Count
+						for(s in sesSig) {
+							resolution++;		// Increment Resolution counter based on signature properties
+							if(sesSig[s]==sig[s]) matches ++;	// Match, increase matches counter
+						}
+						var accuracy = matches/resolution;	// Determine Signature Accuracy %
+						if(accuracy > .8){		// If Signature is 80% accurate, return it
+							sessions[i].setLastFingerPrint(sig);
+							sessions[i].setLastAccessedTime(new Date);
+							sessions[i].setOld();
+							return sessions[i];
+						}
+					}
 				}
 				return null;
 			},
-			newSession : function() {
-				var session = HttpSession.create({
-					id : guid()
-				});
+			isValid : function(sid) {
+				// Check to see if passes JSESSIONID is valid
+				for(var i=0;i<sessions.length;i++) if(sessions[i].getId()==sid) return true
+				return false
+			},
+			newSession : function(signature) {
+				signature = signature || {};
+				signature.id = guid();			// Generate UID
+				var session = HttpSession.create(signature);
 				session.setMaxInactiveInterval(timeoutDefault);
 				sessions.push(session);
 				console.log("New Session Created: [" + session.getId() + "]");

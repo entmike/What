@@ -158,15 +158,85 @@
 							servletParametersNode, statsNode, methodsNode, mappingNode]
 					});
 				}
+				// Session Information
 				var sessionChildren = [];
 				var arrSessions = context.getSessionManager().adminServices.getSessions();
 				for(var j=0;j<arrSessions.length;j++){
+					var fp = arrSessions[j].getFingerPrint();
+					var lfp = arrSessions[j].getLastFingerPrint();
+					var fingerPrint = [];
+					var lastFingerPrint = [];
+					var sessionAttributes = [];
+					for (p in fp) {
+						fingerPrint.push({
+							iconCls : "fingerprintNode",
+							uiProvider : "col",
+							leaf : true,
+							text : p,
+							description : fp[p]
+						})
+					};
+					for (p in lfp) {
+						lastFingerPrint.push({
+							iconCls : "fingerprintRecognitionNode",
+							uiProvider : "col",
+							leaf : true,
+							text : p,
+							description : lfp[p]
+						})
+					};
+					var sesAttrs = arrSessions[j].getAttributeNames();
+					for(var k=0;k<sesAttrs.length;k++){
+						sessionAttributes.push({
+							iconCls : "servletAttributeNode",
+							uiProvider : "col",
+							leaf : true,
+							text : sesAttrs[k],
+							description : arrSessions[j].getAttribute(sesAttrs[k])
+						});
+					};
+					fingerPrint.sort(function(a,b){return(a.text.length-b.text.length)});
+					lastFingerPrint.sort(function(a,b){return(a.text.length-b.text.length)});
 					sessionChildren.push({
 						text: arrSessions[j].getId(),
 						description : "Session",
 						iconCls : "sessionNode",
-						leaf : true,
-						uiProvider : "col"
+						uiProvider : "col",
+						children : [
+							{
+								iconCls : "servletPropertyNode",
+								uiProvider : "col",
+								text : "Created On",
+								description : arrSessions[j].getCreationTime(),
+								leaf : true
+							},{
+								iconCls : "servletPropertyNode",
+								uiProvider : "col",
+								text : "Last Accessed",
+								description : arrSessions[j].getLastAccessedTime(),
+								leaf : true
+							},{
+								iconCls : "servletAttributeNode",
+								uiProvider : "col",
+								text : "Session Attributes",
+								description : "Session Attributes",
+								children : sessionAttributes,
+								leaf : (sessionAttributes.length>0)?false:true
+							},{
+								iconCls : "fingerprintNode",
+								uiProvider : "col",
+								text : "Fingerprint",
+								description : "Session Fingerprint",
+								children : fingerPrint
+							},{
+								iconCls : "fingerprintRecognitionNode",
+								uiProvider : "col",
+								text : "Last Recognized Fingerprint",
+								description : "Last Recognized Fingerprint",
+								children : lastFingerPrint,
+								leaf : (lastFingerPrint.length>0)?false:true
+							}							
+						]
 					});
 				}			
 				var initParamNode = [];									// Create Context Initialization Param. Node

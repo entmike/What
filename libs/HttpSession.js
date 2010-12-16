@@ -1,9 +1,10 @@
-exports.create = function(options) {
+exports.create = function(sig) {
 	// Private
 	var attributes = {};
 	var creationTime = new Date();
 	var lastAccessedTime = new Date();
-	var id = options.id;
+	var signature = sig;	// Session Signature
+	var lastSignature = null;
 	var isNew = true;
 	// Public
 	return {
@@ -11,8 +12,17 @@ exports.create = function(options) {
 		setLastAccessedTime : function(date) {
 			lastAccessedTime = date;
 		},
+		setLastFingerPrint : function(sig) {
+			lastSignature = sig;
+		},
+		getLastFingerPrint : function() {
+			return lastSignature;
+		},
 		setOld : function() {
 			isNew = false;
+		},
+		getFingerPrint : function() {
+			return signature;
 		},
 		// Standard Interface Methods
 		getAttribute : function(name){
@@ -31,7 +41,7 @@ exports.create = function(options) {
 		},
 		getId : function() {
 			// Returns a string containing the unique identifier assigned to this session.
-			return id;
+			return signature.id;
 		},
 		getLastAccessedTime : function() {
 			// Returns the last time the client sent a request associated with this session

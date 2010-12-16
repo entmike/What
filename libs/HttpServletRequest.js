@@ -71,17 +71,26 @@ exports.create = function(options) {
 			return servletPath;
 		},
 		getSession : function(create) { 
-			if(session) return session
-			var s = sessionManager.getSession(JSESSIONID);
+			if(session) return session;
+			// Find session based on following signature key
+			var s = sessionManager.getSession({
+				id : JSESSIONID,
+				ipAddress : IP,
+				userAgent : request.headers["user-agent"]
+			});
 			if(!s && create) {
 				console.log("Could not find requested session [" + JSESSIONID + "].  Creating new session.");
-				s = sessionManager.newSession();
+				// Create new Session with following signature key
+				s = sessionManager.newSession({
+					ipAddress : IP,
+					userAgent : request.headers["user-agent"]
+				});
 			}
 			session = s;
 			return s;
 		},
 		isRequestedSessionIdValid : function() { 
-			if(sessionManager.getSession(JSESSIONID)) {
+			if(sessionManager.isValid(JSESSIONID)) {
 				return true;
 			}else{
 				return false;

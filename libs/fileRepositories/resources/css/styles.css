@@ -31,6 +31,19 @@
 .sessionNode{
     background-image:url('../images/sessionNode.png') !important; 
 }
+.servletAttributeNode{
+    background-image:url('../images/servletAttributeNode.png') !important; 
+}
+.servletPropertyNode{
+    background-image:url('../images/servletPropertyNode.png') !important; 
+}
+.fingerprintNode{
+    background-image:url('../images/fingerprint.png') !important; 
+}
+.fingerprintRecognitionNode{
+    background-image:url('../images/fingerprintRecognition.png') !important; 
+}
+
 /*
 	Buttons
 */

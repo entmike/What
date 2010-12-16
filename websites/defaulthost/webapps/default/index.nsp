@@ -30,5 +30,7 @@
 			<li><a href="/Manager/">Web Container Manager</a></li>
 			<li><a href="/nspExample.nsp">Demo Page illustrating Session Information and server-side scripting in HTML.</a></li>
 		</ul>
+	<h1>What Overview:</h1>
+	<img src="WhatDiagram.png"/>
 	</body>
 </html>

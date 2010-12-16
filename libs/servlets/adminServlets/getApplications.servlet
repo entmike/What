@@ -158,9 +158,20 @@
 							servletParametersNode, statsNode, methodsNode, mappingNode]
 					});
 				}
-				var initParamNode = [];						// Create Initialization Param. Node
-				var initParamNames = context.getInitParameterNames();	// Get Init Parameter Collection
-				for(var j=0;j<initParamNames.length;j++) {	// Run through init params
+				var sessionChildren = [];
+				var arrSessions = context.getSessionManager().adminServices.getSessions();
+				for(var j=0;j<arrSessions.length;j++){
+					sessionChildren.push({
+						text: arrSessions[j].getId(),
+						description : "Session",
+						iconCls : "sessionNode",
+						leaf : true,
+						uiProvider : "col"
+					});
+				}			
+				var initParamNode = [];									// Create Context Initialization Param. Node
+				var initParamNames = context.getInitParameterNames();	// Get Context Init Parameter Collection
+				for(var j=0;j<initParamNames.length;j++) {				// Run through Context Init params
 					var ip = context.getInitParameter(initParamNames[j]);
 					var leaf = true;
 					var children = null;
@@ -196,6 +207,11 @@
 					iconCls : (context.getAdminServices())?"adminNode":"webappNode",
 					children : [
 						{
+							text : "Sessions",
+							iconCls : "sessionNode",
+							children : (sessionChildren.length>0)?sessionChildren:null,
+							leaf : (sessionChildren.length>0)?false:true
+						},{
 							text : "Init Parameters",
 							iconCls : "attributeNode",
 							children : initParamNode

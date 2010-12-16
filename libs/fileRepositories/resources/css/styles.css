@@ -28,6 +28,9 @@
 .classNode {
     background-image:url('../images/classNode.png') !important; 
 }
+.sessionNode{
+    background-image:url('../images/sessionNode.png') !important; 
+}
 /*
 	Buttons
 */

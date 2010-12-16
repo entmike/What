@@ -144,16 +144,6 @@ var adminDashboard = {
 			]
 		})
 	}),
-	// Sessions Data Store
-	dsSessions : new Ext.data.Store({
-		url : "getSessions",
-		autoLoad : true,
-		reader : new Ext.data.JsonReader({
-			fields : [
-				"id", "context", "createdOn", "lastAccessed"
-			]
-		})
-	}),
 	// Databases Data Store
 	dsDatabases : new Ext.data.Store({
 		url : "getDatabases",
@@ -410,33 +400,6 @@ var adminDashboard = {
 													}
 												]
 											}
-										}
-									]
-								},{
-									title : "Sessions",
-									xtype : "grid",
-									tbar : {
-										items : [
-											{
-												text : "Refresh",
-												iconCls : "refreshButton",
-												handler : function() {
-													adminDashboard.dsSessions.load();
-												}
-											}
-										]
-									},
-									store : this.dsSessions,
-									// autoExpandColumn : 1,
-									columns : [
-										{
-										id : "id", header : "JESSIONID", dataIndex : "id", width : 250, sortable : true
-										},{
-										header : "Context", dataIndex : "context", sortable : true, width: 150
-										},{
-										header : "Created On", dataIndex : "createdOn", sortable : true, width: 150
-										},{
-										header : "Last Accessed", dataIndex : "lastAccessed", width : 150, sortable : true
 										}
 									]
 								},{

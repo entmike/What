@@ -4,20 +4,28 @@
 		method : function(request, response, callback, scope) {
 			var writer = response.getWriter();
 			var appBase = this.getServletContext().getHostServices().appBase;
-			var servletPath = request.getServletPath() || "/";
-			var contextPath = request.getContextPath();
+			var servletPath = request.getServletPath();
+			var contextPath = this.getServletContext().getFilePath();
 			var pathInfo = request.getPathInfo();
 			// Init Parameters
 			var allowListings = this.getServletConfig().getInitParameter("listings");
 			var absolutePath = this.getServletConfig().getInitParameter("absolutePath");
-			// var createSessions = this.getServletConfig().getInitParameter("createSessions");
+			var createSessions = this.getServletConfig().getInitParameter("createSessions");
 			var MIMEPath = "";
 			if(!absolutePath) {
 				MIMEPath = appBase + "/webapps/" + contextPath + servletPath + pathInfo;
 			}else{
 				MIMEPath = absolutePath + pathInfo;
 			}
-			// if(createSessions) var session = request.getSession(true);
+			MIMEPath=MIMEPath.replace("//", "/");	// Avoid double-slashes when context and servlet mapping are "/"
+			/*
+			console.log("App Base:\t"+appBase);
+			console.log("Context Path:\t"+contextPath);
+			console.log("Servlet Path:\t"+servletPath);
+			console.log("Path Info:\t"+pathInfo);
+			console.log(MIMEPath);
+			*/
+			if(createSessions) var session = request.getSession(true);
 			var forbidPaths = [
 				appBase + "/webapps/" + contextPath + servletPath + "WEB-INF",
 				appBase + "/webapps/" + contextPath + servletPath + "META-INF"
@@ -38,7 +46,7 @@
 					allowDirectoryListing : allowListings,
 					cacheControl : request.getHeader("Cache-Control"),
 					path : MIMEPath,
-					relPath : pathInfo.split("/")[pathInfo.split("/").length-1],
+					relPath : (contextPath+servletPath+pathInfo).split("/")[(contextPath+servletPath+pathInfo).split("/").length-1],
 					scope : this,
 					callback: function(MIME) {
 						switch(MIME.status) {
@@ -77,8 +85,8 @@
 		method : function(request, response, callback, scope) {
 			var writer = response.getWriter();
 			var appBase = this.getServletContext().getHostServices().appBase;
-			var servletPath = request.getServletPath() || "/";
-			var contextPath = request.getContextPath();
+			var servletPath = request.getServletPath();
+			var contextPath = this.getServletContext().getFilePath();
 			var pathInfo = request.getPathInfo();
 			// Init Parameters
 			var allowListings = this.getServletConfig().getInitParameter("listings");
@@ -90,9 +98,15 @@
 			}else{
 				MIMEPath = absolutePath + pathInfo;
 			}
-			if(createSessions) {
-				var session = request.getSession(true);
-			}
+			MIMEPath=MIMEPath.replace("//", "/");	// Avoid double-slashes when context and servlet mapping are "/"
+			/*
+			console.log("App Base:\t"+appBase);
+			console.log("Context Path:\t"+contextPath);
+			console.log("Servlet Path:\t"+servletPath);
+			console.log("Path Info:\t"+pathInfo);
+			console.log(MIMEPath);
+			*/
+			if(createSessions) var session = request.getSession(true);
 			var forbidPaths = [
 				appBase + "/webapps/" + contextPath + servletPath + "WEB-INF",
 				appBase + "/webapps/" + contextPath + servletPath + "META-INF"
@@ -113,7 +127,7 @@
 					allowDirectoryListing : allowListings,
 					cacheControl : request.getHeader("Cache-Control"),
 					path : MIMEPath,
-					relPath : pathInfo.split("/")[pathInfo.split("/").length-1],
+					relPath : (contextPath+servletPath+pathInfo).split("/")[(contextPath+servletPath+pathInfo).split("/").length-1],
 					scope : this,
 					callback: function(MIME) {
 						switch(MIME.status) {

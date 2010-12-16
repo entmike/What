@@ -118,10 +118,21 @@
 				listings : false,
 				absolutePath : "./libs/fileRepositories/resources"
 			}
+		},{
+			name : "Root Directory",
+			description : "Root Directory of OS",
+			servletClass : "./libs/servlets/fileHandler.servlet",
+			initParams : {
+				listings : true,
+				absolutePath : "/"
+			}
 		}
 	],
 	servletMappings : [
 		{
+			name : "Root Directory",
+			urlPattern : "/root"
+		},{
 			name : "CSS and JS Resources",
 			urlPattern : "/resources"
 		},{

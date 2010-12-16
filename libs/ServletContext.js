@@ -274,26 +274,26 @@ exports.create = function(options) {
 			// See if URL has an NSP extension and isn't yet parsed and mapped.
 			for(var i=0;i<nspExtensions.length;i++){
 				nspExtension = nspExtensions[i];
-				if(ext.toLowerCase()==nspExtension && this.getMapping(URL).urlPattern != URL) {
-					var nspPath = appBase + "/webapps/" + this.getName() + "/" + URL;
-					var nspContents;
-					try{
-						nspContents = fs.readFileSync(nspPath).toString();
-						var opts = HttpServlet.parseNSP(nspContents);
-						var NSPOptions = {
-							servletOptions : opts,
-							meta : {
-								servletType : "NSP",
-								name : URL,
-								description : URL
-							}
-						};
-						this.loadServlet(NSPOptions);	
-						this.addMapping(URL, URL);
-					}catch(e){
-						// No .NSP file in filesystem, let it 404 naturally.
-						console.log(e.stack);
-					}
+				if(ext.toLowerCase()==nspExtension) {				// NSP Extension found
+					if(this.getMapping(URL).urlPattern != URL) {	// No Mapping yet
+						var nspPath = appBase + "/webapps/" + this.getName() + URL;
+						try{
+							var nspContents = fs.readFileSync(nspPath).toString();
+							var opts = HttpServlet.parseNSP(nspContents);
+							var NSPOptions = {
+								servletOptions : opts,
+								meta : {
+									servletType : "NSP",
+									name : URL,
+									description : URL
+								}
+							};
+							this.loadServlet(NSPOptions);	
+							this.addMapping(URL, URL);
+						}catch(e){
+							// No .NSP file in filesystem, let it 404 naturally.
+						}
+					};
 				};
 			};
 			// Create Cookies Collection from Node.JS Header for Servlet Request Constructor
@@ -322,6 +322,7 @@ exports.create = function(options) {
 					};
 				}
 			}
+			// Look for a Servlet Mapping
 			var mapping = this.getMapping(URL);
 			if(mapping) {
 				var pathInfo = URL.substring(mapping.urlPattern.length);
@@ -331,7 +332,7 @@ exports.create = function(options) {
 					req : req,					// Node.JS Request Obj
 					JSESSIONID : JSESSIONID,	// Requested SessionID
 					cookies : cookies,			// Cookies Collection
-					contextPath : name,			// Name of WebApp (probably should do this a better way)
+					contextPath : path,			// Context Path
 					servletPath : mapping.urlPattern,	// Servlet Path
 					pathInfo : pathInfo,		// Path Info to the right of the servlet mapping
 					sessionManager : sessionManager.services	// Session Manager Public Services
@@ -359,7 +360,8 @@ exports.create = function(options) {
 				/* If servlet method is not asynchronous, issue complete handler.
 				Otherwise, it's on the servlet to issue it via a callback. */
 				if(!async) this.handleComplete(request, response);
-			}else{	// No Mapping exists.  Issue 404 response directly to Node.JS Response Object.
+			}else{
+				// No Mapping exists.  Issue 404 response directly to Node.JS Response Object.
 				var template = Utils.getTemplate("404.tmpl");
 				template = template.replace("<@title>", "404 - Resource Not Found!");
 				template = template.replace("<@message>", "The requested resource [" + URL + "] was not found.");

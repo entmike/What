@@ -11,8 +11,7 @@
 			description : "Default File Handler Servlet",
 			servletClass : "./libs/servlets/fileHandler.servlet",
 			initParams : {
-					listings : true,
-					createSessions : true
+				listings : false
 			}
 		},{
 			name : "syntax",

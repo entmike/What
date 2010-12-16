@@ -398,7 +398,8 @@ exports.getMIME = function(options) {
 				listing += "</TR>";
 				var items = fs.readdirSync(path);
 				for (var i = 0; i < items.length; i++) {
-					var item = fs.statSync(MIME.path + "/" + items[i]);
+					var fPath = MIME.path + items[i];
+					var item = fs.statSync(fPath);
 					listing += "<TR>";
 					listing += "<TD><A href = \"" + relPath + items[i] + "\">" + items[i] + "</A></TD>";
 					listing += "<TD>" + item.mtime + "</TD>";

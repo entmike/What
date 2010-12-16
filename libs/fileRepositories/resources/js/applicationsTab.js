@@ -264,7 +264,6 @@ var applicationsTab = {
 							servlet : node.parentNode.parentNode.attributes.text,
 							option : node.attributes.text
 						};
-						console.log(params.webApp);
 						Ext.Ajax.request({
 							url: 'getServletOption',
 							params : params,

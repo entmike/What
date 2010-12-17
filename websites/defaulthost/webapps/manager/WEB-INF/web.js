@@ -15,7 +15,7 @@
 		loginMapping : "/login.nsp",
         exceptionPolicy : "whitelist",
         exceptions : [
-            "ExtJS Library"
+            "ExtJS Library", "CSS and JS Resources"
         ]
 	},
 	servlets : [

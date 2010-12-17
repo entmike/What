@@ -11,8 +11,12 @@
 		}
 	},
 	loginConfig : {
-		requireAuthentication : false,
-		loginMapping : "/login.nsp"
+		requireAuthentication : true,
+		loginMapping : "/login.nsp",
+        exceptionPolicy : "whitelist",
+        exceptions : [
+            "ExtJS Library"
+        ]
 	},
 	servlets : [
 		{

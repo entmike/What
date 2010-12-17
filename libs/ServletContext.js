@@ -347,7 +347,9 @@ exports.create = function(options) {
 					var session = request.getSession(false);
 					if(loginConfig.requireAuthentication 					// If context requires auth...
 					&& (!session || !session.getAttribute("authenticated"))	// and Session is not authenticated...
-					&& URL!=loginConfig.loginMapping) {						// and URL is not the login URL...
+					&& URL!=loginConfig.loginMapping                        // and URL is not the login URL...
+                    && (loginConfig.exceptionPolicy =="whitelist" && !this.getException(mapping.name))
+                    ) {
 						// Redirect to Login Page
 						response.setStatus(302);
 						response.setHeader("Location", path + loginConfig.loginMapping);
@@ -389,7 +391,14 @@ exports.create = function(options) {
 			return name;
 		},
         getServletMappings : getServletMappings,
-		addMapping : addMapping,
+		getException : function(servletName){
+            if(!loginConfig.exceptions) return false;
+            for(var i=0;i<loginConfig.exceptions.length;i++){
+                if(loginConfig.exceptions[i]==servletName) return true;
+            }
+            return false;
+        },
+        addMapping : addMapping,
 		getMapping : function(url) {
 			// NOTE: Longest to Shortest
 			for(var i=0;i<servletMappings.length;i++) {

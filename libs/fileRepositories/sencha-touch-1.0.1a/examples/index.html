@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+
+<title>Sencha Touch Examples</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+<style type="text/css">
+
+body {
+    background: #f1f1f1;
+    background: #f1f1f1 -webkit-gradient(linear, left top, left 95%, from(#fff), to(#f1f1f1)) no-repeat;
+    background: #f1f1f1 -moz-linear-gradient(center top , #FFFFFF 10%, #F1F1F1 100%);
+    color: #444;
+    font: normal 12px/1.6 Helvetica, Arial, sans-serif;
+    margin: 0 auto;
+    padding: 0;
+}
+
+a#logo {
+    background: transparent url(resources/shared/logo-sencha-sm.png) no-repeat scroll 0px 100%;
+    display: block;
+    height: 58px;
+    margin: 0;
+    padding: 0;
+    width: 134px;
+
+    overflow: hidden;
+    text-indent: 150%;
+    white-space: nowrap;
+}
+
+ul, ol, p {
+    margin: 0 0 1em;
+}
+
+a:link,
+a:visited {
+    color: #0464BB;
+    text-decoration: none;
+}
+
+a:hover,
+a:focus,
+a:active {
+    color: #0464BB;
+    text-decoration: underline;
+}
+
+h1,h2,h3,h4,h5,h6 {
+    color: #111;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 30px;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+ol#grid {
+    list-style: none;
+    overflow: auto;
+}
+
+ol#grid li {
+    float: left;
+    position: relative;
+}
+
+ol#grid li a {
+    background: transparent;
+    -webkit-border-radius: 12px;
+    -moz-border-radius:    12px;
+    border-radius:         12px;
+
+    -webkit-box-shadow: 0 0 10px rgba(0,0,0,0.153);
+
+    color: #0464BB;
+    display: block;
+    font-size: 16px;
+    height: 72px;
+    line-height: 20px;
+    padding: 0;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.333);
+    vertical-align: middle;
+    width: 72px;
+
+}
+
+ol#grid li a img {
+    border: none;
+    -webkit-transition: opacity 0.5s ease-in-out;
+    -moz-transition:    opacity 0.5s ease-in-out;
+    transition:         opacity 0.5s ease-in-out;
+}
+
+ol#grid li a#kitchensink span {
+    color: #0464BB;
+}
+
+ol#grid li a#kitchensink {
+    -webkit-animation: glow 2s ease-in-out infinite;
+}
+
+@-webkit-keyframes "pulse" {
+    0% {
+        -webkit-transform: rotate(0deg) scale(1,1);
+    }
+    80% {
+        -webkit-transform: rotate(0deg) scale(1,1);
+    }
+    85% {
+        -webkit-transform: rotate(-7.5deg);
+    }
+    90% {
+        -webkit-transform: rotate(7.5deg) scale(1.15,1.15);
+    }
+    95% {
+        -webkit-transform: rotate(-7.5deg);
+    }
+    97.5% {
+        -webkit-transform: rotate(0deg) scale(1,1);
+    }
+    100% {
+        -webkit-transform: rotate(0deg) scale(1,1);
+    }
+}
+
+@-webkit-keyframes "glow" {
+    0% {
+        -webkit-box-shadow: 0 0 10px  rgba(0,0,0,0.153);
+    }
+    50% {
+        -webkit-box-shadow: 0 0 40px rgba(0,89,208,0.45);
+    }
+    100% {
+        -webkit-box-shadow: 0 0 10px  rgba(0,0,0,0.153)
+    }
+}
+
+
+ol#grid li a:hover,
+ol#grid li a:focus,
+ol#grid li a:active {
+    background: #000;
+}
+
+ol#grid li a:hover img,
+ol#grid li a:focus img,
+ol#grid li a:active img {
+    opacity: 0.65;
+}
+
+ol#grid li a span {
+    color: #444;
+    font-weight: ;
+    font-size: 12px;
+    letter-spacing: -0.01em;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+
+p#copyright {
+    clear: both;
+    color: #999;
+    font-size: 11px;
+    font-weight: normal;
+    height: 16px;
+    line-height: 24px;
+    margin: 36px 0 0;
+    text-align: left;
+}
+
+hr {
+    color: #e0e0e0;
+    background-color: #e0e0e0;
+    height: 1px;
+    border: none;
+    outline: none;
+}
+
+p#copyright a {
+    color: #999;
+    text-decoration: none;
+}
+
+
+/*
+.container {
+    margin: 0 auto;
+    padding: 24px 52px;
+    width: 623px;
+}
+
+ol#grid {
+    list-style: none;
+    overflow: auto;
+    padding: 24px 52px;
+    margin: 0 auto 24px;
+    width: 623px;
+}
+
+
+*/
+
+
+
+
+/*
+ol#grid li a b {
+    background: #f6f6f6 -webkit-gradient(linear, left top, left 95%, from(#e9e9e9), to(#f6f6f6)) no-repeat;
+    border: 1px solid #ddd;
+    -webkit-border-radius: 12px;
+    -moz-border-radius:    12px;
+    border-radius:         12px;
+
+    -webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,1.0);
+
+    display: block;
+    height: 70px;
+    width: 70px;
+}
+*/
+
+
+
+
+/* Portrait */
+@media screen and (max-width: 768px)
+{
+
+    body {
+        width: 768px;
+    }
+
+    .container,
+    ol#grid {
+        padding: 0 81px;
+        width: 603px;
+    }
+
+    ol#grid {
+        padding-top: 24px;
+    }
+
+    ol#grid li a {
+      margin: 0 105px 88px 0;
+    }
+
+    ol#grid li:nth-child(4n+4) a {
+        margin-right: 0;
+    }
+
+    ol#grid li:nth-child(5n+5) a {
+        margin-right: 105px;
+    }
+
+}
+
+/* Landscape */
+@media screen and (min-width: 769px)
+{
+
+    body {
+        width: 1024px;
+    }
+
+    .container,
+    ol#grid {
+        padding: 0 90px;
+        width: 844px;
+    }
+
+    ol#grid {
+        padding-top: 24px;
+    }
+
+    ol#grid li a {
+      margin: 0 120px 71px 0;
+    }
+
+    ol#grid li:nth-child(4n+4) a {
+        margin-right: 120px;
+    }
+
+    ol#grid li:nth-child(5n+5) a {
+        margin-right: 0;
+    }
+
+
+}
+
+/* iPhone */
+@media screen and (max-width: 480px)
+{
+
+    body {
+        margin: 0;
+        padding: 0;
+        width: 320px;
+    }
+
+    .container,
+    ol#grid {
+        padding: 0 17px 16px;
+        width: 286px;
+    }
+
+    ol#grid {
+        padding-top: 24px;
+    }
+
+    ol#grid li a {
+        -webkit-box-shadow: none;
+        margin: 0 19px 31px 0;
+        text-shadow: none;
+    }
+
+    ol#grid li a,
+    ol#grid li a img {
+        height: 57px;
+        width:  57px;
+    }
+
+    ol#grid li a span {
+        display: block;
+        font-size: 11px;
+        line-height: 11px;
+        white-space: nowrap;
+        -webkit-text-overflow: ellipsis;
+        -moz-text-overflow: ellipsis;
+        text-overflow: ellipsis;
+    }
+
+    ol#grid li:nth-child(4n+4) a {
+        margin-right: 0px;
+    }
+
+    ol#grid li:nth-child(5n+5) a {
+        margin-right: 19px;
+    }
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+        <a href="http://www.sencha.com/" id="logo">Sencha Inc.</a>
+
+        <h1>Sencha Touch Examples</h1>
+
+</div>
+
+<ol id="grid">
+    <li><a id="kitchensink" href="kitchensink/">
+        <img src="kitchensink/resources/img/icon.png" alt="Kitchen Sink" height="72" width="72" />
+        <span>Kitchen Sink</span>
+    </a></li>
+    <li><a id="guide" href="geocongress/">
+        <img src="geocongress/resources/img/icon.png" alt="Guide" height="72" width="72" />
+        <span>GeoCongress</span>
+    </a></li>
+    <li><a id="icons" href="kiva/">
+        <img src="kiva/resources/images/kiva.png" alt="Kiva" height="72" width="72" />
+        <span>Kiva</span>
+    </a></li>
+    <li><a id="toolbars" href="twitter/">
+        <img src="twitter/resources/images/icon.png" alt="Twitter" height="72" width="72" />
+        <span>Twitter</span>
+    </a></li>
+    <li><a id="ajax" href="ajax/">
+        <img src="ajax/icon.png" alt="AJAX" height="72" width="72" />
+        <span>AJAX</span>
+    </a></li>
+    <li><a id="carousel" href="carousel/">
+        <img src="carousel/icon.png" alt="Carousel" height="72" width="72" />
+        <span>Carousel</span>
+    </a></li>
+    <li><a id="dragdrop" href="dragdrop/">
+        <img src="dragdrop/icon.png" alt="Drag &amp; Drop" height="72" width="72" />
+        <span>Drag &amp; Drop</span>
+    </a></li>
+    <li><a id="forms" href="forms/">
+        <img src="forms/icon.png" alt="Forms" height="72" width="72" />
+        <span>Forms</span>
+    </a></li>
+    <li><a id="guide" href="guide/">
+        <img src="guide/icon.png" alt="Guide" height="72" width="72" />
+        <span>Guide</span>
+    </a></li>
+    <li><a id="icons" href="icons/">
+        <img src="icons/icon.png" alt="Icons" height="72" width="72" />
+        <span>Icons</span>
+    </a></li>
+    <li><a id="map" href="map/">
+        <img src="map/icon.png" alt="Map" height="72" width="72" />
+        <span>Map</span>
+    </a></li>
+    <li><a id="nestedlist" href="nestedlist/">
+        <img src="nestedlist/icon.png" alt="Nested List" height="72" width="72" />
+        <span>Nested List</span>
+    </a></li>
+    <li><a id="overlays" href="overlays/">
+        <img src="overlays/icon.png" alt="Overlays" height="72" width="72" />
+        <span>Overlays</span>
+    </a></li>
+    <li><a id="picker" href="picker/">
+        <img src="picker/icon.png" alt="Picker" height="72" width="72" />
+        <span>Picker</span>
+    </a></li>
+    <li><a id="sortable" href="sortable/">
+        <img src="sortable/icon.png" alt="Sortable" height="72" width="72" />
+        <span>Sortable</span>
+    </a></li>
+    <li><a id="tabs" href="tabs/">
+        <img src="tabs/icon.png" alt="Tabs" height="72" width="72" />
+        <span>Tabs</span>
+    </a></li>
+    <li><a id="tabs2" href="tabs2/">
+        <img src="tabs2/icon.png" alt="Tabs 2" height="72" width="72" />
+        <span>Tabs 2</span>
+    </a></li>
+    <li><a id="toolbars" href="toolbars/">
+        <img src="toolbars/icon.png" alt="Toolbars" height="72" width="72" />
+        <span>Toolbars</span>
+    </a></li>
+    <li><a id="yql" href="yql/">
+        <img src="yql/icon.png" alt="YQL" height="72" width="72" />
+        <span>YQL</span>
+    </a></li>
+</ol>
+
+<div class="container">
+
+    <hr />
+    <p><em>Last updated: November 15, 2010</em></p>
+
+    <p id="copyright">&copy; 2010 <a href="http://www.sencha.com/">Sencha Inc.</a></p>
+
+</div>
+
+</body>
+</html>

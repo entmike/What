@@ -1,6 +1,6 @@
 {
-	displayName : "Administration",
-	description : "Web Container Administration",
+	displayName : "Manager",
+	description : "Web Engine Manager",
 	initParameters : {
 		author : "Mike Howles",
         version : "1.1",
@@ -12,14 +12,19 @@
 	},
 	loginConfig : {
 		requireAuthentication : true,
-		loginMapping : "/login.nsp",
+		loginServlet : "Login Servlet",
+		loginMessage : "<b>Manager Login</b><br/>Enter your User ID and Password.<br/>Use admin/nimda for now.",
         exceptionPolicy : "whitelist",
         exceptions : [
-            "ExtJS Library", "CSS and JS Resources"
+            "Sencha Touch Library", "ExtJS Library", "CSS and JS Resources"
         ]
 	},
 	servlets : [
 		{
+			name : "Login Servlet",
+			description : "Standard Login Servlet",
+			servletClass : "./libs/servlets/login.servlet"
+		},{
 			name : "newApp",
 			description : "Create a New App Context",
 			servletClass : "./libs/servlets/adminServlets/newApp.servlet"
@@ -103,6 +108,14 @@
 				absolutePath : "./libs/fileRepositories/ext-3.3.0"
 			}
 		},{
+			name : "Sencha Touch Library",
+			description : "Sencha Touch 1.0.1a Library",
+			servletClass : "./libs/servlets/fileHandler.servlet",
+			initParams : {
+				listings : false,
+				absolutePath : "./libs/fileRepositories/sencha-touch-1.0.1a"
+			}
+		},{
 			name : "ExtJS Addons",
 			description : "ExtJS Addons",
 			servletClass : "./libs/servlets/fileHandler.servlet",
@@ -138,6 +151,9 @@
 	],
 	servletMappings : [
 		{
+			name : "Login Servlet",
+			urlPattern : "/login"
+		},{
 			name : "Root Directory",
 			urlPattern : "/root"
 		},{
@@ -146,6 +162,9 @@
 		},{
 			name : "ExtJS Library",
 			urlPattern : "/ext-3.3.0"
+		},{
+			name : "Sencha Touch Library",
+			urlPattern : "/sencha-touch-1.0.1a"
 		},{
 			name : "ExtJS Addons",
 			urlPattern : "/ext-addons"

@@ -1,0 +1,135 @@
+{
+	doGet : {
+		method : function(request, response, callback) {
+			// Get Session
+			var session = request.getSession(true);
+			var msg = this.getServletContext().getLoginConfig().loginMessage;
+			if(!msg) msg = "<b>Login</b>Please provide your User ID and Password.";
+			// If Session is new, make sure Session Cookie is written to the response header before a redirect.
+			if(session.isNew()) {
+				var sessionCookie = require("./Cookie").create("JSESSIONID", session.getId());
+				sessionCookie.setMaxAge(session.getMaxInactiveInterval());
+				response.addCookie(sessionCookie);
+			}
+			// Get Parameters
+			var user = request.getParameter("user");
+			var pass = request.getParameter("password");
+			var redir = request.getParameter("redir");
+			// Default to Context Path if no redirect specified.
+			if(!redir) redir = this.getServletContext().getPath();
+			if(user && pass) {
+				if(user=="admin" && pass=="nimda") {	// Stub Code -- Need to figure out a user store
+					session.setAttribute("authenticated", true);
+					session.setAttribute("user", user);
+				}else{
+					msg += '<br/><span style="color:red">User ID and/or Password incorrect.</span>';
+				}
+			}
+			if(session.getAttribute("authenticated")) {
+				response.sendRedirect(redir);
+			}else{
+				var userAgent = request.getHeader("user-agent");
+				if(userAgent.toLowerCase().indexOf("iphone")>-1){
+					var html = "iPhone";
+				}else{
+					// Standard Browser
+					var html = [
+						"<html>",
+						"<head>",
+						"<title>Login</title>",
+						"<link rel='stylesheet' type='text/css' href='ext-3.3.0/resources/css/ext-all.css'/>",
+						"<script type='text/javascript' src='ext-3.3.0/adapter/ext/ext-base.js'></script>",
+						"<script type='text/javascript' src='ext-3.3.0/ext-all.js'></script>",
+						"<script type='text/javascript'>",
+						"Ext.BLANK_IMAGE_URL = 'ext-3.3.0/resources/images/default/s.gif';",
+						"Ext.onReady(function() {	// Main Entry Method",
+						"Ext.QuickTips.init();	// Enable Quick Tooltips",
+						"var loginForm = new Ext.form.FormPanel({",
+						"id : 'loginForm',",
+						"method : 'POST',",
+						"standardSubmit : true,",
+						"border : false,",
+						"bodyStyle : 'background:transparent;',",
+						"url : '" + request.getContextPath() + request.getServletPath() + "',",
+						"items : [",
+						"	{",
+						"		xtype : 'hidden',",
+						"		name : 'redir',",
+						"		value : '" + (redir||"") + "'",
+						"	},{",
+						"		xtype : 'textfield',",
+						"		msgTarget: 'side',",
+						"		fieldLabel : 'User ID',",
+						"		name : 'user',",
+						(user)?"		value : '" + (user) + "',":"",
+						"		allowBlank : false",
+						"	},{",
+						"		xtype : 'textfield',",
+						"		msgTarget: 'side',",
+						"		fieldLabel : 'Password',",
+						"		inputType : 'password',",
+						"		name : 'password',",
+						"		allowBlank : false",
+						"	}",
+						"]",
+						"});",
+						"var loginWindow = new Ext.Window({",
+						"	title : 'Login',",
+						"	closable : false,",
+						"	draggable : false,",
+						"	resizable : false,",
+						"	modal : true,",
+						"	width : 300,",
+						"	autoHeight: true,",
+						"	layout : 'form',",
+						"	bodyStyle : 'padding: 5px;',",
+						"	items : [ {",
+						"		xtype : 'panel',",
+						"		border : false,",
+						"		bodyStyle : 'background:transparent;',",
+						"		html : [",
+						"		'<img src=\"resources/images/loginBadge.png\" style=\"float:left\"/>'",
+						"		,'" + msg + "'",
+						"		].join('')",
+						"	},loginForm ",
+						"	],",
+						"	bbar : {",
+						"		items : [",
+						"			'->',",
+						"			{",
+						"				text : 'Login',",
+						"				handler : function(a,b) {",
+						"					Ext.getCmp('loginForm').getForm().submit({",
+						"						waitMsg:'Logging In...',",
+						"						submitEmptyText: false,",
+						"						success: function(form, action) {",
+						"							w.close();",
+						"							Ext.Msg.alert('Success', action.result.msg);",
+						"						},",
+						"						failure: function(form, action) {",
+						"							Ext.Msg.alert('Error', action.result.msg);",
+						"						}",
+						"					});",
+						"				}",
+						"			}",
+						"		]",
+						"	}",
+						"});",
+						"loginWindow.show();",
+						"});",
+						"</script>",
+						"</head>",
+						"<body><div id='login'></div></body>",
+						"</html>"
+					].join("\n");
+				}
+				response.getWriter().write(html);
+			}
+		}
+	},
+	doPost : {
+		method : function(request, response, callback) {
+			this.doGet(request, response, callback);
+		}
+	}
+}

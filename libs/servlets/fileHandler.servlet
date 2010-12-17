@@ -1,3 +1,6 @@
+/**
+	File Handler Servlet
+*/
 {
 	doGet : {
 		async : true,	// Node.JS File i/o is asynchronous, so we should flag this method as such

@@ -1,16 +1,34 @@
 exports.create = function(options) {
 	// Private
 	var id = options.id;
+	// Node.JS Request Object
 	var request = options.req;
-	var parameters = request.formData;
+	// Cookies
 	var cookies = options.cookies;
+	// Requested Session ID
 	var JSESSIONID = options.JSESSIONID;
 	var servletPath = options.servletPath;
 	var contextPath = options.contextPath;
 	var pathInfo = options.pathInfo;
 	var session;
 	var sessionManager = options.sessionManager;
+	// IP Address of client
 	var IP = request.connection.remoteAddress;
+	// Query String
+	var queryString = require('url').parse(request.url).query || "";
+	// Gather up GET and POST parameters
+	var postParameters = request.formData.fields || {};
+	var getParameters = require("querystring").parse(queryString) || {};
+	// Consolidate them
+	var parameters = postParameters;
+	for(gp in getParameters) {
+		if(parameters[gp]) {
+			parameters[gp]="," + getParameters[gp];
+		}else{
+			parameters[gp] = getParameters[gp];
+		}
+	}
+	// console.log(parameters);
 	// Public
 	return {
 		toString : function() { return "HttpServletRequest"; },
@@ -40,8 +58,8 @@ exports.create = function(options) {
 		getPathInfo : function() { 
 			return pathInfo;
 		},
-		getParameter : function(name) {
-			return parameters[name];
+		getParameter : function(p) {
+			return (parameters[p] || null);
 		},
 		getParameterNames : function() {
 			var arr = [];
@@ -56,8 +74,7 @@ exports.create = function(options) {
 			return request.formData;
 		},
 		getQueryString : function() {
-			var obj = require('url').parse(request.url).query;
-			return obj || "";
+			return queryString;
 		},
 		isUserInRole : function(role) { /* Stub */ },
 		getUserPrincipal : function() { /* Stub */ },

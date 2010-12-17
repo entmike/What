@@ -13,7 +13,7 @@ exports.gzip = function(options) {
 	var chunk = [];			// Buffer collection
 	// Child process to spawn
 	var gzip = spawn('gzip', ['-' + (rate-0),'-c', '-']);
-	
+	// console.log(gzip.pid);
 	// Determine encoding type
 	if (isBuffer) {    
 		gzip.stdin.encoding = 'binary';    

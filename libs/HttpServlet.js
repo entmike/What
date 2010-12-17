@@ -84,6 +84,7 @@ exports.parseNSP = function(contents) {
 
 exports.create = function(meta) {
 	// Constructor/Private
+	var lastModified = meta.lastModified;
 	var options = meta.options || {};
 	var stats = meta.stats || {};
 	stats.executions = 0;
@@ -117,7 +118,7 @@ exports.create = function(meta) {
 			/* Returns the time the HttpServletRequest object was last modified, in milliseconds since midnight January 1, 1970 GMT.
 			If the time is unknown, this method returns a negative number (the default).
 			*/
-			return -1;
+			return lastModified || -1;
 		},
 		doOptions : function(request, response) {
 			/* Called by the server (via the service method) to allow a servlet to handle a OPTIONS request. 
@@ -156,49 +157,66 @@ exports.create = function(meta) {
 			*/
 			response.setHeaders(request.getHeaders());
 		},
-		service : function(request, response, callback) {
-			/* Receives standard HTTP requests from the public service method and dispatches them to the doXXX methods defined
-			in this class.  There's no need to override this method.
-			*/
-			var opts;
-			switch (request.getMethod()) {
-				case "GET" :
-					opts = options.doGet; break;
-				case "POST" :
-					opts = options.doPost; break;
-				case "DELETE" :
-					opts = options.doDelete; break;
-				case "PUT" :
-					opts = options.doPut; break;
-				case "OPTIONS" :
-					this.doOptions(request, response); this.serviceComplete(request, response);	break;
-				case "TRACE" :
-					this.doTrace(request, response); this.serviceComplete(request, response); break;
-				default:
-			}
-			if(opts) {
-				if(!opts.async) {
-					try{ // Execute Servlet Code
-						var async = opts.method.call(this, request, response, callback);
-						// Give method a chance to be async if it needs to be
+		doGet : function(request, response, callback) {
+			return this._do(options.doGet, request, response, callback);
+		},
+		doPost : function(request, response, callback) {
+			return this._do(options.doPost, request, response, callback);
+		},
+		doDelete : function(request, response, callback) {
+			return this._do(options.doDelete, request, response, callback);
+		},
+		doPut : function(request, response, callback) {
+			return this._do(options.doPut, request, response, callback);
+		},
+		_do : function(o, request, response, callback) {
+			if(!o) {
+				response.sendError(500, new Error("Method " + request.getMethod() + " not supported for this servlet."));
+			}else{
+				if(!o.async) {
+					try{
+						var async = o.method.call(this, request, response, callback);
 						if(!async) this.serviceComplete(request, response);
 					}catch(e){
 						response.sendError(500, e);
 						stats.errors++;
 					}
-				}else{	// Asynchronous Call
+				}else{
 					try{
-						opts.method.call(this, request, response, callback);
+						o.method.call(this, request, response, callback);
 					}catch(e){
 						response.sendError(500, e);
 						stats.errors++;
 					}
 				}					
-				return (async)?async:(opts)?opts.async:false;
-			}else{
-				response.sendError(500, new Error("Method " + request.getMethod() + " not supported for this servlet."));
+				return (async)?async:(o)?o.async:false;
 			}
-			
+		},
+		service : function(request, response, callback) {
+			/* Receives standard HTTP requests from the public service method and dispatches them to the doXXX methods defined
+			in this class.  There's no need to override this method.
+			*/
+			var opt;
+			var doMethod;
+			switch (request.getMethod()) {
+				case "GET" :
+					return this.doGet.call(this, request, response, callback);
+					break;
+				case "POST" :
+					return this.doPost.call(this, request, response, callback);
+					break;
+				case "DELETE" :
+					return this.doDelete.call(this, request, response, callback);
+					break;
+				case "PUT" :
+					return this.doPut.call(this, request, response, callback);
+					break;
+				case "OPTIONS" :
+					return this.doOptions(request, response); this.serviceComplete(request, response);	break;
+				case "TRACE" :
+					return this.doTrace(request, response); this.serviceComplete(request, response); break;
+				default:
+			}			
 		},
 		serviceComplete : function(request, response, callback) {
 			// See if session exists.  If not, don't make a new one.

@@ -103,7 +103,7 @@ exports.create = function(options) {
 					};
 					this.loadServlet(options);
 				}catch(e){
-					console.log("Error initializing servlet [" + meta.name + "]\n\File: [" + servletFile + "].");
+					console.log("Error initializing servlet [" + webConfig.servlets[i].name + "]\n\File: [" + servletFile + "].");
 					console.log(e.stack.green);
 				}
 			}
@@ -211,6 +211,7 @@ exports.create = function(options) {
 			if(acceptEncoding && acceptEncoding.toLowerCase().indexOf("gzip") > -1) {  // Accepts GZIP
 				if(!response.isCommited()) {
 					response.setHeader("Content-Encoding", "gzip");
+					// console.log(request.getPathInfo());
 					gzip({
 						data : response.getOutputStream(),
 						callback : function(err,data){
@@ -345,14 +346,15 @@ exports.create = function(options) {
 				});
 				if(servlet) {	// Servlet Exists
 					var session = request.getSession(false);
-					if(loginConfig.requireAuthentication 					// If context requires auth...
-					&& (!session || !session.getAttribute("authenticated"))	// and Session is not authenticated...
-					&& URL!=loginConfig.loginMapping                        // and URL is not the login URL...
+					if(loginConfig.requireAuthentication 						// If context requires auth...
+					&& (!session || !session.getAttribute("authenticated"))		// and Session is not authenticated...
+					&& mapping.name != loginConfig.loginServlet                 // and Servlet is not the Login Servlet...
                     && (loginConfig.exceptionPolicy =="whitelist" && !this.getException(mapping.name))
                     ) {
+						console.log("Redirecting to Login Page");
 						// Redirect to Login Page
 						response.setStatus(302);
-						response.setHeader("Location", path + loginConfig.loginMapping);
+						response.setHeader("Location", path + "/login" + "?redir=" + (encodeURIComponent(path+URL)));
 						this.handleComplete(request, response);
 					}else{
 						var async = servlet.service(request, response, this.handleComplete);	// Allow async to be dynamic
@@ -390,7 +392,10 @@ exports.create = function(options) {
 		getName : function() {
 			return name;
 		},
-        getServletMappings : getServletMappings,
+        getLoginConfig : function() {
+			return loginConfig;
+		},
+		getServletMappings : getServletMappings,
 		getException : function(servletName){
             if(!loginConfig.exceptions) return false;
             for(var i=0;i<loginConfig.exceptions.length;i++){
@@ -451,14 +456,14 @@ exports.create = function(options) {
 				var servletData = fs.readFileSync(servletFile);
 				try{
 					var servletOptions = eval("("+ servletData.toString() +")");
+					var options = {
+						servletOptions : servletOptions,
+						meta : servlet.meta
+					};
+					this.loadServlet(options);
 				}catch(e2){
 					console.log(e2.stack.red);
 				}
-				var options = {
-					servletOptions : servletOptions,
-					meta : servlet.meta
-				};
-				this.loadServlet(options);
 			}catch(e){
 				console.log("Error initializing servlet [" + name + "]\nFile: [" + servletFile + "].");
 				console.log(e.stack.green);

@@ -3,7 +3,7 @@
 	description : "Web Engine Manager",
 	initParameters : {
 		author : "Mike Howles",
-        version : "1.1",
+        version : "1.3",
 		mongoAdmin : {
 			user : "admin",
 			pass : "admin",

@@ -43,6 +43,12 @@
 .fingerprintRecognitionNode{
     background-image:url('../images/fingerprintRecognition.png') !important; 
 }
+.secureNode{
+    background-image:url('../images/secureNode.png') !important; 
+}
+.keyNode{
+    background-image:url('../images/keyNode.png') !important; 
+}
 
 /*
 	Buttons

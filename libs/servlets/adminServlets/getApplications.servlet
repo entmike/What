@@ -2,18 +2,59 @@
 	doGet : {
 		parameters : [ ],
 		method : function(request, response) {
-		/*
+			/*
 			Get Web Container Context and Servlet Information to return to ExtJS Admin Page
-		*/
+			*/
 			// Get Contexts collection
 			var contexts = this.getServletContext().getAdminServices().getContexts();
 			var rootNode = [];							// Create Root Node
 			for(var i=0;i<contexts.length;i++) {		// Run through contexts
-				var context = contexts[i];
+				var context = contexts[i];				// Context
+				var loginConfig = context.getLoginConfig();	// Login Config
+				var loginNode = null;
+				if(loginConfig) {
+					var exceptions = [];
+					if(loginConfig.exceptions){
+						for(var j=0;j<loginConfig.exceptions.length;j++) {
+							exceptions.push({
+								text : loginConfig.exceptions[j],
+								iconCls : "servletNode",
+								uiProvider : "col",
+								leaf : true
+							});
+						};
+					};
+					loginNode = {
+						text : "Require Authentication",
+						description : loginConfig.requireAuthentication,
+						uiProvider : "col",
+						iconCls : "secureNode",
+						children : [
+							{
+								text : "Login Servlet",
+								description : loginConfig.loginServlet,
+								iconCls : "keyNode",
+								uiProvider : "col",
+								leaf : true
+							},{
+								text : "Exception Policy",
+								description : loginConfig.exceptionPolicy,
+								iconCls : "secureNode",
+								uiProvider : "col",
+								leaf : true
+							},{
+								text : "Exception List",
+								iconCls : "secureNode",
+								uiProvider : "col",
+								children : exceptions
+							}
+						]
+					};
+				};
 				var servlets = context.getServlets();	// Get current context's servlet metadata collection
 				var servletsNode = [];					// Create Servlets Node
 				for(var j=0;j<servlets.length;j++) {	// Run through servlets collection
-					var servlet = servlets[j];
+					var servlet = servlets[j];			// Servlet
 					var servletConfig = servlet.servlet.getServletConfig();
 					var servletName = servletConfig.getServletName();
 					var servletParamNames = servlet.servlet.getServletConfig().getInitParameterNames();
@@ -292,6 +333,7 @@
 						}
 					]
 				}
+				if(loginNode) contextNode.children.push(loginNode);
 				rootNode.push(contextNode);				// Push context Node to Root Node
 			}
 			rootNode.sort(function(a,b) {

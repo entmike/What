@@ -50,7 +50,7 @@ exports.create = function(options) {
 		return (b.urlPattern.length - a.urlPattern.length);
 	});
 	// Login Config
-	var loginConfig = webConfig.loginConfig || {};
+	var loginConfig = webConfig.loginConfig || null;
 	// Path Translations
     var translations = webConfig.translations;
 	var addMapping = function(servletName, url) {
@@ -346,10 +346,11 @@ exports.create = function(options) {
 				});
 				if(servlet) {	// Servlet Exists
 					var session = request.getSession(false);
-					if(loginConfig.requireAuthentication 						// If context requires auth...
+					if(loginConfig && loginConfig.requireAuthentication 		// If context requires auth...
 					&& (!session || !session.getAttribute("authenticated"))		// and Session is not authenticated...
 					&& mapping.name != loginConfig.loginServlet                 // and Servlet is not the Login Servlet...
-                    && (loginConfig.exceptionPolicy =="whitelist" && !this.getException(mapping.name))
+                    && ((loginConfig.exceptionPolicy =="whitelist" && !this.getException(mapping.name)) ||
+					(loginConfig.exceptionPolicy=="blacklist" && this.getException(mapping.name)))
                     ) {
 						console.log("Redirecting to Login Page");
 						// Redirect to Login Page
@@ -462,7 +463,7 @@ exports.create = function(options) {
 					};
 					this.loadServlet(options);
 				}catch(e2){
-					console.log(e2.stack.red);
+					console.log(e2.stack.red.bold);
 				}
 			}catch(e){
 				console.log("Error initializing servlet [" + name + "]\nFile: [" + servletFile + "].");

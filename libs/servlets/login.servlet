@@ -18,9 +18,11 @@
 			// Default to Context Path if no redirect specified.
 			if(!redir) redir = this.getServletContext().getPath();
 			if(user && pass) {
-				if(user=="admin" && pass=="nimda") {	// Stub Code -- Need to figure out a user store
+				var u = this.getServletContext().getUserStore().authenticate(user, pass);
+				if(u) {
 					session.setAttribute("authenticated", true);
 					session.setAttribute("user", user);
+					session.setAttribute("userObj", u);
 				}else{
 					msg += '<br/><span style="color:red">User ID and/or Password incorrect.</span>';
 				}

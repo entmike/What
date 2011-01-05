@@ -51,6 +51,15 @@ exports.create = function(options) {
 	});
 	// Login Config
 	var loginConfig = webConfig.loginConfig || null;
+	var userStore;
+	if(loginConfig) {
+		loginConfig.userFile = loginConfig.userFile || "users.js";
+		var loginFile = appBase + "/webapps/" + filePath + "/META-INF/" + loginConfig.userFile;
+		userStore = require(loginConfig.userStore || "./UserStore").create({
+			userFile : loginFile
+		});
+	}
+	
 	// Path Translations
     var translations = webConfig.translations;
 	var addMapping = function(servletName, url) {
@@ -75,6 +84,9 @@ exports.create = function(options) {
 	
 	// Public
 	var context = {
+		getUserStore : function() {
+			return userStore;
+		},
 		init : function() {
 			// Load Servlets
 			for(var i=0;i<webConfig.servlets.length;i++) {

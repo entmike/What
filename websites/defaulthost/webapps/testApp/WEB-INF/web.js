@@ -1,0 +1,1 @@
+{"displayName":"Test App","description":"Enter Description Here","initParameters":{},"servlets":[{"name":"default","description":"Default File Handler Servlet","servletClass":"./libs/servlets/fileHandler.servlet","initParams":{"listings":false}}],"servletMappings":[{"name":"default","urlPattern":"/"}],"translations":[]}

@@ -1,0 +1,1 @@
+{"path":"/testApp","privileged":false}

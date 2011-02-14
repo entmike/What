@@ -19,8 +19,8 @@ exports.create = function(options) {
 	// Public
 	return {
 		// Non-interface method.  Ends Node.JS response
-		close : function() {
-			this.flushBuffer();
+		close : function(autoFlush) {
+			if(autoFlush) this.flushBuffer();
 			if(this.getStatus()==304) {
 				this.getWriter().close();
 				return;

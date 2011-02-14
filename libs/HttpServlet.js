@@ -215,7 +215,12 @@ exports.create = function(meta) {
 					return this.doOptions(request, response); this.serviceComplete(request, response);	break;
 				case "TRACE" :
 					return this.doTrace(request, response); this.serviceComplete(request, response); break;
-				default:
+				case "HEAD":
+					return this.doGet.call(this, request, response, callback);
+					break;
+				default:	// Others
+					return this.doGet.call(this, request, response, callback);
+					break;
 			}			
 		},
 		serviceComplete : function(request, response, callback) {

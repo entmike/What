@@ -221,7 +221,7 @@ exports.create = function(options) {
 		handleComplete : function(request, response){
 			var acceptEncoding = request.getHeader("accept-encoding");
 			if(acceptEncoding && acceptEncoding.toLowerCase().indexOf("gzip") > -1) {  // Accepts GZIP
-				if(!response.isCommited()) {
+				if(!response.isCommited() && !request.method=="HEAD") {
 					response.setHeader("Content-Encoding", "gzip");
 					// console.log(request.getPathInfo());
 					gzip({
@@ -234,10 +234,10 @@ exports.create = function(options) {
 						}
 					});
 				}else{ // Response is commited, cannot GZIP.
-					response.close();
+					response.close((request.getMethod()!="HEAD"));
 				}
 			}else{ // Browser does not accept GZIP.
-				response.close();
+				response.close((request.getMethod()!="HEAD"));
 			}
 			var rStatus = response.getStatus().toString();
 			switch (rStatus){

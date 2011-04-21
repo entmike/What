@@ -7,11 +7,11 @@ specifications and interface of HttpServlets](http://tomcat.apache.org/tomcat-5.
 
 This project began as my first attempt to write *anything* in NodeJS.  I
 shortly fell down the rabbit hole of toying with it and what began as a simple
-static file server proof-of-concept has now become a Web Application container.
+static file server proof-of-concept has now become a [Web Application container](http://en.wikipedia.org/wiki/Web_container).
 
 Live Demo
 ------------
-[What live servlet demo at no.de provided by Joyent](http://entmike.no.de/).
+[Try this live servlet demo at no.de provided by Joyent](http://entmike.no.de/).
 
 Features
 =========

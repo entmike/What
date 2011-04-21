@@ -1,47 +1,48 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
-	<head>
-	<title>Welcome!!!</title>
-	<style type="text/css">
-		body {
-			font-family: Arial, Tahoma, Verdana;
-			font-size: 8pt;
-			background-color: #EFEFEF;
-		}
-		h1 {
-			font-size: 14pt;
-			color: #006699;
-		}
-		a, a:visited {
-			color : #009966;
-			text-decoration : none;
-		}
-		a:hover {
-			text-decoration : underline;
-		}
-	</style>
-	<script type="text/javascript">
-		var _gaq = _gaq || [];
-		_gaq.push(['_setAccount', 'UA-19845178-2']);
-		_gaq.push(['_setDomainName', '.omgwtflol.com']);
-		_gaq.push(['_trackPageview']);
-		(function() {
-		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-		})();
-	</script>
-	</head>
-	<body>
-		<h1>Welcome</h1>
-		<p>If you are reading this message, your webcontainer on Node.JS is working properly.</p>
-		<h1>Example URIs:</h1>
-		<ul>
-			<li><a href="/">Home (HINT: You are here)</a></li>
-			<li><a href="/Manager/">Web Container Manager</a></li>
-			<li><a href="/nspExample.nsp">Demo Page illustrating Session Information and server-side scripting in HTML.</a></li>
-		</ul>
-	<h1>What Overview:</h1>
-	<img src="WhatDiagram.png"/>
-	</body>
-</html>
+    <head>
+        <title>Welcome!!!</title>
+        <style type="text/css">
+            body {
+                font-family: Arial, Tahoma, Verdana;
+                font-size: 8pt;
+                background-color: #EFEFEF;
+            }
+            h1 {
+                font-size: 14pt;
+                color: #006699;
+            }
+            a, a:visited {
+                color : #009966;
+                text-decoration : none;
+            }
+            a:hover {
+                text-decoration : underline;
+            }
+        </style>
+        <script type="text/javascript">
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-19845178-2']);
+            _gaq.push(['_setDomainName', '.omgwtflol.com']);
+            _gaq.push(['_trackPageview']);
+            (function() {
+             var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+             ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+             var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+             })();
+         </script>
+     </head>
+     <body>
+         <h1>Welcome</h1>
+         <p>If you are reading this message, your webcontainer on Node.JS is working properly.</p>
+         <p>What is a "work in progress Web Container / Application Server written against Java specifications and interface of HttpServlets, etc but in JavaScript."  See the source for this demo site at <a href="https://github.com/entmike/What">github.com/entmike/What</a>.</p>
+         <h1>Example URIs:</h1>
+         <ul>
+             <li><a href="/">Home (HINT: You are here)</a></li>
+             <li><a href="/Manager/">Web Container Manager</a></li>
+             <li><a href="/nspExample.nsp">Demo Page illustrating Session Information and server-side scripting in HTML.</a></li>
+         </ul>
+         <h1>What Overview:</h1>
+         <img src="WhatDiagram.png"/>
+     </body>
+ </html>

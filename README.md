@@ -1,6 +1,6 @@
 WHAT - A Node.JS Web Application Server
 ===============================================================================
-Author : Mike Howles - [entmike@gmail.com](mailto:entmike@gmail.com)
+**Author**: Mike Howles ([email](mailto:entmike@gmail.com))
 
 Work in progress Web Container / Application Server written against [Java
 specifications and interface of HttpServlets](http://tomcat.apache.org/tomcat-5.5-doc/servletapi/index.html), etc but in JavaScript.
@@ -8,6 +8,10 @@ specifications and interface of HttpServlets](http://tomcat.apache.org/tomcat-5.
 This project began as my first attempt to write *anything* in NodeJS.  I
 shortly fell down the rabbit hole of toying with it and what began as a simple
 static file server proof-of-concept has now become a Web Application container.
+
+Live Demo
+------------
+[What live servlet demo at no.de provided by Joyent](http://entmike.no.de/).
 
 Features
 =========

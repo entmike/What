@@ -35,7 +35,7 @@
      <body>
          <h1>Welcome</h1>
          <p>If you are reading this message, your webcontainer on Node.JS is working properly.</p>
-         <p>What is a "work in progress Web Container / Application Server written against Java specifications and interface of HttpServlets, etc but in JavaScript."  See the source for this demo site at <a href="https://github.com/entmike/What">github.com/entmike/What</a>.</p>
+         <p><strong>What</strong> is a "work in progress Web Container / Application Server written against Java specifications and interface of HttpServlets, etc but in JavaScript."  See the source for this demo site at <a href="https://github.com/entmike/What">github.com/entmike/What</a>.</p>
          <h1>Example URIs:</h1>
          <ul>
              <li><a href="/">Home (HINT: You are here)</a></li>
